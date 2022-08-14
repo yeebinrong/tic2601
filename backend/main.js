@@ -30,6 +30,13 @@ app.use(express.json())
 // Apply cors headers to resp
 app.use(cors())
 
+app.get('/api/receive', (req, resp) => {
+    const value = req.query.value
+    resp.status(200)
+    resp.type('application/json')
+    resp.json({ value: "Server received your message! [" + value + "]" })
+})
+
 app.listen(PORT, () => {
     console.info(`Application is listening PORT ${PORT} at ${new Date()}`)
 })
