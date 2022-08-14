@@ -8,19 +8,19 @@ const App = () => {
   return (
     <BrowserRouter>
       <Routes>
-          <Route path="/" exact element={<HomePage />} />
-          <Route path="/settings" exact element={<SettingPage />} />
-          <Route
-            path="*"
-            element={
-              <main style={{ padding: "1rem" }}>
-                <p>There's nothing here!</p>
-              </main>
-            }
-          />
+        <Route path="/" exact element={<HomePage />} />
+        <Route path="/settings" exact element={<SettingPage />} />
+        <Route
+          path="*"
+          element={
+            <main style={{ padding: "1rem" }}>
+              <p>There's nothing here!</p>
+            </main>
+          }
+        />
       </Routes>
     </BrowserRouter>
   );
-}
+};
 
 export default App;
