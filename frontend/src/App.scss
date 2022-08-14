@@ -1,0 +1,22 @@
+.app-main {
+  height: 100vh;
+}
+
+.app-drawer-main {
+  .MuiDrawer-paper {
+    width: 240px;
+    background-color: white;
+  }
+}
+
+.app-drawer-header {
+  .MuiIconButton-root {
+    display: flex;
+    margin-left: auto;
+    height: 100%;
+    svg {
+      font-size: 30px;
+    }
+  }
+  min-height: 64px;
+}
