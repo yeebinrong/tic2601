@@ -4,19 +4,47 @@
 
 .app-drawer-main {
   .MuiDrawer-paper {
-    width: 240px;
     background-color: white;
   }
+}
+
+.app-drawer-close {
+  .MuiPaper-root {
+    overflow: hidden;
+    width: 64px !important;
+    margin-top: 64px !important;
+  }
+}
+
+.app-drawer-open {
+  .MuiPaper-root {
+    width: 240px !important;
+    margin-top: 64px !important;
+  }
+}
+
+.app-drawer-filler-close {
+  width: 64px !important;
+}
+
+.app-drawer-filler-open {
+  width: 240px !important;
 }
 
 .app-drawer-header {
   .MuiIconButton-root {
     display: flex;
     margin-left: auto;
-    height: 100%;
+    margin-top: 9px;
     svg {
       font-size: 30px;
+      color: white;
     }
   }
   min-height: 64px;
+  width: 216px;
+}
+
+.main-router-content {
+  margin: 20px 20px 20px 260px;
 }
