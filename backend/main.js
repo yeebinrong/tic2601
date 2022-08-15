@@ -37,6 +37,12 @@ app.get('/api/receive', (req, resp) => {
     resp.json({ value: "Server received your message! [" + value + "]" })
 })
 
+app.get('/api/getbackendvalue', (req, resp) => {
+    resp.status(200)
+    resp.type('application/json')
+    resp.json({ value: Math.floor(Math.random() * 100) })
+})
+
 app.listen(PORT, () => {
     console.info(`Application is listening PORT ${PORT} at ${new Date()}`)
 })

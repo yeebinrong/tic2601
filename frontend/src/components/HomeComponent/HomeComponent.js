@@ -1,7 +1,11 @@
 import { Button, Input, TextField } from "@mui/material";
 import React from "react";
-import { sendMessage } from "../../apis/app-api";
+import { sendMessageApi } from "../../apis/app-api";
 import "./HomeComponent.scss";
+import { MainActions } from "../../state/actions";
+import { actions as MainSagaActions } from "../../state/sagas/main.saga";
+import { MainSelectors } from "../../state/selectors";
+import { connect } from "react-redux";
 
 class HomeComponent extends React.Component {
   constructor(props) {
@@ -12,6 +16,7 @@ class HomeComponent extends React.Component {
       firstDisplayText: "",
       secondTextFieldValue: "",
       secondDisplayText: "",
+      thirdTextFieldValue: "",
     };
   }
 
@@ -29,8 +34,7 @@ class HomeComponent extends React.Component {
                 firstTextFieldValue: e.target.value,
               });
             }}
-            id="outlined-basic"
-            label="Input Text"
+            label="First Textbox"
             variant="outlined"
           />
           <Button
@@ -58,15 +62,13 @@ class HomeComponent extends React.Component {
                 secondTextFieldValue: e.target.value,
               });
             }}
-            id="outlined-basic"
-            label="Input Text"
+            label="Second Textbox"
             variant="outlined"
           />
           <Button
             onClick={() => {
-              sendMessage(this.state.secondTextFieldValue).then((resp) => {
+              sendMessageApi(this.state.secondTextFieldValue).then((resp) => {
                 if (!resp.error) {
-                  console.log(resp);
                   this.setState({
                     secondDisplayText: resp.data.value,
                   });
@@ -85,9 +87,70 @@ class HomeComponent extends React.Component {
             value={this.state.secondDisplayText}
           />
         </span>
+        <span style={{ display: "flex", flex: "1", marginBottom: "16px" }}>
+          <TextField
+            value={this.state.thirdTextFieldValue}
+            onChange={(e) => {
+              this.setState({
+                thirdTextFieldValue: e.target.value,
+              });
+            }}
+            label="Third Textbox"
+            variant="outlined"
+          />
+          <Button
+            onClick={() => {
+              // store value into redux store
+              this.props.setValue(this.state.thirdTextFieldValue);
+            }}
+            style={{ margin: "8px" }}
+            variant="outlined"
+          >
+            {" "}
+            {/* Values stored in redux store persist even if you navigate to other page, it will disappear if you refresh */}
+            {/* Values stored in redux store can be read in different pages */}
+            Store value into redux store (something like cache)
+          </Button>
+          <Input
+            style={{ width: "400px" }}
+            disabled
+            // retrieve value from redux store
+            value={this.props.value}
+          />
+        </span>
+        <span style={{ display: "flex", flex: "1", marginBottom: "16px" }}>
+          <Button
+            onClick={() => {
+              this.props.getValueFromBackend();
+            }}
+            style={{ margin: "8px" }}
+            variant="outlined"
+          >
+            {" "}
+            {/* Values stored in redux store persist even if you navigate to other page, it will disappear if you refresh */}
+            {/* Values stored in redux store can be read in different pages */}
+            Retrieve random number from backend using saga and store in redux
+          </Button>
+          <Input
+            style={{ width: "400px" }}
+            disabled
+            // retrieve value from redux store
+            value={this.props.valueFromBackend}
+          />
+        </span>
       </div>
     );
   }
 }
 
-export default HomeComponent;
+const mapStateToProps = (state) => ({
+  value: MainSelectors.getValue(state),
+  valueFromBackend: MainSelectors.getValueFromBackend(state),
+});
+
+const mapDispatchToProps = {
+  setValue: MainActions.setValue,
+  getValueFromBackend: MainSagaActions.getBackEndValue,
+};
+
+export default connect(mapStateToProps, mapDispatchToProps)(HomeComponent);
