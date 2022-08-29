@@ -92,13 +92,13 @@ app.post('/api/register', async (req, resp) => {
     } else {
         try {
             // Insert credentials into postgres database
-            const insertedUser = await insertToUser(credentials)
+            await insertToUser(credentials)
         } catch (e) {
             console.info(e)
         }
         resp.status(200)
         resp.type('application/json')
-        resp.json({message: `Successfully created an account for ${insertedUser}!`})
+        resp.json({message: `Successfully created an account for ${credentials.username}!`})
         return
     }
 })
