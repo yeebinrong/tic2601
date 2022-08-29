@@ -5,14 +5,15 @@
 const express = require('express')
 const morgan = require('morgan')
 const cors = require('cors')
-
 const jwt = require('jsonwebtoken')
+const sha256 = require('sha256')
 
 // Passport core
 const passport = require('passport')
 // Passport Strategies
 const { localStrategy, mkAuth } = require('./passport_strategy.js')
-const sha256 = require('sha256')
+const { SIGN_SECRET } = require('./server_config.js')
+const { checkUserNameAlreadyExists, insertToUser } = require('./db_utils.js')
 
 const USER_LOGGED_IN = []
 
@@ -51,38 +52,72 @@ app.use(cors())
 const signToken = (payload) => {
     const currTime = (new Date()).getTime() / 1000
     return jwt.sign({
-        sub: payload.userName,
+        sub: payload.username,
         iss: 'readit',
         iat: currTime,
         // exp: currTime + (30),
-    }, ENV_PASSWORD)
+    }, SIGN_SECRET)
 }
 
-const checkUserAlreadyLoggedIn = (userName) => {
+const checkUserAlreadyLoggedIn = (username) => {
     const bool = USER_LOGGED_IN.find(u => {
-        return u == userName
+        return u == username
     })
     if (!bool) {
-        USER_LOGGED_IN.push(userName)
+        USER_LOGGED_IN.push(username)
     }
     return bool
 }
+
+// POST /api/register
+// Create new local account
+app.post('/api/register', async (req, resp) => {
+    const credentials = req.body
+    // check if client has posted the credentials correctly
+    if (!credentials.password || !credentials.username || !credentials.email) {
+        resp.status(401)
+        resp.type('application/json')
+        resp.json({message: "Missing credentials."})
+        return
+    }
+    // hash password
+    credentials.password = sha256(credentials.password)
+    // check if username already exists
+    const exists = await checkUserNameAlreadyExists(credentials)
+    if (!exists.length <= 0) {
+        resp.status(409)
+        resp.type('application/json')
+        resp.json({message: `Username [${credentials.username}] already exists.`})
+        return
+    } else {
+        try {
+            // Insert credentials into postgres database
+            const insertedUser = await insertToUser(credentials)
+        } catch (e) {
+            console.info(e)
+        }
+        resp.status(200)
+        resp.type('application/json')
+        resp.json({message: `Successfully created an account for ${insertedUser}!`})
+        return
+    }
+})
 
 // POST /api/login
 app.post('/api/login',
 // passport middleware to perform authentication
 localStrategyAuth,
 (req, resp) => {
-    const token = signToken(req.userName)
-    if(checkUserAlreadyLoggedIn(req.userName)) {
+    const token = signToken(req.username)
+    if(checkUserAlreadyLoggedIn(req.username)) {
         resp.status(406)
         resp.type('application/json')
-        resp.json({message:"Already logged in."})
+        resp.json({message: `Username [${req.username} is already logged in.`})
         return
     }
     resp.status(200)
     resp.type('application/json')
-    resp.json({message: `Login at ${new Date()}`, token, user: req.user})
+    resp.json({message: `Logged in at ${new Date()}`, token, user: req.user})
 })
 
 app.get('/api/receive', (req, resp) => {

@@ -16,6 +16,7 @@
     "nodemon": "^2.0.19",
     "passport": "^0.6.0",
     "passport-strategy": "^1.0.0",
+    "pg": "^8.8.0",
     "secure-env": "^1.2.0",
     "sha256": "^0.2.0"
   }

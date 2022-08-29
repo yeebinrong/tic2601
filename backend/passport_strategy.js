@@ -3,6 +3,7 @@
 /* -------------------------------------------------------------------------- */
 const sha256 = require('sha256')
 const LocalStrategy = require('passport-local').Strategy
+const { retrieveUserInfoWithCredentials } = require('./db_utils.js')
 
 const localStrategy = new LocalStrategy(
     {
@@ -15,13 +16,15 @@ const localStrategy = new LocalStrategy(
             // perform the authentication
             password = sha256(password)
             console.info(password)
+            const data = await retrieveUserInfoWithCredentials(username, password)
             // query db for matching user and password
-            const data = []
             if (data.length > 0) {
                 done(null,
                     // info about the user
                     {
-                        // return info about user from the query
+                        // specify the data to return
+                        username: username,
+                        // ...
                     }
                 )
             } else {
