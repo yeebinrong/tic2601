@@ -1,10 +1,6 @@
 import {
   AppBar,
   Button,
-  Divider,
-  Drawer,
-  IconButton,
-  List,
   Toolbar,
   Typography,
 } from "@mui/material";
@@ -24,89 +20,18 @@ class BasePage extends React.Component {
     };
   }
 
-  setDrawer = (bool) => {
-    this.setState({
-      isDrawerOpen: bool,
-    });
-  };
-
   render() {
     return (
       <>
-        <AppBar position="static" open variant="dense">
+        <AppBar className={'app-bar'} position="static" open variant="dense">
           <Toolbar>
-            <IconButton
-              disableRipple
-              color="inherit"
-              onClick={() => this.setDrawer(!this.state.isDrawerOpen)}
-              edge="start"
-              className={"app-menu-btn"}
-              style={{
-                marginRight: 5,
-                ...(this.state.isDrawerOpen && { display: "none" }),
-              }}
-            >
-              <MenuIcon />
-            </IconButton>
-            {this.state.isDrawerOpen && (
-              <div className={"app-drawer-header"}>
-                <IconButton
-                  disableRipple
-                  onClick={() => this.setDrawer(!this.state.isDrawerOpen)}
-                >
-                  <ChevronLeftIcon />
-                </IconButton>
-              </div>
-            )}
-            <Typography
-              variant="h6"
-              style={{ marginLeft: "20px" }}
-              className={"app-menu-title"}
-            >
-              App Name
-            </Typography>
+            <img src="/static/readit_logo.png" className={'app-bar-logo'} alt="readit logo" />
             <Button color="inherit" style={{ marginLeft: "auto" }}>
               PLACEHOLDER
             </Button>
           </Toolbar>
         </AppBar>
-        <Drawer
-          open
-          variant={"persistent"}
-          className={`app-drawer-main ${
-            this.state.isDrawerOpen ? "app-drawer-open" : "app-drawer-close"
-          }`}
-        >
-          <List>
-            <NavigateButton
-              text={"Home"}
-              url={"/"}
-              icon={<HomeIcon />}
-              isDrawerOpen={this.state.isDrawerOpen}
-              closeDrawer={() => this.setDrawer(false)}
-            />
-          </List>
-          <Divider />
-          <List>
-            <NavigateButton
-              text={"Settings"}
-              url={"/settings"}
-              icon={<SettingsIcon />}
-              isDrawerOpen={this.state.isDrawerOpen}
-              closeDrawer={() => this.setDrawer(false)}
-            />
-          </List>
-        </Drawer>
-        <div style={{ display: "flex" }}>
-          <div
-            className={`${
-              this.state.isDrawerOpen
-                ? "app-drawer-filler-open"
-                : "app-drawer-filler-close"
-            }`}
-          />
-          {this.props.component}
-        </div>
+        {this.props.component}
       </>
     );
   }

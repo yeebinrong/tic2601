@@ -1,50 +1,29 @@
+body {
+  background-color: #eef3f6;
+}
+
+.main-logo {
+  height: 96px;
+}
+
 .app-main {
   height: 100vh;
 }
 
-.app-drawer-main {
-  .MuiDrawer-paper {
-    background-color: white;
-  }
+.app-bar {
+  background-color: white !important;
+  border-bottom: 1px solid lightgray;
 }
 
-.app-drawer-close {
-  .MuiPaper-root {
-    overflow: hidden;
-    width: 64px !important;
-    margin-top: 64px !important;
-  }
-}
-
-.app-drawer-open {
-  .MuiPaper-root {
-    width: 240px !important;
-    margin-top: 64px !important;
-  }
-}
-
-.app-drawer-filler-close {
-  width: 64px !important;
-}
-
-.app-drawer-filler-open {
-  width: 240px !important;
-}
-
-.app-drawer-header {
-  .MuiIconButton-root {
-    display: flex;
-    margin-left: auto;
-    margin-top: 9px;
-    svg {
-      font-size: 30px;
-      color: white;
-    }
-  }
-  min-height: 64px;
-  width: 216px;
+.app-bar-logo {
+  margin-left: 16px;
+  height: 48px;
 }
 
 .main-router-content {
   margin: 20px 20px 20px 260px;
+}
+
+.full-width-class {
+  width: 100% !important;
 }
