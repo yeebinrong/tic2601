@@ -20,9 +20,9 @@ let transporter = nodemailer.createTransport({
 // verify connection configuration
 transporter.verify(function(error, success) {
     if (error) {
-    console.log("Mailer error : ", error);
+    console.info("Mailer error : ", error);
     } else {
-    console.log("Nodemailer is ready to take our messages");
+    console.info("Nodemailer is ready to take our messages");
     }
 });
 
@@ -37,7 +37,7 @@ const sendResetPasswordEmail = async (payload, url) => {
         html: '<p>Hello <b>' + (payload.name || payload.username) + '</b>, <br><br> You can reset password for ' + payload.username + ' by clicking this link <a href="' + url + '">Reset Password</a></p><br>Link will last 5 minutes.', // html text body
     });
 
-    console.log("Message sent: %s", info.messageId);
+    console.info("Message sent: %s", info.messageId);
 }
 
 module.exports = {

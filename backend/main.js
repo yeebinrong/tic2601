@@ -83,8 +83,8 @@ app.post('/api/register', async (req, resp) => {
     // hash password
     credentials.password = sha256(credentials.password)
     // check if username already exists
-    const exists = await checkUserNameAlreadyExists(credentials)
-    if (!exists.length <= 0) {
+    const results = await checkUserNameAlreadyExists(credentials.username)
+    if (!results.rows.length <= 0) {
         resp.status(409)
         resp.type('application/json')
         resp.json({message: `Username [${credentials.username}] already exists.`})
@@ -94,7 +94,11 @@ app.post('/api/register', async (req, resp) => {
             // Insert credentials into postgres database
             await insertToUser(credentials)
         } catch (e) {
-            console.info(e)
+            console.info(`ERROR: Insert to user failed with following error: ${e}`)
+            resp.status(400)
+            resp.type('application/json')
+            resp.json({message: "Failed to register. Please try again later."})
+            return
         }
         resp.status(200)
         resp.type('application/json')
