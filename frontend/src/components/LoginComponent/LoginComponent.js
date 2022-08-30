@@ -2,17 +2,13 @@ import {
     Alert,
     Button,
     FormControl,
-    FormGroup,
-    FormHelperText,
     IconButton,
-    Input,
     InputAdornment,
-    InputLabel,
     TextField,
     Typography,
 } from '@mui/material';
 import React from 'react';
-import { registerAccount, sendMessageApi } from '../../apis/app-api';
+import { registerAccount } from '../../apis/app-api';
 import './LoginComponent.scss';
 import { MainActions } from '../../state/actions';
 import { actions as MainSagaActions } from '../../state/sagas/main.saga';
@@ -50,7 +46,6 @@ class LoginComponent extends React.Component {
                 ...initialState,
             };
         }
-
         // Return null to indicate no change to state.
         return null;
     }
@@ -72,14 +67,13 @@ class LoginComponent extends React.Component {
                             this.setState({
                                 errorMessage: JSON.parse(res.data).message,
                             });
-                            // display error
                         } else {
-                            // display snack bar for register success
-                            // go to login page
+                            // TODO display snack bar for register success
+                            // TODO go to login page
                         }
                     });
                 } else {
-                    // Login logic
+                    // TODO Login logic
                 }
             },
         );

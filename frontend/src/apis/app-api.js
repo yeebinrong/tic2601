@@ -4,7 +4,6 @@ const HOST = 'http://localhost:3008';
 const CONTENT_TYPE_JSON = 'application/json';
 
 export function registerAccount(credentials) {
-    const data = JSON.stringify(credentials);
     return axios
         .post(`${HOST}/api/register`, {
             username: credentials.username,
