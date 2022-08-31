@@ -21,6 +21,23 @@ export function registerAccount(credentials) {
         }));
 }
 
+export function loginAccount(credentials) {
+    return axios
+        .post(`${HOST}/api/login`, {
+            username: credentials.username,
+            password: credentials.password,
+            headers: {
+                Accept: CONTENT_TYPE_JSON,
+            },
+        })
+        .then((resp) => ({ data: resp.data, error: false }))
+        .catch((err) => ({
+            data: err && err.response ? JSON.stringify(err.response.data) : '',
+            error: true,
+            status: err && err.response ? err.response.status : '',
+        }));
+}
+
 export function sendMessageApi(value) {
     return axios
         .get(`${HOST}/api/receive`, {

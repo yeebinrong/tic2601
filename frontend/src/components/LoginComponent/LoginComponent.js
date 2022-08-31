@@ -18,16 +18,8 @@ import PropTypes from 'prop-types';
 import NavigateButton from '../NavigateButton';
 import VisibilityOffIcon from '@mui/icons-material/VisibilityOff';
 import VisibilityIcon from '@mui/icons-material/Visibility';
-
-const initialState = {
-    username: '',
-    email: '',
-    password: '',
-    confirmPassword: '',
-    errorMessage: '',
-    showPassword: false,
-    showConfirmPassword: false,
-};
+import { withSnackbar } from 'notistack';
+import { initialLoginPageState, snackBarProps } from '../../constants/constants';
 
 class LoginComponent extends React.Component {
     constructor(props) {
@@ -35,7 +27,7 @@ class LoginComponent extends React.Component {
 
         this.state = {
             isRegister: this.props.isRegister,
-            ...initialState,
+            ...initialLoginPageState,
         };
     }
 
@@ -43,7 +35,7 @@ class LoginComponent extends React.Component {
         if (prevState.isRegister !== nextProps.isRegister) {
             return {
                 isRegister: nextProps.isRegister,
-                ...initialState,
+                ...initialLoginPageState,
             };
         }
         // Return null to indicate no change to state.
@@ -68,12 +60,17 @@ class LoginComponent extends React.Component {
                                 errorMessage: JSON.parse(res.data).message,
                             });
                         } else {
-                            // TODO display snack bar for register success
-                            // TODO go to login page
+                            this.props.enqueueSnackbar(
+                                `Successfully registered an account for [${this.state.username}]!`,
+                                snackBarProps('success'),
+                            );
+                            this.props.navigate('/login');
+                            console.log(this.props);
                         }
                     });
                 } else {
                     // TODO Login logic
+                    // loginAccount
                 }
             },
         );
@@ -114,34 +111,31 @@ class LoginComponent extends React.Component {
         );
     };
 
+    renderTextField = (isStandard, target, value, label, showPassword, showPassTarget) => {
+        return (
+            <TextField
+                size="small"
+                className={isStandard ? 'standard-panel-text-field' : 'helper-text-field'}
+                onChange={(e) =>
+                    this.updateState(target, e.target.value)
+                }
+                value={value}
+                label={label}
+                type={showPassTarget && !showPassword ? 'password' : 'text'}
+                InputProps={{
+                    endAdornment: showPassTarget ?
+                        this.renderShowPasswordIcon(showPassTarget) : '',
+                }}
+                helperText={target === 'email' ? "We'll never share your email." : ''}
+            />
+        );
+    }
+
     renderLoginForm = () => {
         return (
             <>
-                <TextField
-                    id="login-username"
-                    size="small"
-                    className={'standard-panel-text-field'}
-                    onChange={(e) =>
-                        this.updateState('username', e.target.value)
-                    }
-                    value={this.state.username}
-                    label="Username"
-                />
-                <TextField
-                    id="login-password"
-                    size="small"
-                    className={'standard-panel-text-field'}
-                    onChange={(e) =>
-                        this.updateState('password', e.target.value)
-                    }
-                    value={this.state.password}
-                    label="Password"
-                    type={this.state.showPassword ? 'text' : 'password'}
-                    InputProps={{
-                        endAdornment:
-                            this.renderShowPasswordIcon('showPassword'),
-                    }}
-                />
+                {this.renderTextField(true, 'username', this.state.username, 'Username')}
+                {this.renderTextField(true, 'password', this.state.password, 'Password', this.state.showPassword, 'showPassword')}
                 <div
                     style={{
                         display: 'flex',
@@ -171,64 +165,16 @@ class LoginComponent extends React.Component {
     };
 
     renderRegisterForm = () => {
+        // helperText="Only alphanumerics, maximum 30 characters. "
+        // TODO add username regex validation
+        // helperText="Must contain at least one number and one uppercase and lowercase letter, and at least 8 or more characters."
+        // TODO add password regex validation
         return (
             <>
-                <TextField
-                    id="register-username"
-                    size="small"
-                    className={'standard-panel-text-field'}
-                    label="Username"
-                    onChange={(e) =>
-                        this.updateState('username', e.target.value)
-                    }
-                    value={this.state.username}
-                    // helperText="Only alphanumerics, maximum 30 characters. "
-                    // TODO add username regex validation
-                />
-                <TextField
-                    id="register-email"
-                    size="small"
-                    className={'helper-text-field'}
-                    label="Email"
-                    onChange={(e) => this.updateState('email', e.target.value)}
-                    value={this.state.email}
-                    helperText="We'll never share your email."
-                    // TODO add email regex validation
-                />
-                <TextField
-                    id="register-password"
-                    size="small"
-                    className={'standard-panel-text-field'}
-                    label="Password"
-                    type={this.state.showPassword ? 'text' : 'password'}
-                    onChange={(e) =>
-                        this.updateState('password', e.target.value)
-                    }
-                    value={this.state.password}
-                    InputProps={{
-                        endAdornment:
-                            this.renderShowPasswordIcon('showPassword'),
-                    }}
-                    // helperText="Must contain at least one number and one uppercase and lowercase letter, and at least 8 or more characters."
-                    // TODO add password regex validation
-                />
-                <TextField
-                    id="register-confirm-password"
-                    size="small"
-                    className={'standard-panel-text-field'}
-                    label="Retype password"
-                    type={this.state.showConfirmPassword ? 'text' : 'password'}
-                    onChange={(e) =>
-                        this.updateState('confirmPassword', e.target.value)
-                    }
-                    value={this.state.confirmPassword}
-                    InputProps={{
-                        endAdornment: this.renderShowPasswordIcon(
-                            'showConfirmPassword',
-                        ),
-                    }}
-                    // TODO add password regex validation
-                />
+                {this.renderTextField(true, 'username', this.state.username, 'Username')}
+                {this.renderTextField(false, 'email', this.state.email, 'Email')}
+                {this.renderTextField(true, 'password', this.state.password, 'Password', this.state.showPassword, 'showPassword')}
+                {this.renderTextField(true, 'confirmPassword', this.state.confirmPassword, 'Retype password', this.state.showConfirmPassword, 'showConfirmPassword')}
                 <div
                     style={{
                         display: 'flex',
@@ -261,6 +207,7 @@ class LoginComponent extends React.Component {
         return (
             <div className={'login-container'}>
                 <img
+                    draggable={false}
                     src="/static/readit_logo.png"
                     className={'main-logo'}
                     alt="readit logo"
@@ -308,6 +255,7 @@ const mapDispatchToProps = {
 
 LoginComponent.propTypes = {
     isRegister: PropTypes.string,
+    navigate: PropTypes.func,
 };
 
-export default connect(mapStateToProps, mapDispatchToProps)(LoginComponent);
+export default connect(mapStateToProps, mapDispatchToProps)(withSnackbar(LoginComponent));
