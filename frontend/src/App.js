@@ -8,8 +8,6 @@ import store from './state/store';
 import ErrorPage from './pages/error-page';
 import LoginPage from './pages/login-page';
 
-
-
 const App = () => {
     let navigate = useNavigate();
     return (
@@ -19,7 +17,9 @@ const App = () => {
                     <Route
                         path="/login"
                         exact
-                        element={<LoginPage navigate={navigate} isRegister={false} />}
+                        element={
+                            <LoginPage navigate={navigate} isRegister={false} />
+                        }
                     />
                     <Route
                         path="/register"
@@ -27,11 +27,7 @@ const App = () => {
                         element={<LoginPage navigate={navigate} isRegister />}
                     />
                     <Route path="/home" exact element={<HomePage />} />
-                    <Route
-                        path="/settings"
-                        exact
-                        element={<SettingPage />}
-                    />
+                    <Route path="/settings" exact element={<SettingPage />} />
                     <Route
                         path=""
                         exact

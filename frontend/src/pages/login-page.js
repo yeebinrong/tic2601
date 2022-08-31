@@ -8,7 +8,12 @@ class LoginPage extends React.Component {
         return (
             <BasePage
                 isLogin
-                component={<LoginComponent navigate={this.props.navigate} isRegister={this.props.isRegister} />}
+                component={
+                    <LoginComponent
+                        navigate={this.props.navigate}
+                        isRegister={this.props.isRegister}
+                    />
+                }
             />
         );
     }

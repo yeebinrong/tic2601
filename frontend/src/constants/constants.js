@@ -1,4 +1,4 @@
-export const snackBarProps = variant => {
+export const snackBarProps = (variant) => {
     return {
         anchorOrigin: {
             horizontal: 'right',
@@ -6,7 +6,7 @@ export const snackBarProps = variant => {
         },
         variant,
     };
-}
+};
 
 export const initialLoginPageState = {
     username: '',
