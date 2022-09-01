@@ -11,7 +11,6 @@ import React from 'react';
 import { loginAccount, registerAccount } from '../../apis/app-api';
 import './LoginComponent.scss';
 import { MainActions } from '../../state/actions';
-import { actions as MainSagaActions } from '../../state/sagas/main.saga';
 import { MainSelectors } from '../../state/selectors';
 import { connect } from 'react-redux';
 import PropTypes from 'prop-types';
@@ -55,6 +54,7 @@ class LoginComponent extends React.Component {
                 isButtonClicked: true,
             },
             () => {
+                this.props.setIsLoading(true);
                 if (this.props.isRegisterPage) {
                     registerAccount({
                         username: this.state.username,
@@ -62,6 +62,7 @@ class LoginComponent extends React.Component {
                         email: this.state.email,
                     }).then((res) => {
                         if (res.error) {
+                            // Display register error
                             this.setState({
                                 errorMessage: JSON.parse(res.data).message,
                                 isButtonClicked: false,
@@ -72,9 +73,9 @@ class LoginComponent extends React.Component {
                                 `Successfully registered an account for [${this.state.username}]!`,
                                 snackBarProps('success'),
                             );
-                            // Navigate to login page
                             this.props.navigate('/login');
                         }
+                        this.props.setIsLoading(false);
                     });
                 } else {
                     loginAccount({
@@ -82,6 +83,7 @@ class LoginComponent extends React.Component {
                         password: this.state.password,
                     }).then((res) => {
                         if (res.error) {
+                            // Display login error
                             this.setState({
                                 errorMessage: JSON.parse(res.data).message,
                                 isButtonClicked: false,
@@ -94,9 +96,9 @@ class LoginComponent extends React.Component {
                             );
                             localStorage.setItem('token', res.data.token);
                             this.props.setToken(res.data.token);
-                            // Navigate to home page
                             this.props.navigate('/home');
                         }
+                        this.props.setIsLoading(false);
                     });
                 }
             },
@@ -281,6 +283,9 @@ class LoginComponent extends React.Component {
     };
 
     render() {
+        if (this.props.token || localStorage.getItem('token')) {
+            return <></>;
+        }
         return (
             <div className={'login-container'}>
                 <img
@@ -321,19 +326,18 @@ class LoginComponent extends React.Component {
 }
 
 const mapStateToProps = (state) => ({
-    value: MainSelectors.getValue(state),
-    valueFromBackend: MainSelectors.getValueFromBackend(state),
+    token: MainSelectors.getToken(state),
 });
 
 const mapDispatchToProps = {
     setToken: MainActions.setToken,
-    setValue: MainActions.setValue,
-    getValueFromBackend: MainSagaActions.getBackEndValue,
+    setIsLoading: MainActions.setIsLoading,
 };
 
 LoginComponent.propTypes = {
     isRegisterPage: PropTypes.bool,
     navigate: PropTypes.func,
+    setIsLoading: PropTypes.func,
 };
 
 export default connect(

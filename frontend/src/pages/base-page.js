@@ -4,8 +4,17 @@ import PropTypes from 'prop-types';
 import { MainSelectors } from '../state/selectors';
 import { connect } from 'react-redux';
 import { MainActions } from '../state/actions';
+import { logoutAccount } from '../apis/app-api';
 
 class BasePage extends React.Component {
+
+    logoutUser = () => {
+        // TODO remove user from backend using logoutAccount
+        this.props.setToken(null);
+        localStorage.removeItem('token');
+        this.props.navigate('/login');
+    }
+
     render() {
         return (
             <>
@@ -24,10 +33,13 @@ class BasePage extends React.Component {
                                 alt="readit logo"
                             />
                             <Button
-                                color="inherit"
+                                disableRipple
+                                variant="contained"
+                                color="primary"
+                                onClick={() => this.logoutUser()}
                                 style={{ marginLeft: 'auto' }}
                             >
-                                PLACEHOLDER
+                                Logout
                             </Button>
                         </Toolbar>
                     </AppBar>

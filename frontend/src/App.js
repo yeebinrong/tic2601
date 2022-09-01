@@ -16,9 +16,10 @@ const App = props => {
     let navigate = useNavigate();
 
     useEffect(() => {
+        const isLoginPage = window.location.pathname === '/login' || window.location.pathname === 'register';
         let token = props.token;
         if (token) {
-            if (props.isLoginPage) {
+            if (isLoginPage) {
                 props.navigate('/home');
             }
             axios.defaults.headers.common['Authorization'] = `Bearer ${token}`;
@@ -30,8 +31,8 @@ const App = props => {
                     .then(res => {
                         if (!res.error) {
                             props.setToken(token);
-                            if (props.isLoginPage) {
-                                navigate('/main');
+                            if (isLoginPage) {
+                                navigate('/home');
                             }
                         } else {
                             navigate('/login');
@@ -41,7 +42,7 @@ const App = props => {
             }
             if (token) {
                 axios.defaults.headers.common['Authorization'] = `Bearer ${token}`;
-            } else if (!props.isLoginPage) {
+            } else if (!isLoginPage) {
                 axios.defaults.headers.common['Authorization'] = '';
                 // Maybe display snackbar to ask user to log in?
                 navigate('/login');

@@ -11,7 +11,6 @@ export const actions = {
 };
 
 export function* getBackEndValue() {
-    console.log('yes');
     const resp = yield call(getBackEndValueApi);
     if (!resp.error) {
         yield put(MainActions.setValueFromBackend(resp.data.value));
