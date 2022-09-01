@@ -113,12 +113,12 @@ localStrategyAuth,
 (req, resp) => {
     const userInfo = req.body;
     const token = signToken(userInfo.username)
-    if(checkUserAlreadyLoggedIn(userInfo.username)) {
-        resp.status(406)
-        resp.type('application/json')
-        resp.json({message: `User [${userInfo.username}] is already logged in.`})
-        return
-    }
+    // if(checkUserAlreadyLoggedIn(userInfo.username)) {
+    //     resp.status(406)
+    //     resp.type('application/json')
+    //     resp.json({message: `User [${userInfo.username}] is already logged in.`})
+    //     return
+    // }
     resp.status(200)
     resp.type('application/json')
     resp.json({message: `Logged in at ${new Date()}`, token, username: userInfo.username})
