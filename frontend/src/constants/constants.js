@@ -1,4 +1,4 @@
-import { useSnackbar } from 'notistack'
+import { useSnackbar } from 'notistack';
 import CloseIcon from '@mui/icons-material/Close';
 
 export const snackBarProps = (variant) => {
@@ -12,12 +12,17 @@ export const snackBarProps = (variant) => {
     };
 };
 
-const SnackBarAction = snackbarId => {
+const SnackBarAction = (snackbarId) => {
     const { closeSnackbar } = useSnackbar();
     return (
-        <CloseIcon style={{ cursor: 'pointer' }} onClick={() => { closeSnackbar(snackbarId) }} />
+        <CloseIcon
+            style={{ cursor: 'pointer' }}
+            onClick={() => {
+                closeSnackbar(snackbarId);
+            }}
+        />
     );
-}
+};
 
 export const initialLoginPageState = {
     username: '',

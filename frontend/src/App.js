@@ -12,36 +12,39 @@ import axios from 'axios';
 import { verifyToken } from './apis/app-api';
 import PropTypes from 'prop-types';
 
-const App = props => {
+const App = (props) => {
     let navigate = useNavigate();
 
     useEffect(() => {
-        const isLoginPage = window.location.pathname === '/login' || window.location.pathname === 'register';
+        const isLoginPage =
+            window.location.pathname === '/login' ||
+            window.location.pathname === 'register';
         let token = props.token;
         if (token) {
             if (isLoginPage) {
                 props.navigate('/home');
             }
             axios.defaults.headers.common['Authorization'] = `Bearer ${token}`;
-        } else {            
+        } else {
             token = localStorage.getItem('token');
             if (!props.isLoading && token) {
                 props.setIsLoading(true);
-                verifyToken(`Bearer ${token}`)
-                    .then(res => {
-                        if (!res.error) {
-                            props.setToken(token);
-                            if (isLoginPage) {
-                                navigate('/home');
-                            }
-                        } else {
-                            navigate('/login');
+                verifyToken(`Bearer ${token}`).then((res) => {
+                    if (!res.error) {
+                        props.setToken(token);
+                        if (isLoginPage) {
+                            navigate('/home');
                         }
-                        props.setIsLoading(false);
-                    })
+                    } else {
+                        navigate('/login');
+                    }
+                    props.setIsLoading(false);
+                });
             }
             if (token) {
-                axios.defaults.headers.common['Authorization'] = `Bearer ${token}`;
+                axios.defaults.headers.common[
+                    'Authorization'
+                ] = `Bearer ${token}`;
             } else if (!isLoginPage) {
                 axios.defaults.headers.common['Authorization'] = '';
                 // Maybe display snackbar to ask user to log in?
@@ -64,13 +67,17 @@ const App = props => {
                 exact
                 element={<LoginPage navigate={navigate} isRegisterPage />}
             />
-            <Route path="/home" exact element={<HomePage navigate={navigate} />} />
-            <Route path="/settings" exact element={<SettingPage navigate={navigate} />} />
             <Route
-                path=""
+                path="/home"
                 exact
-                element={<Navigate replace to="/login" />}
+                element={<HomePage navigate={navigate} />}
             />
+            <Route
+                path="/settings"
+                exact
+                element={<SettingPage navigate={navigate} />}
+            />
+            <Route path="" exact element={<Navigate replace to="/login" />} />
             <Route path="*" element={<ErrorPage />} />
         </Routes>
     );

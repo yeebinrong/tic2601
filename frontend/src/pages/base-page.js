@@ -1,4 +1,10 @@
-import { AppBar, Backdrop, Button, CircularProgress, Toolbar } from '@mui/material';
+import {
+    AppBar,
+    Backdrop,
+    Button,
+    CircularProgress,
+    Toolbar,
+} from '@mui/material';
 import React from 'react';
 import PropTypes from 'prop-types';
 import { MainSelectors } from '../state/selectors';
@@ -7,13 +13,12 @@ import { MainActions } from '../state/actions';
 import { logoutAccount } from '../apis/app-api';
 
 class BasePage extends React.Component {
-
     logoutUser = () => {
         // TODO remove user from backend using logoutAccount
         this.props.setToken(null);
         localStorage.removeItem('token');
         this.props.navigate('/login');
-    }
+    };
 
     render() {
         return (
@@ -46,9 +51,12 @@ class BasePage extends React.Component {
                 )}
                 <div>
                     <Backdrop
-                        sx={{ color: '#fff', zIndex: (theme) => theme.zIndex.drawer + 1 }}
+                        sx={{
+                            color: '#fff',
+                            zIndex: (theme) => theme.zIndex.drawer + 1,
+                        }}
                         open={this.props.isLoading}
-                        >
+                    >
                         <CircularProgress color="inherit" />
                     </Backdrop>
                 </div>

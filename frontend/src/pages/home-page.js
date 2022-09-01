@@ -5,7 +5,12 @@ import PropTypes from 'prop-types';
 
 class HomePage extends React.Component {
     render() {
-        return <BasePage navigate={this.props.navigate} component={<HomeComponent />} />;
+        return (
+            <BasePage
+                navigate={this.props.navigate}
+                component={<HomeComponent />}
+            />
+        );
     }
 }
 

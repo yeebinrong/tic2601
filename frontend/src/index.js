@@ -11,9 +11,10 @@ const root = ReactDOM.createRoot(document.getElementById('root'));
 root.render(
     <SnackbarProvider maxSnack={3} autoHideDuration={3000}>
         <Provider store={store}>
-        <BrowserRouter>
-            <App />
-        </BrowserRouter>,
+            <BrowserRouter>
+                <App />
+            </BrowserRouter>
+            ,
         </Provider>
-    </SnackbarProvider>
+    </SnackbarProvider>,
 );

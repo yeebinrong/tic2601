@@ -296,7 +296,9 @@ class LoginComponent extends React.Component {
                 />
                 <div
                     className={`${
-                        this.props.isRegisterPage ? 'register-panel' : 'login-panel'
+                        this.props.isRegisterPage
+                            ? 'register-panel'
+                            : 'login-panel'
                     } main-panel`}
                 >
                     <Typography className={'login-panel-main-title'}>
