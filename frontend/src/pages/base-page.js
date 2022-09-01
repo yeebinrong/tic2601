@@ -1,115 +1,89 @@
 import {
-  AppBar,
-  Button,
-  Divider,
-  Drawer,
-  IconButton,
-  List,
-  Toolbar,
-  Typography,
-} from "@mui/material";
-import React from "react";
-import ChevronLeftIcon from "@mui/icons-material/ChevronLeft";
-import MenuIcon from "@mui/icons-material/Menu";
-import HomeIcon from "@mui/icons-material/Home";
-import SettingsIcon from "@mui/icons-material/Settings";
-import NavigateButton from "../components/NavigateButton";
+    AppBar,
+    Backdrop,
+    Button,
+    CircularProgress,
+    Toolbar,
+} from '@mui/material';
+import React from 'react';
+import PropTypes from 'prop-types';
+import { MainSelectors } from '../state/selectors';
+import { connect } from 'react-redux';
+import { MainActions } from '../state/actions';
+import { logoutAccount } from '../apis/app-api';
 
 class BasePage extends React.Component {
-  constructor(props) {
-    super(props);
-
-    this.state = {
-      isDrawerOpen: false,
+    logoutUser = () => {
+        // TODO remove user from backend using logoutAccount
+        this.props.setToken(null);
+        localStorage.removeItem('token');
+        this.props.navigate('/login');
     };
-  }
 
-  setDrawer = (bool) => {
-    this.setState({
-      isDrawerOpen: bool,
-    });
-  };
-
-  render() {
-    return (
-      <>
-        <AppBar position="static" open variant="dense">
-          <Toolbar>
-            <IconButton
-              disableRipple
-              color="inherit"
-              onClick={() => this.setDrawer(!this.state.isDrawerOpen)}
-              edge="start"
-              className={"app-menu-btn"}
-              style={{
-                marginRight: 5,
-                ...(this.state.isDrawerOpen && { display: "none" }),
-              }}
-            >
-              <MenuIcon />
-            </IconButton>
-            {this.state.isDrawerOpen && (
-              <div className={"app-drawer-header"}>
-                <IconButton
-                  disableRipple
-                  onClick={() => this.setDrawer(!this.state.isDrawerOpen)}
-                >
-                  <ChevronLeftIcon />
-                </IconButton>
-              </div>
-            )}
-            <Typography
-              variant="h6"
-              style={{ marginLeft: "20px" }}
-              className={"app-menu-title"}
-            >
-              App Name
-            </Typography>
-            <Button color="inherit" style={{ marginLeft: "auto" }}>
-              PLACEHOLDER
-            </Button>
-          </Toolbar>
-        </AppBar>
-        <Drawer
-          open
-          variant={"persistent"}
-          className={`app-drawer-main ${
-            this.state.isDrawerOpen ? "app-drawer-open" : "app-drawer-close"
-          }`}
-        >
-          <List>
-            <NavigateButton
-              text={"Home"}
-              url={"/"}
-              icon={<HomeIcon />}
-              isDrawerOpen={this.state.isDrawerOpen}
-              closeDrawer={() => this.setDrawer(false)}
-            />
-          </List>
-          <Divider />
-          <List>
-            <NavigateButton
-              text={"Settings"}
-              url={"/settings"}
-              icon={<SettingsIcon />}
-              isDrawerOpen={this.state.isDrawerOpen}
-              closeDrawer={() => this.setDrawer(false)}
-            />
-          </List>
-        </Drawer>
-        <div style={{ display: "flex" }}>
-          <div
-            className={`${
-              this.state.isDrawerOpen
-                ? "app-drawer-filler-open"
-                : "app-drawer-filler-close"
-            }`}
-          />
-          {this.props.component}
-        </div>
-      </>
-    );
-  }
+    render() {
+        return (
+            <>
+                {!this.props.isLoginPage && (
+                    <AppBar
+                        className={'app-bar'}
+                        position="static"
+                        open
+                        variant="dense"
+                    >
+                        <Toolbar>
+                            <img
+                                draggable={false}
+                                src="/static/readit_logo.png"
+                                className={'app-bar-logo'}
+                                alt="readit logo"
+                            />
+                            <Button
+                                disableRipple
+                                variant="contained"
+                                color="primary"
+                                onClick={() => this.logoutUser()}
+                                style={{ marginLeft: 'auto' }}
+                            >
+                                Logout
+                            </Button>
+                        </Toolbar>
+                    </AppBar>
+                )}
+                <div>
+                    <Backdrop
+                        sx={{
+                            color: '#fff',
+                            zIndex: (theme) => theme.zIndex.drawer + 1,
+                        }}
+                        open={this.props.isLoading}
+                    >
+                        <CircularProgress color="inherit" />
+                    </Backdrop>
+                </div>
+                {this.props.component}
+            </>
+        );
+    }
 }
 
-export default BasePage;
+const mapStateToProps = (state) => ({
+    token: MainSelectors.getToken(state),
+    isLoading: MainSelectors.getIsLoading(state),
+});
+
+const mapDispatchToProps = {
+    setToken: MainActions.setToken,
+    setIsLoading: MainActions.setIsLoading,
+};
+
+BasePage.propTypes = {
+    component: PropTypes.object,
+    isLoginPage: PropTypes.bool,
+    navigate: PropTypes.func,
+    token: PropTypes.string,
+    setToken: PropTypes.func,
+    isLoading: PropTypes.bool,
+    setIsLoading: PropTypes.func,
+};
+
+export default connect(mapStateToProps, mapDispatchToProps)(BasePage);
