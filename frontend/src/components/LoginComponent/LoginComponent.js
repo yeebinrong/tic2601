@@ -8,7 +8,7 @@ import {
     Typography,
 } from '@mui/material';
 import React from 'react';
-import { registerAccount } from '../../apis/app-api';
+import { loginAccount, registerAccount } from '../../apis/app-api';
 import './LoginComponent.scss';
 import { MainActions } from '../../state/actions';
 import { actions as MainSagaActions } from '../../state/sagas/main.saga';
@@ -29,15 +29,17 @@ class LoginComponent extends React.Component {
         super(props);
 
         this.state = {
-            isRegister: this.props.isRegister,
+            isRegisterPage: this.props.isRegisterPage,
             ...initialLoginPageState,
+            username: 'testaccount',
+            password: '123',
         };
     }
 
     static getDerivedStateFromProps(nextProps, prevState) {
-        if (prevState.isRegister !== nextProps.isRegister) {
+        if (prevState.isRegisterPage !== nextProps.isRegisterPage) {
             return {
-                isRegister: nextProps.isRegister,
+                isRegisterPage: nextProps.isRegisterPage,
                 ...initialLoginPageState,
             };
         }
@@ -50,9 +52,10 @@ class LoginComponent extends React.Component {
         this.setState(
             {
                 errorMessage: '',
+                isButtonClicked: true,
             },
             () => {
-                if (this.props.isRegister) {
+                if (this.props.isRegisterPage) {
                     registerAccount({
                         username: this.state.username,
                         password: this.state.password,
@@ -61,21 +64,40 @@ class LoginComponent extends React.Component {
                         if (res.error) {
                             this.setState({
                                 errorMessage: JSON.parse(res.data).message,
+                                isButtonClicked: false,
                             });
                         } else {
-                            // Open snackbar to display login success
+                            // Open snackbar to display register success
                             this.props.enqueueSnackbar(
                                 `Successfully registered an account for [${this.state.username}]!`,
                                 snackBarProps('success'),
                             );
                             // Navigate to login page
                             this.props.navigate('/login');
-                            console.log(this.props);
                         }
                     });
                 } else {
-                    // TODO Login logic
-                    // loginAccount
+                    loginAccount({
+                        username: this.state.username,
+                        password: this.state.password,
+                    }).then((res) => {
+                        if (res.error) {
+                            this.setState({
+                                errorMessage: JSON.parse(res.data).message,
+                                isButtonClicked: false,
+                            });
+                        } else {
+                            // Open snackbar to display login success
+                            this.props.enqueueSnackbar(
+                                `Successfully logged in to [${this.state.username}]!`,
+                                snackBarProps('success'),
+                            );
+                            localStorage.setItem('token', res.data.token);
+                            this.props.setToken(res.data.token);
+                            // Navigate to home page
+                            this.props.navigate('/home');
+                        }
+                    });
                 }
             },
         );
@@ -183,6 +205,7 @@ class LoginComponent extends React.Component {
                     />
                     <Button
                         type="submit"
+                        disabled={this.state.isButtonClicked}
                         className={'login-panel-main-button'}
                         variant="contained"
                     >
@@ -245,6 +268,7 @@ class LoginComponent extends React.Component {
                         text="Already have an account?"
                     />
                     <Button
+                        disabled={this.state.isButtonClicked}
                         type="submit"
                         className={'login-panel-main-button'}
                         variant="contained"
@@ -267,11 +291,11 @@ class LoginComponent extends React.Component {
                 />
                 <div
                     className={`${
-                        this.props.isRegister ? 'register-panel' : 'login-panel'
+                        this.props.isRegisterPage ? 'register-panel' : 'login-panel'
                     } main-panel`}
                 >
                     <Typography className={'login-panel-main-title'}>
-                        {this.props.isRegister
+                        {this.props.isRegisterPage
                             ? 'Sign up with readit'
                             : 'Login with Readit'}
                     </Typography>
@@ -285,7 +309,7 @@ class LoginComponent extends React.Component {
                         className={'full-width-class'}
                     >
                         <FormControl className={'full-width-class'}>
-                            {this.props.isRegister
+                            {this.props.isRegisterPage
                                 ? this.renderRegisterForm()
                                 : this.renderLoginForm()}
                         </FormControl>
@@ -302,12 +326,13 @@ const mapStateToProps = (state) => ({
 });
 
 const mapDispatchToProps = {
+    setToken: MainActions.setToken,
     setValue: MainActions.setValue,
     getValueFromBackend: MainSagaActions.getBackEndValue,
 };
 
 LoginComponent.propTypes = {
-    isRegister: PropTypes.string,
+    isRegisterPage: PropTypes.bool,
     navigate: PropTypes.func,
 };
 

@@ -11,7 +11,7 @@ const sha256 = require('sha256')
 // Passport core
 const passport = require('passport')
 // Passport Strategies
-const { localStrategy, mkAuth } = require('./passport_strategy.js')
+const { localStrategy, mkAuth, verifyToken } = require('./passport_strategy.js')
 const { SIGN_SECRET } = require('./server_config.js')
 const { checkUserNameAlreadyExists, insertToUser } = require('./db_utils.js')
 
@@ -55,7 +55,6 @@ const signToken = (payload) => {
         sub: payload.username,
         iss: 'readit',
         iat: currTime,
-        // exp: currTime + (30),
     }, SIGN_SECRET)
 }
 
@@ -81,7 +80,7 @@ app.post('/api/register', async (req, resp) => {
         return
     }
     // hash password
-    credentials.password = sha256(credentials.password)
+    credentials.password = sha256(credentials.username + credentials.password)
     // check if username already exists
     const results = await checkUserNameAlreadyExists(credentials.username)
     if (!results.rows.length <= 0) {
@@ -109,20 +108,48 @@ app.post('/api/register', async (req, resp) => {
 
 // POST /api/login
 app.post('/api/login',
-// passport middleware to perform authentication
+// passport middleware to perform login authentication
 localStrategyAuth,
 (req, resp) => {
-    const token = signToken(req.username)
-    if(checkUserAlreadyLoggedIn(req.username)) {
+    const userInfo = req.body;
+    const token = signToken(userInfo.username)
+    if(checkUserAlreadyLoggedIn(userInfo.username)) {
         resp.status(406)
         resp.type('application/json')
-        resp.json({message: `Username [${req.username} is already logged in.`})
+        resp.json({message: `User [${userInfo.username}] is already logged in.`})
         return
     }
     resp.status(200)
     resp.type('application/json')
-    resp.json({message: `Logged in at ${new Date()}`, token, user: req.user})
+    resp.json({message: `Logged in at ${new Date()}`, token, username: userInfo.username})
+    return
 })
+
+// POST /api/verify
+// Check if token is valid
+app.post('/api/verify', (req, resp, next) => {
+    const auth = req.body.token
+    verifyToken(auth, req, resp, next)
+}, (req, resp) => {
+    resp.status(200)
+    resp.type('application/json')
+    resp.json({message: 'Authentication successful'})
+    return
+})
+
+/* -------------------------------------------------------------------------- */
+//               ######## AUTHENTICATION MIDDLEWARE ########
+/* -------------------------------------------------------------------------- */
+
+// Authenticate token before allowing user to send requests to below apis
+app.use((req, resp, next) => {
+    const auth = req.get('Authorization')
+    verifyToken(auth, req, resp, next)
+})
+
+/* -------------------------------------------------------------------------- */
+//                 ######## AUTHENTICATED REQUESTS ########
+/* -------------------------------------------------------------------------- */
 
 app.get('/api/receive', (req, resp) => {
     const value = req.query.value

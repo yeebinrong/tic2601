@@ -17,7 +17,7 @@ const checkUserNameAlreadyExists = (username) => {
 
 const retrieveUserInfoWithCredentials = (username, password) => {
     return POOL.query(
-        `SELECT * FROM users WHERE user_name == '${username}' AND password == '${password}'`
+        `SELECT * FROM users WHERE user_name = '${username}' AND password = '${password}'`
     )
 }
 

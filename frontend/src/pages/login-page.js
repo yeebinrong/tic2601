@@ -7,11 +7,12 @@ class LoginPage extends React.Component {
     render() {
         return (
             <BasePage
-                isLogin
+                navigate={this.props.navigate}
+                isLoginPage
                 component={
                     <LoginComponent
                         navigate={this.props.navigate}
-                        isRegister={this.props.isRegister}
+                        isRegisterPage={this.props.isRegisterPage}
                     />
                 }
             />
@@ -20,7 +21,7 @@ class LoginPage extends React.Component {
 }
 
 LoginPage.propTypes = {
-    isRegister: PropTypes.bool,
+    isRegisterPage: PropTypes.bool,
     navigate: PropTypes.func,
 };
 
