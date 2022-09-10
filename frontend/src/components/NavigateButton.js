@@ -1,46 +1,20 @@
-import {
-  ListItem,
-  ListItemButton,
-  ListItemIcon,
-  ListItemText,
-} from "@mui/material";
-import React from "react";
-import { useLocation, useNavigate } from "react-router-dom";
+import { Button } from '@mui/material';
+import React from 'react';
+import { useNavigate } from 'react-router-dom';
 
 const NavigateButton = (props) => {
-  const { text, url, icon, isDrawerOpen, closeDrawer } = props;
-  const navigate = useNavigate();
-  const location = useLocation();
+    const { disableRipple, style, text, url } = props;
+    const navigate = useNavigate();
 
-  console.log(location);
-
-  return (
-    <ListItem key={text} disablePadding sx={{ display: "block" }}>
-      <ListItemButton
-        selected={location.pathname === url}
-        onClick={() => {
-          closeDrawer();
-          navigate(url);
-        }}
-        sx={{
-          minHeight: 48,
-          justifyContent: isDrawerOpen ? "initial" : "center",
-          px: 2.5,
-        }}
-      >
-        <ListItemIcon
-          sx={{
-            minWidth: 0,
-            mr: isDrawerOpen ? 3 : "auto",
-            justifyContent: "center",
-          }}
+    return (
+        <Button
+            disableRipple={disableRipple}
+            style={style}
+            onClick={() => navigate(url)}
         >
-          {icon}
-        </ListItemIcon>
-        <ListItemText primary={text} sx={{ opacity: isDrawerOpen ? 1 : 0 }} />
-      </ListItemButton>
-    </ListItem>
-  );
+            {text}
+        </Button>
+    );
 };
 
 export default NavigateButton;
