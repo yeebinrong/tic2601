@@ -55,6 +55,7 @@ const App = (props) => {
 
     return (
         <Routes>
+            <Route path="" exact element={<Navigate replace to="/login" />} />
             <Route
                 path="/login"
                 exact
@@ -77,8 +78,7 @@ const App = (props) => {
                 exact
                 element={<SettingPage navigate={navigate} />}
             />
-            <Route path="" exact element={<Navigate replace to="/login" />} />
-            <Route path="*" element={<ErrorPage />} />
+            <Route path="*" element={<ErrorPage navigate={navigate} />} />
         </Routes>
     );
 };
