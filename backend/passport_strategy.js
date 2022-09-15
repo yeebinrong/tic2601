@@ -30,11 +30,12 @@ const localStrategy = new LocalStrategy(
                     }
                 )
             } else {
-                // Incorrect login
+                console.log(`Failed to authenticate user [${username}]`);
                 done('Incorrect username and/or password', false)
             }
         } catch (e) {
-            done(`Error authenticating: ${e}`, false)
+            console.log(`Exception when connecting to database for [${username}] - ${e}`);
+            done(`Failed to login, please try again later.`, false)
         }
     }
 )
