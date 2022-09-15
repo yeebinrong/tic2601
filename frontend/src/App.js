@@ -10,7 +10,6 @@ import { MainSelectors } from './state/selectors';
 import { MainActions } from './state/actions';
 import axios from 'axios';
 import { verifyToken } from './apis/app-api';
-import PropTypes from 'prop-types';
 
 const App = (props) => {
     let navigate = useNavigate();
@@ -91,12 +90,6 @@ const mapStateToProps = (state) => ({
 const mapDispatchToProps = {
     setToken: MainActions.setToken,
     setIsLoading: MainActions.setIsLoading,
-};
-
-App.propTypes = {
-    token: PropTypes.string,
-    setToken: PropTypes.func,
-    setIsLoading: PropTypes.func,
 };
 
 export default connect(mapStateToProps, mapDispatchToProps)(App);
