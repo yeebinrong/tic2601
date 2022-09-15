@@ -13,7 +13,6 @@ import './LoginComponent.scss';
 import { MainActions } from '../../state/actions';
 import { MainSelectors } from '../../state/selectors';
 import { connect } from 'react-redux';
-import PropTypes from 'prop-types';
 import NavigateButton from '../NavigateButton';
 import VisibilityOffIcon from '@mui/icons-material/VisibilityOff';
 import VisibilityIcon from '@mui/icons-material/Visibility';
@@ -334,12 +333,6 @@ const mapStateToProps = (state) => ({
 const mapDispatchToProps = {
     setToken: MainActions.setToken,
     setIsLoading: MainActions.setIsLoading,
-};
-
-LoginComponent.propTypes = {
-    isRegisterPage: PropTypes.bool,
-    navigate: PropTypes.func,
-    setIsLoading: PropTypes.func,
 };
 
 export default connect(

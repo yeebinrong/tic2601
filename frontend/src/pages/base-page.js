@@ -6,11 +6,9 @@ import {
     Toolbar,
 } from '@mui/material';
 import React from 'react';
-import PropTypes from 'prop-types';
 import { MainSelectors } from '../state/selectors';
 import { connect } from 'react-redux';
 import { MainActions } from '../state/actions';
-import { logoutAccount } from '../apis/app-api';
 
 class BasePage extends React.Component {
     logoutUser = () => {
@@ -74,16 +72,6 @@ const mapStateToProps = (state) => ({
 const mapDispatchToProps = {
     setToken: MainActions.setToken,
     setIsLoading: MainActions.setIsLoading,
-};
-
-BasePage.propTypes = {
-    component: PropTypes.object,
-    isLoginPage: PropTypes.bool,
-    navigate: PropTypes.func,
-    token: PropTypes.string,
-    setToken: PropTypes.func,
-    isLoading: PropTypes.bool,
-    setIsLoading: PropTypes.func,
 };
 
 export default connect(mapStateToProps, mapDispatchToProps)(BasePage);

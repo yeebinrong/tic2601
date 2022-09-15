@@ -27,3 +27,22 @@ body {
 .full-width-class {
     width: 100% !important;
 }
+
+.app-error-container {
+    width: 50%;
+    display: flex;
+    justify-content: center;
+    flex-direction: column;
+    margin: 12% auto auto auto;
+}
+
+.app-error {
+    top: 30%;
+    width: 1000px;
+    margin: auto;
+}
+
+.app-error-button {
+    width: 300px;
+    margin: auto !important;
+}
