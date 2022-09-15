@@ -9,7 +9,6 @@ import React from 'react';
 import { MainSelectors } from '../state/selectors';
 import { connect } from 'react-redux';
 import { MainActions } from '../state/actions';
-import { logoutAccount } from '../apis/app-api';
 
 class BasePage extends React.Component {
     logoutUser = () => {
