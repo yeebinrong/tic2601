@@ -38,26 +38,25 @@ export function loginAccount(credentials) {
         }));
 }
 
-// export function logoutAccount(username) {
-//     return axios
-//         .post(`${HOST}/api/logout`, {
-//             username: username,
-//             headers: {
-//                 Accept: CONTENT_TYPE_JSON,
-//             },
-//         })
-//         .then((resp) => ({ data: resp.data, error: false }))
-//         .catch((err) => ({
-//             data: err && err.response ? JSON.stringify(err.response.data) : '',
-//             error: true,
-//             status: err && err.response ? err.response.status : '',
-//         }));
-// }
-
 export function verifyToken(token) {
     return axios
         .post(`${HOST}/api/verify`, {
             token,
+            headers: {
+                Accept: CONTENT_TYPE_JSON,
+            },
+        })
+        .then((resp) => ({ data: resp.data, error: false }))
+        .catch((err) => ({
+            data: err && err.response ? JSON.stringify(err.response.data) : '',
+            error: true,
+            status: err && err.response ? err.response.status : '',
+        }));
+}
+
+export function retrieveAllPosts() {
+    return axios
+        .get(`${HOST}/api/all_posts`, {
             headers: {
                 Accept: CONTENT_TYPE_JSON,
             },

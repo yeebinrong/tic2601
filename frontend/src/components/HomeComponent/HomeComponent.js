@@ -1,6 +1,6 @@
 import { Button, Input, TextField } from '@mui/material';
 import React from 'react';
-import { sendMessageApi } from '../../apis/app-api';
+import { retrieveAllPosts, sendMessageApi } from '../../apis/app-api';
 import './HomeComponent.scss';
 import { MainActions } from '../../state/actions';
 import { actions as MainSagaActions } from '../../state/sagas/main.saga';
@@ -21,6 +21,11 @@ class HomeComponent extends React.Component {
     }
 
     render() {
+        if (!this.props.isLoading) {
+            retrieveAllPosts().then(res => {
+                console.log(res);
+            })
+        }
         return (
             <div className={'container'}>
                 <span
@@ -160,6 +165,7 @@ class HomeComponent extends React.Component {
 const mapStateToProps = (state) => ({
     value: MainSelectors.getValue(state),
     valueFromBackend: MainSelectors.getValueFromBackend(state),
+    isLoading: MainSelectors.getIsLoading(state),
 });
 
 const mapDispatchToProps = {

@@ -13,9 +13,7 @@ const passport = require('passport')
 // Passport Strategies
 const { localStrategy, mkAuth, verifyToken } = require('./passport_strategy.js')
 const { SIGN_SECRET } = require('./server_config.js')
-const { checkUserNameAlreadyExists, insertToUser } = require('./db_utils.js')
-
-const USER_LOGGED_IN = []
+const { checkUserNameAlreadyExists, insertToUser, getAllPosts } = require('./db_utils.js')
 
 /* -------------------------------------------------------------------------- */
 //             ######## DECLARE VARIABLES & CONFIGURATIONS ########
@@ -56,16 +54,6 @@ const signToken = (payload) => {
         iss: 'readit',
         iat: currTime,
     }, SIGN_SECRET)
-}
-
-const checkUserAlreadyLoggedIn = (username) => {
-    const bool = USER_LOGGED_IN.find(u => {
-        return u == username
-    })
-    if (!bool) {
-        USER_LOGGED_IN.push(username)
-    }
-    return bool
 }
 
 // POST /api/register
@@ -113,12 +101,6 @@ localStrategyAuth,
 (req, resp) => {
     const userInfo = req.body;
     const token = signToken(userInfo.username)
-    // if(checkUserAlreadyLoggedIn(userInfo.username)) {
-    //     resp.status(406)
-    //     resp.type('application/json')
-    //     resp.json({message: `User [${userInfo.username}] is already logged in.`})
-    //     return
-    // }
     resp.status(200)
     resp.type('application/json')
     resp.json({message: `Logged in at ${new Date()}`, token, username: userInfo.username})
@@ -150,6 +132,20 @@ app.use((req, resp, next) => {
 /* -------------------------------------------------------------------------- */
 //                 ######## AUTHENTICATED REQUESTS ########
 /* -------------------------------------------------------------------------- */
+
+app.get('/api/all_posts', async (req, resp) => {
+    const results = await getAllPosts()
+    if (!results.rows.length == 0) {
+        resp.status(204)
+        resp.type('application/json')
+        resp.json({message: 'No posts found!'})
+        return
+    }
+    resp.status(200)
+    resp.type('application/json')
+    resp.json({data: results.rows})
+    return
+})
 
 app.get('/api/receive', (req, resp) => {
     const value = req.query.value
