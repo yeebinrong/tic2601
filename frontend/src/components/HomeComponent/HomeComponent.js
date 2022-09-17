@@ -17,15 +17,34 @@ class HomeComponent extends React.Component {
             secondTextFieldValue: '',
             secondDisplayText: '',
             thirdTextFieldValue: '',
+            posts: [],
         };
+        if (props.isVerifyDone) {
+            this.props.setIsLoading(true);
+            retrieveAllPosts().then(res => {
+                console.log(res);
+                this.props.setIsLoading(false);
+                this.setState({
+                    posts: res.data.rows,
+                });
+            });
+        }
+    }
+
+    shouldComponentUpdate (nextProps) {
+        if (nextProps.isVerifyDone && !this.props.isVerifyDone) {
+            this.props.setIsLoading(true);
+            retrieveAllPosts().then(res => {
+                this.props.setIsLoading(false);
+                this.setState({
+                    posts: res.data.rows,
+                });
+            });
+        }
+        return true;
     }
 
     render() {
-        if (!this.props.isLoading) {
-            retrieveAllPosts().then(res => {
-                console.log(res);
-            })
-        }
         return (
             <div className={'container'}>
                 <span
@@ -157,18 +176,29 @@ class HomeComponent extends React.Component {
                         value={this.props.valueFromBackend}
                     />
                 </span>
+                <div>
+                    {this.state.posts.map(post => {
+                        return (
+                            <div>
+                                <span>{post.title}</span>
+                            </div>
+                        );
+                    })}
+                </div>
             </div>
         );
     }
 }
 
 const mapStateToProps = (state) => ({
+    isVerifyDone: MainSelectors.getIsVerifyDone(state),
+    isLoading: MainSelectors.getIsLoading(state),
     value: MainSelectors.getValue(state),
     valueFromBackend: MainSelectors.getValueFromBackend(state),
-    isLoading: MainSelectors.getIsLoading(state),
 });
 
 const mapDispatchToProps = {
+    setIsLoading: MainActions.setIsLoading,
     setValue: MainActions.setValue,
     getValueFromBackend: MainSagaActions.getBackEndValue,
 };

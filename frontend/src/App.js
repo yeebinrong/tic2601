@@ -20,7 +20,6 @@ const App = (props) => {
             window.location.pathname === 'register';
         let token = props.token;
         if (token) {
-            axios.defaults.headers.common['Authorization'] = `Bearer ${token}`;
             if (isLoginPage) {
                 navigate('/home');
             }
@@ -30,16 +29,18 @@ const App = (props) => {
                 props.setIsLoading(true);
                 verifyToken(`Bearer ${token}`).then((res) => {
                     if (!res.error) {
-                        props.setToken(token);
                         axios.defaults.headers.common['Authorization'] = `Bearer ${token}`;
+                        props.setToken(token);
                         if (isLoginPage) {
                             navigate('/home');
                         }
                     } else {
                         axios.defaults.headers.common['Authorization'] = '';
+                        localStorage.removeItem('token');
                         navigate('/login');
                     }
                     props.setIsLoading(false);
+                    props.setIsVerifyDone(true);
                 });
             }
             if (token) {
@@ -47,7 +48,7 @@ const App = (props) => {
                     'Authorization'
                 ] = `Bearer ${token}`;
             } else if (!isLoginPage) {
-                // Maybe display snackbar to ask user to log in?
+                // TODO Maybe display snackbar to ask user to log in?
                 axios.defaults.headers.common['Authorization'] = '';
                 navigate('/login');
             }
@@ -91,6 +92,7 @@ const mapStateToProps = (state) => ({
 });
 
 const mapDispatchToProps = {
+    setIsVerifyDone: MainActions.setIsVerifyDone,
     setToken: MainActions.setToken,
     setIsLoading: MainActions.setIsLoading,
 };

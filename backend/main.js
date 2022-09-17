@@ -135,7 +135,7 @@ app.use((req, resp, next) => {
 
 app.get('/api/all_posts', async (req, resp) => {
     const results = await getAllPosts()
-    if (!results.rows.length == 0) {
+    if (results.rows.length == 0) {
         resp.status(204)
         resp.type('application/json')
         resp.json({message: 'No posts found!'})
@@ -143,7 +143,7 @@ app.get('/api/all_posts', async (req, resp) => {
     }
     resp.status(200)
     resp.type('application/json')
-    resp.json({data: results.rows})
+    resp.json({rows: results.rows})
     return
 })
 
