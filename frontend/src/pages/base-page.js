@@ -1,8 +1,10 @@
 import {
     AppBar,
+    Autocomplete,
     Avatar,
     Backdrop,
     Button,
+    Chip,
     CircularProgress,
     IconButton,
     InputAdornment,
@@ -29,6 +31,8 @@ class BasePage extends React.Component {
 
         this.state = {
             menuAnchorElement: null,
+            searchBarText: '',
+            searchBarChips: [],
         };
     }
 
@@ -39,17 +43,22 @@ class BasePage extends React.Component {
         this.props.navigate('/login');
     };
 
-    searchAdornment = () => {
+    searchAdornment = (otherAdornment) => {
         return (
-            <InputAdornment position="start">
-                <IconButton
-                    style={{ cursor: 'inherit' }}
-                    disableRipple
-                    edge="end"
-                >
-                    <SearchIcon />
-                </IconButton>
-            </InputAdornment>
+            <>
+                <InputAdornment position="start">
+                    <IconButton
+                        style={{ cursor: 'inherit' }}
+                        disableRipple
+                        edge="end"
+                    >
+                        <SearchIcon />
+                    </IconButton>
+                </InputAdornment>
+                {otherAdornment?.map(adornment => {
+                    return adornment;
+                })}
+            </>
         );
     }
 
@@ -70,13 +79,71 @@ class BasePage extends React.Component {
                                 className={'app-bar-logo'}
                                 alt="readit logo"
                             />
-                            <div style={{ margin: 'auto' }}>
-                                <TextField
+                            <div style={{ display: 'flex', flexGrow: '1', marginLeft: '16px' }}>\
+                                <Autocomplete
+                                    multiple
+                                    onChange={(e, chips) => {
+                                        this.setState({
+                                            searchBarChips: chips,
+                                        });
+                                    }}
+                                    freeSolo
                                     className="app-bar-search-bar"
-                                    size="small"
-                                    label="Search Readit"
-                                    InputProps={{
-                                        startAdornment: this.searchAdornment(),
+                                    options={[]}
+                                    defaultValue={[]}
+                                    open={!this.props.isLoading}
+                                    handleHomeEndKeys
+                                    filterOptions={(options, params) => {
+                                        console.log(params);
+                                        if (params.inputValue.length <= 2) {
+                                            return [];
+                                        }
+                                        let toAdd = '';
+                                        if (params.inputValue.startsWith('u/')) {
+                                            toAdd = 'Add user filter: ';
+                                        } else if (params.inputValue.startsWith('c/')) {
+                                            toAdd = 'Add community filter: ';
+                                        } else if (params.inputValue.startsWith('f/')) {
+                                            toAdd = 'Add flair filter: ';
+                                        }
+                                        if (toAdd === '') {
+                                            return [];
+                                        }
+                                        return [{
+                                            inputValue: params.inputValue.substring(2),
+                                            title: `${toAdd} ${params.inputValue.substring(2)}`,
+                                        }];
+                                    }}
+                                    getOptionLabel={(option) => {
+                                        return option.title;
+                                    }}
+                                    renderInput={params => {
+                                        return (
+                                            <TextField
+                                                {...params}
+                                                onChange={e => {
+                                                    this.setState({
+                                                        searchBarText: e.target.value,
+                                                    });
+                                                }}
+                                                // size="small"
+                                                label="Search Readit"
+                                                InputProps={{
+                                                    ...params.InputProps,
+                                                    startAdornment: this.searchAdornment(params.InputProps.startAdornment),
+                                                }}
+                                                inputProps={{
+                                                ...params.inputProps,
+                                                onKeyDown: (e) => {
+                                                    if (e.key === 'Enter') {
+                                                      e.stopPropagation();
+                                                      this.props.setIsLoading(true);
+                                                      // TODO add logic to send search request to backend
+                                                    }
+                                                },
+                                                }}
+                                            />
+                                        );
                                     }}
                                 />
                             </div>
@@ -106,7 +173,7 @@ class BasePage extends React.Component {
                                 <Menu
                                     anchorEl={this.state.menuAnchorElement}
                                     id="account-menu"
-                                    open={this.state.menuAnchorElement}
+                                    open={!!this.state.menuAnchorElement}
                                     onClose={() => { this.setState({ menuAnchorElement: null })}}
                                     onClick={() => { this.setState({ menuAnchorElement: null })}}
                                     PaperProps={{

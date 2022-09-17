@@ -49,5 +49,8 @@ body {
 }
 
 .app-bar-search-bar {
-    width: 800px;
+    display: flex;
+    flex-grow: 1;
+    margin-top: 12px;
+    margin-bottom: 12px;
 }

@@ -22,7 +22,6 @@ class HomeComponent extends React.Component {
         if (props.isVerifyDone) {
             this.props.setIsLoading(true);
             retrieveAllPosts().then(res => {
-                console.log(res);
                 this.props.setIsLoading(false);
                 this.setState({
                     posts: res.data.rows,
