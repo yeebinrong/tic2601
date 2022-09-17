@@ -156,12 +156,14 @@ app.get('/api/receive', (req, resp) => {
     resp.status(200)
     resp.type('application/json')
     resp.json({ value: "Server received your message! [" + value + "]" })
+    return
 })
 
 app.get('/api/getbackendvalue', (req, resp) => {
     resp.status(200)
     resp.type('application/json')
     resp.json({ value: Math.floor(Math.random() * 100) })
+    return
 })
 
 app.listen(PORT, () => {
