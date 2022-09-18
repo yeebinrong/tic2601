@@ -94,7 +94,6 @@ class BasePage extends React.Component {
                                     open={!this.props.isLoading}
                                     handleHomeEndKeys
                                     filterOptions={(options, params) => {
-                                        console.log(params);
                                         if (params.inputValue.length <= 2) {
                                             return [];
                                         }
@@ -136,9 +135,10 @@ class BasePage extends React.Component {
                                                 ...params.inputProps,
                                                 onKeyDown: (e) => {
                                                     if (e.key === 'Enter') {
-                                                      e.stopPropagation();
-                                                      this.props.setIsLoading(true);
-                                                      // TODO add logic to send search request to backend
+                                                        e.stopPropagation();
+                                                        e.target.blur();
+                                                        this.props.setIsLoading(true);
+                                                        // TODO add logic to send search request to backend
                                                     }
                                                 },
                                                 }}
