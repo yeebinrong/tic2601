@@ -6,6 +6,7 @@ import HomePage from './pages/home-page';
 import SettingPage from './pages/setting-page';
 import ErrorPage from './pages/error-page';
 import LoginPage from './pages/login-page';
+import ViewPostPage from './pages/post-page';
 import { MainSelectors } from './state/selectors';
 import { MainActions } from './state/actions';
 import axios from 'axios';
@@ -50,7 +51,7 @@ const App = (props) => {
                 navigate('/login');
             }
         }
-       // eslint-disable-next-line react-hooks/exhaustive-deps
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []);
 
     return (
@@ -73,6 +74,12 @@ const App = (props) => {
                 exact
                 element={<HomePage navigate={navigate} />}
             />
+            <Route
+                path="/post"
+                exact
+                element={<ViewPostPage navigate={navigate} />}
+            />
+
             <Route
                 path="/settings"
                 exact
