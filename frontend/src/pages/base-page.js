@@ -23,6 +23,7 @@ import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import LogoutIcon from '@mui/icons-material/Logout';
 import AddIcon from '@mui/icons-material/Add';
 import AccountBoxIcon from '@mui/icons-material/AccountBox';
+import CreateCommunityComponent from '../components/CreateCommunityComponent/CreateCommunityComponent';
 
 class BasePage extends React.Component {
     constructor(props) {
@@ -32,6 +33,7 @@ class BasePage extends React.Component {
             menuAnchorElement: null,
             searchBarText: '',
             searchBarChips: [],
+            isCreateCommunityDialogOpen: false,
         };
     }
 
@@ -41,6 +43,12 @@ class BasePage extends React.Component {
         localStorage.removeItem('token');
         this.props.navigate('/login');
     };
+
+    setIsCreateCommunityDialog = value => {
+        this.setState({
+            isCreateCommunityDialogOpen: value,
+        });
+    }
 
     searchAdornment = (otherAdornment) => {
         return (
@@ -210,7 +218,9 @@ class BasePage extends React.Component {
                                     <MenuItem>
                                         <AccountBoxIcon style={{ marginRight: '8px' }} /> Profile
                                     </MenuItem>
-                                    <MenuItem>
+                                    <MenuItem
+                                        onClick={() => this.setIsCreateCommunityDialog(true)}
+                                    >
                                         <AddIcon style={{ marginRight: '8px' }} /> Create a community
                                     </MenuItem>
                                     <MenuItem onClick={() => this.logoutUser()}>
@@ -233,6 +243,10 @@ class BasePage extends React.Component {
                     </Backdrop>
                 </div>
                 {this.props.component}
+                <CreateCommunityComponent
+                    open={this.state.isCreateCommunityDialogOpen}
+                    onClose={() => this.setIsCreateCommunityDialog(false)}
+                />
             </>
         );
     }

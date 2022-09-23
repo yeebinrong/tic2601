@@ -10,7 +10,6 @@ import { MainSelectors } from './state/selectors';
 import { MainActions } from './state/actions';
 import axios from 'axios';
 import { verifyToken } from './apis/app-api';
-import ReportComponent from './components/ReportComponent/ReportComponent';
 
 const App = (props) => {
     let navigate = useNavigate();
@@ -64,7 +63,7 @@ const App = (props) => {
                 path="/login"
                 exact
                 element={
-                    <ReportComponent/>
+                    <LoginPage navigate={navigate} />
                 }
             />
             <Route

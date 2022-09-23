@@ -1,7 +1,9 @@
 import { Button, IconButton, Modal, TextField } from '@mui/material';
 import React from 'react';
 import CancelIcon from '@mui/icons-material/Cancel';
-
+import { createCommunityApi } from '../../apis/app-api';
+import { snackBarProps } from '../../constants/constants';
+import { withSnackbar } from 'notistack';
 
 const style = {
   position: 'absolute',
@@ -25,20 +27,25 @@ class CreateCommunityComponent extends React.Component {
 
     render() {
         return (
-            <div> select<Button>Open modal</Button>
             <Modal
-              open 
+              open={this.props.open}
             >
               <div style={style}>
                 <div className='dialog-flex'>
                   <span>Create Community</span>
                   <span style={{ marginLeft:'auto'}}>
                     <IconButton
+                      onClick={() => {
+                        this.setState({
+                          communityName: '',
+                        });
+                        this.props.onClose();
+                      }}
                       disableRipple
-                  >
-                    <CancelIcon />
-                  </IconButton>
-                </span>
+                    >
+                      <CancelIcon />
+                    </IconButton>
+                  </span>
                 </div>
                 <div className='margin-top'>Community Name</div>
                 <div style={{fontSize:'10px'}}>Community names including capitalisation cannot be changed.</div>
@@ -58,19 +65,46 @@ class CreateCommunityComponent extends React.Component {
              </div>
              <div className='margin-top dialog-flex'>
                 <Button
+                  onClick={() => {
+                    this.setState({
+                      communityName: '',
+                    });
+                    this.props.onClose();
+                  }}
                   style={{ margin: '8px 8px 8px auto',borderRadius:'14px'}}
                   variant="outlined"
                 >Cancel</Button>
                 <Button
+                  onClick={() => {
+                    createCommunityApi(this.state.communityName)
+                      .then(res => {
+                        if (!res.error) {
+                          this.setState({
+                            communityName: '',
+                          });
+                          this.props.onClose();
+                          this.props.enqueueSnackbar(
+                              `Successfully created a community [${res.data.communityName}]!`,
+                              snackBarProps('success'),
+                          );
+                          // TODO Add code to navigate to community page
+                        } else {
+                          this.props.enqueueSnackbar(
+                              res.data.message,
+                              snackBarProps('error'),
+                          );
+                        }
+                      })
+                  }}
                   style={{ margin: '8px', borderRadius:'14px'}}
                   variant="contained"
                 >Create Community</Button>
              </div>
               </div>
-            </Modal></div>
+            </Modal>
         );
     }
 }
 
 
-export default CreateCommunityComponent;
+export default withSnackbar(CreateCommunityComponent);

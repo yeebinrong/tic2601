@@ -218,5 +218,5 @@ INSERT INTO community (community_name) VALUES ('test_community');
 -- Insert default post
 INSERT INTO posts (community_id, title, user_id) VALUES (1, 'Hello World One!', 1);
 INSERT INTO posts (community_id, title, user_id) VALUES (1, 'Hello World Two!', 1);
-INSERT INTO post_contents (post_id, content) VALUES (1, 'This is post content for hello world one.')
-INSERT INTO post_contents (post_id, content) VALUES (1, 'This is post content for hello world two.')
+INSERT INTO post_contents (post_id, content) VALUES (1, 'This is post content for hello world one.');
+INSERT INTO post_contents (post_id, content) VALUES (2, 'This is post content for hello world two.');
