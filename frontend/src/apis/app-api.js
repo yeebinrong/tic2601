@@ -15,7 +15,7 @@ export function registerAccount(credentials) {
         })
         .then((resp) => ({ data: resp.data, error: false }))
         .catch((err) => ({
-            data: err && err.response ? JSON.stringify(err.response.data) : '',
+            data: err && err.response ? err.response.data : '',
             error: true,
             status: err && err.response ? err.response.status : '',
         }));
@@ -32,7 +32,7 @@ export function loginAccount(credentials) {
         })
         .then((resp) => ({ data: resp.data, error: false }))
         .catch((err) => ({
-            data: err && err.response ? JSON.stringify(err.response.data) : '',
+            data: err && err.response ? err.response.data : '',
             error: true,
             status: err && err.response ? err.response.status : '',
         }));
@@ -48,7 +48,23 @@ export function verifyToken(token) {
         })
         .then((resp) => ({ data: resp.data, error: false }))
         .catch((err) => ({
-            data: err && err.response ? JSON.stringify(err.response.data) : '',
+            data: err && err.response ? err.response.data : '',
+            error: true,
+            status: err && err.response ? err.response.status : '',
+        }));
+}
+
+export function createCommunityApi(communityName) {
+    return axios
+        .post(`${HOST}/api/create_community`, {
+            communityName,
+            headers: {
+                Accept: CONTENT_TYPE_JSON,
+            },
+        })
+        .then((resp) => ({ data: resp.data, error: false }))
+        .catch((err) => ({
+            data: err && err.response ? err.response.data : '',
             error: true,
             status: err && err.response ? err.response.status : '',
         }));
@@ -63,7 +79,7 @@ export function retrieveAllPosts() {
         })
         .then((resp) => ({ data: resp.data, error: false }))
         .catch((err) => ({
-            data: err && err.response ? JSON.stringify(err.response.data) : '',
+            data: err && err.response ? err.response.data : '',
             error: true,
             status: err && err.response ? err.response.status : '',
         }));
@@ -81,7 +97,7 @@ export function sendMessageApi(value) {
         })
         .then((resp) => ({ data: resp.data, error: false }))
         .catch((err) => ({
-            data: err && err.response ? JSON.stringify(err.response.data) : '',
+            data: err && err.response ? err.response.data : '',
             error: true,
             status: err && err.response ? err.response.status : '',
         }));
@@ -96,7 +112,7 @@ export function getBackEndValueApi() {
         })
         .then((resp) => ({ data: resp.data, error: false }))
         .catch((err) => ({
-            data: err && err.response ? JSON.stringify(err.response.data) : '',
+            data: err && err.response ? err.response.data : '',
             error: true,
             status: err && err.response ? err.response.status : '',
         }));

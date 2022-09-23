@@ -63,7 +63,7 @@ const App = (props) => {
                 path="/login"
                 exact
                 element={
-                    <LoginPage navigate={navigate} isRegisterPage={false} />
+                    <LoginPage navigate={navigate} />
                 }
             />
             <Route

@@ -64,7 +64,7 @@ class LoginComponent extends React.Component {
                         if (res.error) {
                             // Display register error
                             this.setState({
-                                errorMessage: JSON.parse(res.data).message,
+                                errorMessage: res.data.message,
                                 isButtonClicked: false,
                             });
                         } else {
@@ -85,7 +85,7 @@ class LoginComponent extends React.Component {
                         if (res.error) {
                             // Display login error
                             this.setState({
-                                errorMessage: JSON.parse(res.data).message,
+                                errorMessage: res.data.message,
                                 isButtonClicked: false,
                             });
                         } else {

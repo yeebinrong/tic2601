@@ -13,7 +13,7 @@ const passport = require('passport')
 // Passport Strategies
 const { localStrategy, mkAuth, verifyToken } = require('./passport_strategy.js')
 const { SIGN_SECRET } = require('./server_config.js')
-const { checkUserNameAlreadyExists, insertToUser, getAllPosts } = require('./db_utils.js')
+const { checkUserNameAlreadyExists, insertToUser, getAllPosts, insertOneCommunityAndReturnId } = require('./db_utils.js')
 
 /* -------------------------------------------------------------------------- */
 //             ######## DECLARE VARIABLES & CONFIGURATIONS ########
@@ -50,7 +50,7 @@ app.use(cors())
 const signToken = (payload) => {
     const currTime = (new Date()).getTime() / 1000
     return jwt.sign({
-        sub: payload.username,
+        ...payload,
         iss: 'readit',
         iat: currTime,
     }, SIGN_SECRET)
@@ -99,8 +99,8 @@ app.post('/api/login',
 // passport middleware to perform login authentication
 localStrategyAuth,
 (req, resp) => {
-    const userInfo = req.body;
-    const token = signToken(userInfo.username)
+    const userInfo = req.user;
+    const token = signToken(userInfo)
     resp.status(200)
     resp.type('application/json')
     resp.json({message: `Logged in at ${new Date()}`, token, username: userInfo.username})
@@ -132,6 +132,44 @@ app.use((req, resp, next) => {
 /* -------------------------------------------------------------------------- */
 //                 ######## AUTHENTICATED REQUESTS ########
 /* -------------------------------------------------------------------------- */
+
+// Note: You can access user information using req.token from requests below
+// code 23505 = Duplicate constraint
+// code 23514 = Check constraint
+
+app.post('/api/create_community', async (req, resp) => {
+    let insertedCommunityId = -1
+    let insertedCommunityName = ''
+    try {
+        const results = await insertOneCommunityAndReturnId(req.token.user_id, req.body.communityName)
+        insertedCommunityId = results.rows[0].community_id
+        insertedCommunityName = results.rows[0].community_name
+    } catch (e) {
+        console.info(`ERROR: Insert to community failed with following ${e}`)
+        if (e.code === '23505') {
+            // 409 Conflict
+            resp.status(409)
+            resp.type('application/json')
+            resp.json({message: `Community name [${req.body.communityName}] already exists.`})
+            return
+        } else if (e.code === '23514') {
+            // 409 Unprocessable Entity
+            console.log()
+            resp.status(422)
+            resp.type('application/json')
+            resp.json({message: `Community name [${req.body.communityName}] failed check constraints.`})
+            return
+        }
+        resp.status(400)
+        resp.type('application/json')
+        resp.json({message: `An error has occurred while creating community.`})
+        return
+    }
+    resp.status(200)
+    resp.type('application/json')
+    resp.json({ communityName: insertedCommunityName, communityId: insertedCommunityId })
+    return
+})
 
 app.get('/api/all_posts', async (req, resp) => {
     const results = await getAllPosts()
