@@ -4,7 +4,6 @@ import {
     Avatar,
     Backdrop,
     Button,
-    Chip,
     CircularProgress,
     IconButton,
     InputAdornment,
