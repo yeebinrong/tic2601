@@ -7,7 +7,7 @@ import { actions as MainSagaActions } from '../../state/sagas/main.saga';
 import { MainSelectors } from '../../state/selectors';
 import { connect } from 'react-redux';
 
-class HomeComponent extends React.Component {
+class DemoComponent extends React.Component {
     constructor(props) {
         super(props);
 
@@ -202,4 +202,4 @@ const mapDispatchToProps = {
     getValueFromBackend: MainSagaActions.getBackEndValue,
 };
 
-export default connect(mapStateToProps, mapDispatchToProps)(HomeComponent);
+export default connect(mapStateToProps, mapDispatchToProps)(DemoComponent);
