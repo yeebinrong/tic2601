@@ -1,13 +1,13 @@
 import { Button, Input, TextField } from '@mui/material';
 import React from 'react';
-import { sendMessageApi } from '../../apis/app-api';
-import './HomeComponent.scss';
+import { retrieveAllPosts, sendMessageApi } from '../../apis/app-api';
+import './DemoComponent.scss';
 import { MainActions } from '../../state/actions';
 import { actions as MainSagaActions } from '../../state/sagas/main.saga';
 import { MainSelectors } from '../../state/selectors';
 import { connect } from 'react-redux';
 
-class HomeComponent extends React.Component {
+class DemoComponent extends React.Component {
     constructor(props) {
         super(props);
 
@@ -17,7 +17,30 @@ class HomeComponent extends React.Component {
             secondTextFieldValue: '',
             secondDisplayText: '',
             thirdTextFieldValue: '',
+            posts: [],
         };
+        if (props.isVerifyDone) {
+            this.props.setIsLoading(true);
+            retrieveAllPosts().then(res => {
+                this.props.setIsLoading(false);
+                this.setState({
+                    posts: res.data.rows,
+                });
+            });
+        }
+    }
+
+    shouldComponentUpdate (nextProps) {
+        if (nextProps.isVerifyDone && !this.props.isVerifyDone) {
+            this.props.setIsLoading(true);
+            retrieveAllPosts().then(res => {
+                this.props.setIsLoading(false);
+                this.setState({
+                    posts: res.data.rows,
+                });
+            });
+        }
+        return true;
     }
 
     render() {
@@ -152,19 +175,31 @@ class HomeComponent extends React.Component {
                         value={this.props.valueFromBackend}
                     />
                 </span>
+                <div>
+                    {this.state.posts.map(post => {
+                        return (
+                            <div>
+                                <span>{post.title}</span>
+                            </div>
+                        );
+                    })}
+                </div>
             </div>
         );
     }
 }
 
 const mapStateToProps = (state) => ({
+    isVerifyDone: MainSelectors.getIsVerifyDone(state),
+    isLoading: MainSelectors.getIsLoading(state),
     value: MainSelectors.getValue(state),
     valueFromBackend: MainSelectors.getValueFromBackend(state),
 });
 
 const mapDispatchToProps = {
+    setIsLoading: MainActions.setIsLoading,
     setValue: MainActions.setValue,
     getValueFromBackend: MainSagaActions.getBackEndValue,
 };
 
-export default connect(mapStateToProps, mapDispatchToProps)(HomeComponent);
+export default connect(mapStateToProps, mapDispatchToProps)(DemoComponent);

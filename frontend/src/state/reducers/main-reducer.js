@@ -1,13 +1,15 @@
 export const types = {
     SET_TOKEN: 'main/setToken',
+    SET_IS_VERIFY_DONE: 'main/setIsVerifyDone',
     SET_IS_INIT_LOADING: 'main/setIsLoading',
     SET_VALUE: 'main/setValue',
     SET_VALUE_FROM_BACKEND: 'main/setValueFromBackend',
 };
 
 export const actions = {
-    setIsLoading: (payload) => ({ type: types.SET_IS_INIT_LOADING, payload }),
     setToken: (payload) => ({ type: types.SET_TOKEN, payload }),
+    setIsVerifyDone: (payload) => ({ type: types.SET_IS_VERIFY_DONE, payload }),
+    setIsLoading: (payload) => ({ type: types.SET_IS_INIT_LOADING, payload }),
     setValue: (payload) => ({ type: types.SET_VALUE, payload }),
     setValueFromBackend: (payload) => ({
         type: types.SET_VALUE_FROM_BACKEND,
@@ -17,12 +19,14 @@ export const actions = {
 
 export const initialState = {
     isLoading: false,
+    isVerifyDone: false,
     token: null,
     value: '',
     valueFromBackend: '',
 };
 
 export const selectors = {
+    getIsVerifyDone: (state) => state.main.isVerifyDone,
     getIsLoading: (state) => state.main.isLoading,
     getToken: (state) => state.main.token,
     getValue: (state) => state.main.value,
@@ -32,6 +36,11 @@ export const selectors = {
 export function mainReducer(state = initialState, action) {
     const { payload } = action;
     switch (action.type) {
+        case types.SET_IS_VERIFY_DONE:
+            return {
+                ...state,
+                isVerifyDone: payload,
+            };
         case types.SET_IS_INIT_LOADING:
             return {
                 ...state,

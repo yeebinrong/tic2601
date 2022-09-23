@@ -215,3 +215,8 @@ CREATE TABLE banlist(
 INSERT into users(user_name, password, email) VALUES ('testaccount', 'a49425421365d534c88d93fd6d04b94df756988254b31aec08850bd37a265832', 'test@gmail.com');
 -- Insert default community
 INSERT INTO community (community_name) VALUES ('test_community');
+-- Insert default post
+INSERT INTO posts (community_id, title, user_id) VALUES (1, 'Hello World One!', 1);
+INSERT INTO posts (community_id, title, user_id) VALUES (1, 'Hello World Two!', 1);
+INSERT INTO post_contents (post_id, content) VALUES (1, 'This is post content for hello world one.')
+INSERT INTO post_contents (post_id, content) VALUES (1, 'This is post content for hello world two.')

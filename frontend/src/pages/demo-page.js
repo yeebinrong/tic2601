@@ -1,16 +1,16 @@
 import React from 'react';
-import HomeComponent from '../components/HomeComponent/HomeComponent';
+import DemoComponent from '../components/DemoComponent/DemoComponent';
 import BasePage from './base-page';
 
-class HomePage extends React.Component {
+class DemoPage extends React.Component {
     render() {
         return (
             <BasePage
                 navigate={this.props.navigate}
-                component={<HomeComponent />}
+                component={<DemoComponent />}
             />
         );
     }
 }
 
-export default HomePage;
+export default DemoPage;

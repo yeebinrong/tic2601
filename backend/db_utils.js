@@ -21,10 +21,14 @@ const retrieveUserInfoWithCredentials = (username, password) => {
     )
 }
 
+const getAllPosts = () => {
+    return POOL.query('SELECT * FROM posts')
+}
+
 /* -------------------------------------------------------------------------- */
 /* -------------------------------------------------------------------------- */
 /* -------------------------------------------------------------------------- */
 
 module.exports = {
-    retrieveUserInfoWithCredentials, checkUserNameAlreadyExists, insertToUser
+    retrieveUserInfoWithCredentials, checkUserNameAlreadyExists, insertToUser, getAllPosts
 }

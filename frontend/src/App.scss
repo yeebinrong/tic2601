@@ -17,6 +17,7 @@ body {
 
 .app-bar-logo {
     margin-left: 16px;
+    margin-right: 16px;
     height: 48px;
 }
 
@@ -45,6 +46,13 @@ body {
 .app-error-button {
     width: 300px;
     margin: auto !important;
+}
+
+.app-bar-search-bar {
+    display: flex;
+    flex-grow: 1;
+    margin-top: 12px;
+    margin-bottom: 12px;
 }
 
 .dialog-flex{
