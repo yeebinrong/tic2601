@@ -2,7 +2,7 @@ import { Navigate, Route, Routes, useNavigate } from 'react-router-dom';
 import { connect } from 'react-redux';
 import React, { useEffect } from 'react';
 import './App.scss';
-import HomePage from './pages/home-page';
+import DemoPage from './pages/demo-page';
 import SettingPage from './pages/setting-page';
 import ErrorPage from './pages/error-page';
 import LoginPage from './pages/login-page';
@@ -74,7 +74,7 @@ const App = (props) => {
             <Route
                 path="/home"
                 exact
-                element={<HomePage navigate={navigate} />}
+                element={<DemoPage navigate={navigate} />}
             />
             <Route
                 path="/settings"

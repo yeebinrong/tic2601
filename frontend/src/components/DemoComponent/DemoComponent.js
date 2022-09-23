@@ -1,7 +1,7 @@
 import { Button, Input, TextField } from '@mui/material';
 import React from 'react';
 import { retrieveAllPosts, sendMessageApi } from '../../apis/app-api';
-import './HomeComponent.scss';
+import './DemoComponent.scss';
 import { MainActions } from '../../state/actions';
 import { actions as MainSagaActions } from '../../state/sagas/main.saga';
 import { MainSelectors } from '../../state/selectors';
