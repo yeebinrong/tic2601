@@ -21,6 +21,7 @@ import {
     initialLoginPageState,
     snackBarProps,
 } from '../../constants/constants';
+import axios from 'axios';
 
 class LoginComponent extends React.Component {
     constructor(props) {
@@ -63,7 +64,7 @@ class LoginComponent extends React.Component {
                         if (res.error) {
                             // Display register error
                             this.setState({
-                                errorMessage: JSON.parse(res.data).message,
+                                errorMessage: res.data.message,
                                 isButtonClicked: false,
                             });
                         } else {
@@ -84,7 +85,7 @@ class LoginComponent extends React.Component {
                         if (res.error) {
                             // Display login error
                             this.setState({
-                                errorMessage: JSON.parse(res.data).message,
+                                errorMessage: res.data.message,
                                 isButtonClicked: false,
                             });
                         } else {
@@ -94,7 +95,9 @@ class LoginComponent extends React.Component {
                                 snackBarProps('success'),
                             );
                             localStorage.setItem('token', res.data.token);
+                            axios.defaults.headers.common['Authorization'] = `Bearer ${res.data.token}`;
                             this.props.setToken(res.data.token);
+                            this.props.setIsVerifyDone(true);
                             this.props.navigate('/home');
                         }
                         this.props.setIsLoading(false);
@@ -331,6 +334,7 @@ const mapStateToProps = (state) => ({
 });
 
 const mapDispatchToProps = {
+    setIsVerifyDone: MainActions.setIsVerifyDone,
     setToken: MainActions.setToken,
     setIsLoading: MainActions.setIsLoading,
 };

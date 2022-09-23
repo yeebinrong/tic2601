@@ -22,10 +22,11 @@ const localStrategy = new LocalStrategy(
             if (data.rowCount > 0) {
                 done(null,
                     {
-                        username: data.rows[0].email,
+                        user_id: data.rows[0].user_id,
+                        username: data.rows[0].user_name,
                         email: data.rows[0].email,
                         profile_picture: data.rows[0].profile_picture,
-                        description: data.rows[0].description,
+                        description: data.rows[0].user_description,
                         datetime_created: data.rows[0].datetime_created,
                     }
                 )
