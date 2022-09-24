@@ -3,6 +3,7 @@ import { connect } from 'react-redux';
 import React, { useEffect } from 'react';
 import './App.scss';
 import DemoPage from './pages/demo-page';
+import HomePage from './pages/home-page';
 import SettingPage from './pages/setting-page';
 import ErrorPage from './pages/error-page';
 import LoginPage from './pages/login-page';
@@ -29,7 +30,9 @@ const App = (props) => {
                 props.setIsLoading(true);
                 verifyToken(`Bearer ${token}`).then((res) => {
                     if (!res.error) {
-                        axios.defaults.headers.common['Authorization'] = `Bearer ${token}`;
+                        axios.defaults.headers.common[
+                            'Authorization'
+                        ] = `Bearer ${token}`;
                         props.setToken(token);
                         if (isLoginPage) {
                             navigate('/home');
@@ -53,7 +56,7 @@ const App = (props) => {
                 navigate('/login');
             }
         }
-       // eslint-disable-next-line react-hooks/exhaustive-deps
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []);
 
     return (
@@ -62,9 +65,7 @@ const App = (props) => {
             <Route
                 path="/login"
                 exact
-                element={
-                    <LoginPage navigate={navigate} />
-                }
+                element={<LoginPage navigate={navigate} />}
             />
             <Route
                 path="/register"
@@ -74,7 +75,7 @@ const App = (props) => {
             <Route
                 path="/home"
                 exact
-                element={<DemoPage navigate={navigate} />}
+                element={<HomePage navigate={navigate} />}
             />
             <Route
                 path="/settings"
