@@ -13,7 +13,7 @@ const passport = require('passport')
 // Passport Strategies
 const { localStrategy, mkAuth, verifyToken } = require('./passport_strategy.js')
 const { SIGN_SECRET } = require('./server_config.js')
-const { checkUserNameAlreadyExists, insertToUser, getAllPosts, insertOneCommunityAndReturnId } = require('./db_utils.js')
+const { checkUserNameAlreadyExists, insertToUser, getAllPosts, insertOneCommunityAndReturnName } = require('./db_utils.js')
 
 /* -------------------------------------------------------------------------- */
 //             ######## DECLARE VARIABLES & CONFIGURATIONS ########
@@ -138,11 +138,9 @@ app.use((req, resp, next) => {
 // code 23514 = Check constraint
 
 app.post('/api/create_community', async (req, resp) => {
-    let insertedCommunityId = -1
     let insertedCommunityName = ''
     try {
-        const results = await insertOneCommunityAndReturnId(req.token.user_id, req.body.communityName)
-        insertedCommunityId = results.rows[0].community_id
+        const results = await insertOneCommunityAndReturnName(req.token.user_name, req.body.communityName)
         insertedCommunityName = results.rows[0].community_name
     } catch (e) {
         console.info(`ERROR: Insert to community failed with following ${e}`)
@@ -167,7 +165,7 @@ app.post('/api/create_community', async (req, resp) => {
     }
     resp.status(200)
     resp.type('application/json')
-    resp.json({ communityName: insertedCommunityName, communityId: insertedCommunityId })
+    resp.json({ communityName: insertedCommunityName })
     return
 })
 
