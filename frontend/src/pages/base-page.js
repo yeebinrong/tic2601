@@ -87,9 +87,17 @@ class BasePage extends React.Component {
                             <div style={{ display: 'flex', flexGrow: '1', marginLeft: '16px' }}>\
                                 <Autocomplete
                                     multiple
+                                    value={this.state.searchBarChips}
                                     onChange={(e, chips) => {
+                                        const validatedChips = {};
+                                        chips.forEach(chip => validatedChips[chip.type] = chip);
+                                        const chipKeys = Object.keys(validatedChips);
+                                        const finalChips = [];
+                                        for (let i = 0; i < chipKeys.length; i += 1) {
+                                            finalChips.push(validatedChips[chipKeys[i]]);
+                                        }
                                         this.setState({
-                                            searchBarChips: chips,
+                                            searchBarChips: finalChips,
                                         });
                                     }}
                                     freeSolo
@@ -103,17 +111,22 @@ class BasePage extends React.Component {
                                             return [];
                                         }
                                         let toAdd = '';
+                                        let type = '';
                                         if (params.inputValue.startsWith('u/')) {
-                                            toAdd = 'Add user filter: ';
+                                            toAdd = 'Add user filter:';
+                                            type = 'user';
                                         } else if (params.inputValue.startsWith('c/')) {
-                                            toAdd = 'Add community filter: ';
+                                            toAdd = 'Add community filter:';
+                                            type = 'community';
                                         } else if (params.inputValue.startsWith('f/')) {
-                                            toAdd = 'Add flair filter: ';
+                                            toAdd = 'Add flair filter:';
+                                            type = 'flair';
                                         }
                                         if (toAdd === '') {
                                             return [];
                                         }
                                         return [{
+                                            type,
                                             inputValue: params.inputValue.substring(2),
                                             title: `${toAdd} ${params.inputValue.substring(2)}`,
                                         }];

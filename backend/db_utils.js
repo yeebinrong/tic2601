@@ -36,11 +36,21 @@ const insertOneCommunityAndReturnName = (userName, communityName) => {
                 VALUES ('${communityName}') RETURNING community_name),
             M_ROWS AS
             (INSERT INTO MODERATORS (community_name, user_name, is_admin)
-            SELECT community_name, ${userName}, 'Y'
+            SELECT community_name, '${userName}', 'Y'
                 FROM C_ROWS)
         SELECT community_name
         FROM C_ROWS;`
     )
+}
+
+const searchPostWithParams = (currentUser, order, user, flair, community) => {
+    console.log('current user: ' + currentUser);
+    console.log('order: ' + order);
+    console.log('user: ' + user);
+    console.log('flair: ' + flair);
+    console.log('community: ' + community);
+
+    return '';
 }
 
 /* -------------------------------------------------------------------------- */
@@ -48,5 +58,5 @@ const insertOneCommunityAndReturnName = (userName, communityName) => {
 /* -------------------------------------------------------------------------- */
 
 module.exports = {
-    retrieveUserInfoWithCredentials, checkUserNameAlreadyExists, insertToUser, getAllPosts, insertOneCommunityAndReturnName
+    retrieveUserInfoWithCredentials, checkUserNameAlreadyExists, insertToUser, getAllPosts, insertOneCommunityAndReturnName, searchPostWithParams
 }

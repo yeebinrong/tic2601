@@ -13,7 +13,7 @@ const passport = require('passport')
 // Passport Strategies
 const { localStrategy, mkAuth, verifyToken } = require('./passport_strategy.js')
 const { SIGN_SECRET } = require('./server_config.js')
-const { checkUserNameAlreadyExists, insertToUser, getAllPosts, insertOneCommunityAndReturnName } = require('./db_utils.js')
+const { checkUserNameAlreadyExists, insertToUser, getAllPosts, insertOneCommunityAndReturnName, searchPostWithParams } = require('./db_utils.js')
 
 /* -------------------------------------------------------------------------- */
 //             ######## DECLARE VARIABLES & CONFIGURATIONS ########
@@ -140,7 +140,7 @@ app.use((req, resp, next) => {
 app.post('/api/create_community', async (req, resp) => {
     let insertedCommunityName = ''
     try {
-        const results = await insertOneCommunityAndReturnName(req.token.user_name, req.body.communityName)
+        const results = await insertOneCommunityAndReturnName(req.token.username, req.body.communityName)
         insertedCommunityName = results.rows[0].community_name
     } catch (e) {
         console.info(`ERROR: Insert to community failed with following ${e}`)
@@ -180,6 +180,21 @@ app.get('/api/all_posts', async (req, resp) => {
     resp.status(200)
     resp.type('application/json')
     resp.json({rows: results.rows})
+    return
+})
+
+app.get('/api/search', async (req, resp) => {
+    const { order, user, flair, community } = req.query;
+    const results = await searchPostWithParams(req.token.username, order, user, flair, community);
+    // if (results.rows && results.rows.length == 0) {
+    //     resp.status(204)
+    //     resp.type('application/json')
+    //     resp.json({message: 'No posts found!'})
+    //     return
+    // }
+    resp.status(200)
+    resp.type('application/json')
+    resp.json({rows: 'ok' })
     return
 })
 

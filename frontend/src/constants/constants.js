@@ -1,5 +1,6 @@
 import { useSnackbar } from 'notistack';
 import CloseIcon from '@mui/icons-material/Close';
+import { useParams } from 'react-router-dom';
 
 export const snackBarProps = (variant) => {
     return {
@@ -33,4 +34,26 @@ export const initialLoginPageState = {
     showPassword: false,
     showConfirmPassword: false,
     isButtonClicked: false,
+};
+
+export function withParams(Component) {
+    return props => <Component {...props} params={useParams()} />;
+};
+
+export const getQueryParameters = str => {
+    if (!str || !str.startsWith('?')) {
+        return {};
+    }
+    const search = str.substring(1);
+    const parsed = JSON.parse('{"' + search.replace(/&/g, '","').replace(/=/g,'":"') + '"}', function(key, value) { return key===""?value:decodeURIComponent(value) });
+    if (!parsed.user) {
+        parsed.user = '';
+    }
+    if (!parsed.flair) {
+        parsed.flair = '';
+    }
+    if (!parsed.community) {
+        parsed.community = '';
+    }
+    return parsed;
 };
