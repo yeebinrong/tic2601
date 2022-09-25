@@ -18,7 +18,6 @@ import { MainSelectors } from '../state/selectors';
 import { connect } from 'react-redux';
 import { MainActions } from '../state/actions';
 import SearchIcon from '@mui/icons-material/Search';
-import NotificationsIcon from '@mui/icons-material/Notifications';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import LogoutIcon from '@mui/icons-material/Logout';
 import AddIcon from '@mui/icons-material/Add';
@@ -154,11 +153,11 @@ class BasePage extends React.Component {
                                     }}
                                 />
                             </div>
-                            <div style={{ marginLeft: '16px' }}>
+                            {/* <div style={{ marginLeft: '16px' }}>
                                 <IconButton>
                                     <NotificationsIcon />
                                 </IconButton>
-                            </div>
+                            </div> */}
                             <div style={{ marginLeft: '16px' }}>
                                 <Tooltip title="Account settings">
                                     <Button
