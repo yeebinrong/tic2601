@@ -7,7 +7,11 @@ class DemoPage extends React.Component {
         return (
             <BasePage
                 navigate={this.props.navigate}
-                component={<DemoComponent />}
+                component={(props) => {
+                    return (
+                        <DemoComponent {...props} />
+                    );
+                }}
             />
         );
     }

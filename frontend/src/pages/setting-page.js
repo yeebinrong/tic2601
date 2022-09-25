@@ -4,7 +4,7 @@ import BasePage from './base-page';
 
 class SettingPage extends React.Component {
     render() {
-        return <BasePage component={<SettingComponent />} />;
+        return <BasePage component={(props) => { return (<SettingComponent {...props} />) }} />;
     }
 }
 

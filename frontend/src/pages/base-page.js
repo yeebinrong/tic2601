@@ -37,7 +37,6 @@ class BasePage extends React.Component {
     }
 
     logoutUser = () => {
-        // TODO remove user from backend using logoutAccount
         this.props.setToken(null);
         localStorage.removeItem('token');
         this.props.navigate('/login');
@@ -241,7 +240,7 @@ class BasePage extends React.Component {
                         <CircularProgress color="inherit" />
                     </Backdrop>
                 </div>
-                {this.props.component}
+                {this.props.component(this.props)}
                 <CreateCommunityComponent
                     open={this.state.isCreateCommunityDialogOpen}
                     onClose={() => this.setIsCreateCommunityDialog(false)}
@@ -252,11 +251,13 @@ class BasePage extends React.Component {
 }
 
 const mapStateToProps = (state) => ({
+    isVerifyDone: MainSelectors.getIsVerifyDone(state),
     token: MainSelectors.getToken(state),
     isLoading: MainSelectors.getIsLoading(state),
 });
 
 const mapDispatchToProps = {
+    setIsVerifyDone: MainActions.setIsVerifyDone,
     setToken: MainActions.setToken,
     setIsLoading: MainActions.setIsLoading,
 };

@@ -10,9 +10,6 @@ import {
 import React from 'react';
 import { loginAccount, registerAccount } from '../../apis/app-api';
 import './LoginComponent.scss';
-import { MainActions } from '../../state/actions';
-import { MainSelectors } from '../../state/selectors';
-import { connect } from 'react-redux';
 import NavigateButton from '../NavigateButton';
 import VisibilityOffIcon from '@mui/icons-material/VisibilityOff';
 import VisibilityIcon from '@mui/icons-material/Visibility';
@@ -329,17 +326,4 @@ class LoginComponent extends React.Component {
     }
 }
 
-const mapStateToProps = (state) => ({
-    token: MainSelectors.getToken(state),
-});
-
-const mapDispatchToProps = {
-    setIsVerifyDone: MainActions.setIsVerifyDone,
-    setToken: MainActions.setToken,
-    setIsLoading: MainActions.setIsLoading,
-};
-
-export default connect(
-    mapStateToProps,
-    mapDispatchToProps,
-)(withSnackbar(LoginComponent));
+export default withSnackbar(LoginComponent);
