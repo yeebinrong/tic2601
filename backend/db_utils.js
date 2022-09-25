@@ -1,8 +1,8 @@
 /* -------------------------------------------------------------------------- */
-//                      ######## POSTGRES / S3 METHODS ########
+//                        ######## POSTGRES ########
 /* -------------------------------------------------------------------------- */
 
-const { POOL } = require('./server_config.js')
+const { POOL, DIGITAL_OCEAN_SPACE } = require('./server_config.js')
 
 const escapeQuotes = (str) => {
     return str.replace(/'/g, "''");
@@ -67,9 +67,37 @@ const searchPostWithParams = (currentUser, order, user, flair, community, q) => 
 };
 
 /* -------------------------------------------------------------------------- */
+//                        ######## DIGITALOCEAN METHODS ########
+/* -------------------------------------------------------------------------- */
+
+// Handles the uploading to digital ocean space and returns the key as a promise
+const uploadToDigitalOcean = (buffer, req) => new Promise((resolve, reject) => {
+    const key = req.file.filename + '_' + req.file.originalname;
+    const params = {
+        Bucket: 'tic2601',
+        Key: key,
+        Body: buffer,
+        ACL: 'public-read',
+        ContentType: req.file.mimetype,
+        ContentLength: req.file.size,
+        Metadata: {
+            originalName: req.file.originalname,
+            createdTime: '' + (new Date()).getTime(),
+        }
+    }
+    DIGITAL_OCEAN_SPACE.putObject(params, (err, result) => {
+        if (err == null) {
+            resolve(key)
+        } else {
+            reject("uploadToDigitalOcean Err: ", err)
+        }
+    })
+})
+
+/* -------------------------------------------------------------------------- */
 /* -------------------------------------------------------------------------- */
 /* -------------------------------------------------------------------------- */
 
 module.exports = {
-    retrieveUserInfoWithCredentials, checkUserNameAlreadyExists, insertToUser, getAllPosts, insertOneCommunityAndReturnName, searchPostWithParams
+    retrieveUserInfoWithCredentials, checkUserNameAlreadyExists, insertToUser, getAllPosts, insertOneCommunityAndReturnName, searchPostWithParams, uploadToDigitalOcean
 }

@@ -7,17 +7,21 @@ const morgan = require('morgan')
 const cors = require('cors')
 const jwt = require('jsonwebtoken')
 const sha256 = require('sha256')
+const multer = require('multer')
 
 // Passport core
 const passport = require('passport')
 // Passport Strategies
 const { localStrategy, mkAuth, verifyToken } = require('./passport_strategy.js')
-const { SIGN_SECRET } = require('./server_config.js')
-const { checkUserNameAlreadyExists, insertToUser, getAllPosts, insertOneCommunityAndReturnName, searchPostWithParams } = require('./db_utils.js')
+const { SIGN_SECRET, CHECK_DIGITAL_OCEAN_KEYS, CHECK_POSTGRES_CONN, READ_FILE, UNLINK_ALL_FILES } = require('./server_config.js')
+const { checkUserNameAlreadyExists, insertToUser, getAllPosts, insertOneCommunityAndReturnName, searchPostWithParams, uploadToDigitalOcean } = require('./db_utils.js')
 
 /* -------------------------------------------------------------------------- */
 //             ######## DECLARE VARIABLES & CONFIGURATIONS ########
 /* -------------------------------------------------------------------------- */
+
+// Directory to store files to upload
+const UPLOAD_PATH = `${__dirname}/uploads/`
 
 // Configure passport with a strategy
 passport.use(localStrategy)
@@ -28,6 +32,8 @@ const localStrategyAuth = mkAuth(passport, 'local')
 const PORT = parseInt(process.argv[2]) || parseInt(process.env.PORT) || 3008
 // Create an instance of express
 const app = express()
+// Create an instance of multer
+const upload = multer({dest: UPLOAD_PATH})
 
 /* -------------------------------------------------------------------------- */
 //                          ######## REQUESTS ########
@@ -198,6 +204,27 @@ app.get('/api/search', async (req, resp) => {
     return;
 });
 
+// POST /api/upload
+app.post('/api/upload', upload.single('file'), async (req, resp) => {
+    // Parse the json string sent from client into json object
+    const data = JSON.parse(req.body.data)
+    try {
+        const buffer = await READ_FILE(req.file.path)
+        const key = await uploadToDigitalOcean(buffer, req)
+        data.key = key
+        // const id = await uploadToMongo(data)
+        await UNLINK_ALL_FILES(UPLOAD_PATH)
+        resp.status(200)
+        resp.type('application/json')
+        resp.json({id: id})
+    } catch (e) {
+        console.info(e)
+		resp.status(500)
+		resp.type('application/json')
+		resp.json({msg: `${e}`})
+    }
+})
+
 app.get('/api/receive', (req, resp) => {
     const value = req.query.value
     resp.status(200)
@@ -213,6 +240,11 @@ app.get('/api/getbackendvalue', (req, resp) => {
     return
 })
 
-app.listen(PORT, () => {
-    console.info(`Application is listening PORT ${PORT} at ${new Date()}`)
+Promise.all([CHECK_POSTGRES_CONN(), CHECK_DIGITAL_OCEAN_KEYS()])
+.then(() => {
+    app.listen(PORT, () => {
+        console.info(`Application is listening PORT ${PORT} at ${new Date()}`);
+    })
+}).catch(e => {
+    console.info('Error starting the server: ', e);
 })
