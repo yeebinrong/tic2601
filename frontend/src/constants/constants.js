@@ -57,3 +57,26 @@ export const getQueryParameters = str => {
     }
     return parsed;
 };
+
+export const defaultFlairs = [
+    {
+        type: 'flair',
+        inputValue: 'Text',
+        title: 'Add flairs filter: Text',
+    },
+    {
+        type: 'flair',
+        inputValue: 'News',
+        title: 'Add flairs filter: News',
+    },
+    {
+        type: 'flair',
+        inputValue: 'Discussion',
+        title: 'Add flairs filter: Discussion',
+    },
+    {
+        type: 'flair',
+        inputValue: 'Photo',
+        title: 'Add flairs filter: Photo',
+    },
+];

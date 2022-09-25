@@ -152,7 +152,6 @@ app.post('/api/create_community', async (req, resp) => {
             return
         } else if (e.code === '23514') {
             // 409 Unprocessable Entity
-            console.log()
             resp.status(422)
             resp.type('application/json')
             resp.json({message: `Community name [${req.body.communityName}] failed check constraints.`})
@@ -174,7 +173,7 @@ app.get('/api/all_posts', async (req, resp) => {
     if (results.rows.length == 0) {
         resp.status(204)
         resp.type('application/json')
-        resp.json({message: 'No posts found!'})
+        resp.json({rows: [], message: 'No posts found!'})
         return
     }
     resp.status(200)

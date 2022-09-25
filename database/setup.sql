@@ -42,37 +42,13 @@ CREATE TABLE community (
 	colour CHAR(7) NOT NULL DEFAULT '#00b2d2' CHECK(colour ~* '^#[A-Fa-f0-9]{6}$') -- Colour theme of the community
 );
 
--- [Create community_flairs table]
--- Flair name is not unique as it is possible to have duplicate flair names from different communities
-DROP TABLE IF EXISTS community_flairs CASCADE;
-CREATE TABLE community_flairs (
-	unique_id VARCHAR(292) UNIQUE, -- unique_id is built using community_name and flair_id used as a foreign key for other tables
-	community_name VARCHAR(21) NOT NULL REFERENCES community(community_name) ON DELETE CASCADE ON UPDATE CASCADE,
-	flair_id UUID DEFAULT uuid_generate_v4(),
-	flair_name VARCHAR(30) NOT NULL,
-	colour CHAR(7) NOT NULL DEFAULT '#00b2d2' CHECK(colour ~* '^#[A-Fa-f0-9]{6}$'), -- Colour of the community flair
-	PRIMARY KEY (community_name, flair_id)
-);
-
--- [Create function to concentate unique_id for community_flairs to be used as foreign key ]
-CREATE OR REPLACE FUNCTION community_flairs_insert() RETURNS trigger AS '
-     BEGIN
-         NEW.unique_id := NEW.community_name||''#''||NEW.flair_id;
-         RETURN NEW;
-     END;
- ' LANGUAGE plpgsql;
-
-CREATE OR REPLACE TRIGGER community_flairs_insert
-	BEFORE INSERT OR UPDATE ON community_flairs
-	FOR EACH ROW EXECUTE PROCEDURE community_flairs_insert();
-
 -- [Create posts table]
 DROP TABLE IF EXISTS posts CASCADE;
 CREATE TABLE posts (
 	post_id SERIAL PRIMARY KEY,
 	user_name VARCHAR(30) NOT NULL REFERENCES users(user_name) ON DELETE CASCADE ON UPDATE CASCADE,
-	selected_flair_id VARCHAR(292) NOT NULL REFERENCES community_flairs(unique_id) ON DELETE CASCADE ON UPDATE CASCADE,
 	community_name VARCHAR(21) NOT NULL REFERENCES community(community_name) ON DELETE CASCADE ON UPDATE CASCADE,
+	flair FlairEnum NOT NULL,
 	url VARCHAR(2048),
 	title VARCHAR(300) NOT NULL,
 	date_created TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -174,19 +150,6 @@ CREATE TABLE hide_or_fav_posts (
 	PRIMARY KEY (post_id, user_name)
 );
 
--- -- [Create notifications table]
--- DROP TABLE IF EXISTS notifications CASCADE;
--- CREATE TABLE notifications (
--- 	notification_id SERIAL PRIMARY KEY,
--- 	user_name VARCHAR(30) NOT NULL REFERENCES users(user_name) ON DELETE CASCADE ON UPDATE CASCADE,
--- 	post_id INTEGER NOT NULL REFERENCES posts(post_id) ON DELETE CASCADE ON UPDATE CASCADE,
--- 	unique_comment_id VARCHAR(292) NOT NULL REFERENCES comments(unique_id) ON DELETE CASCADE ON UPDATE CASCADE,
--- 	date_created TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
--- 	title VARCHAR(300) NOT NULL,
--- 	content VARCHAR(1000) NOT NULL,
--- 	is_read TrueOrFalse NOT NULL
--- );
-
 -- [Create moderators table]
 DROP TABLE IF EXISTS moderators CASCADE;
 CREATE TABLE moderators(
@@ -249,53 +212,40 @@ INSERT INTO moderators (community_name, user_name, is_admin)
 	VALUES ('another_community', 'test2', 'Y');
 INSERT INTO moderators (community_name, user_name, is_admin)
 	VALUES ('another_community', 'test3', 'Y');
--- Insert flairs
-INSERT INTO community_flairs (community_name, flair_name, flair_id)
-	VALUES ('community_w_no_posts', 'Text', '4b36afc8-5205-49c1-af16-4dc6f96db982');
-INSERT INTO community_flairs (community_name, flair_name, flair_id)
-	VALUES ('banned_community', 'Text', '4b36afc8-5205-49c1-af16-4dc6f96db982');
-INSERT INTO community_flairs (community_name, flair_name, flair_id)
-	VALUES ('another_community', 'Text', '4b36afc8-5205-49c1-af16-4dc6f96db982');
-INSERT INTO community_flairs (community_name, flair_name, flair_id)
-	VALUES ('test_community', 'Text', '4b36afc8-5205-49c1-af16-4dc6f96db982');
-INSERT INTO community_flairs (community_name, flair_name, flair_id, colour)
-	VALUES ('test_community', 'Red flair', '5b36afc8-5205-49c1-af16-4dc6f96db982', '#E30D00');
-INSERT INTO community_flairs (community_name, flair_name, flair_id, colour)
-	VALUES ('test_community', 'Green  flair', '6b36afc8-5205-49c1-af16-4dc6f96db982', '#0D976F');
 -- Insert Posts data
 --
-INSERT INTO posts (community_name, title, user_name, selected_flair_id)
-	VALUES ('test_community', 'Hello World One!', 'testaccount', 'test_community#4b36afc8-5205-49c1-af16-4dc6f96db982');
+INSERT INTO posts (community_name, title, user_name, flair)
+	VALUES ('test_community', 'Hello World One!', 'testaccount', 'Text');
 INSERT INTO post_contents (post_id, content)
 	VALUES (1, 'This is post content for hello world one.');
 --
-INSERT INTO posts (community_name, title, user_name, selected_flair_id)
-	VALUES ('test_community', 'Hello World Two!', 'test2', 'test_community#5b36afc8-5205-49c1-af16-4dc6f96db982');
+INSERT INTO posts (community_name, title, user_name, flair)
+	VALUES ('test_community', 'Hello World Two!', 'test2', 'Text');
 INSERT INTO post_contents (post_id, content)
 	VALUES (2, 'This is post content for hello world two.');
 --
-INSERT INTO posts (community_name, title, user_name, selected_flair_id)
-	VALUES ('test_community', 'This post should be hidden for testaccount user!', 'anotheraccount', 'test_community#6b36afc8-5205-49c1-af16-4dc6f96db982');
+INSERT INTO posts (community_name, title, user_name, flair)
+	VALUES ('test_community', 'This post should be hidden for testaccount user!', 'anotheraccount', 'Text');
 INSERT INTO post_contents (post_id, content)
 	VALUES (3, 'testaccount user should not be able to view this post!');
 INSERT INTO hide_or_fav_posts (post_id, user_name, hide_or_favourite)
 	VALUES (3, 'testaccount', 'Y');
 --
-INSERT INTO posts (community_name, title, user_name, selected_flair_id)
-	VALUES ('test_community', 'This post should be favourited for testaccount user!', 'test3', 'test_community#4b36afc8-5205-49c1-af16-4dc6f96db982');
+INSERT INTO posts (community_name, title, user_name, flair)
+	VALUES ('test_community', 'This post should be favourited for testaccount user!', 'test3', 'Text');
 INSERT INTO post_contents (post_id, content)
 	VALUES (4, 'This post should appear as favourited for testaccount user!');
 INSERT INTO hide_or_fav_posts (post_id, user_name, hide_or_favourite)
 	VALUES (4, 'testaccount', 'N');
 --
-INSERT INTO posts (community_name, title, user_name, selected_flair_id)
-	VALUES ('test_community', 'This post should be pinned when viewing test_community!', 'testaccount', 'test_community#5b36afc8-5205-49c1-af16-4dc6f96db982');
+INSERT INTO posts (community_name, title, user_name, flair)
+	VALUES ('test_community', 'This post should be pinned when viewing test_community!', 'testaccount', 'Text');
 INSERT INTO post_contents (post_id, content)
 	VALUES (5, 'This post should be pinned for test_community.');
 UPDATE community SET pinned_post = 3 WHERE community_name = 'test_community';
 --
-INSERT INTO posts (community_name, title, user_name, selected_flair_id)
-	VALUES ('test_community', 'This post should have 5 comments and 2 likes!', 'testaccount', 'test_community#6b36afc8-5205-49c1-af16-4dc6f96db982');
+INSERT INTO posts (community_name, title, user_name, flair)
+	VALUES ('test_community', 'This post should have 5 comments and 2 likes!', 'testaccount', 'Text');
 INSERT INTO favours (post_id, favour_point, giver, receiver)
 	VALUES (6, 1, 'testaccount', 'testaccount');
 INSERT INTO favours (post_id, favour_point, giver, receiver)
@@ -325,13 +275,13 @@ INSERT INTO favours (unique_comment_id, favour_point, giver, receiver)
 INSERT INTO favours (unique_comment_id, favour_point, giver, receiver)
 	VALUES ('6#4', 1, 'test1', 'test1');
 --
-INSERT INTO posts (community_name, title, user_name, selected_flair_id)
-	VALUES ('another_community', 'Hello World One for another_community!', 'test1', 'test_community#5b36afc8-5205-49c1-af16-4dc6f96db982');
+INSERT INTO posts (community_name, title, user_name, flair)
+	VALUES ('another_community', 'Hello World One for another_community!', 'test1', 'Text');
 INSERT INTO post_contents (post_id, content)
 	VALUES (7, 'This is post content for hello world for another_community post.');
 --
-INSERT INTO posts (community_name, title, user_name, selected_flair_id)
-	VALUES ('banned_community', 'testaccount should not be able to see this post as he is banned from here!', 'anotheraccount', 'banned_community#4b36afc8-5205-49c1-af16-4dc6f96db982');
+INSERT INTO posts (community_name, title, user_name, flair)
+	VALUES ('banned_community', 'testaccount should not be able to see this post as he is banned from here!', 'anotheraccount', 'Text');
 INSERT INTO post_contents (post_id, content)
 	VALUES (8, 'testaccount should not be able to see this post... as he is banned.');
 --

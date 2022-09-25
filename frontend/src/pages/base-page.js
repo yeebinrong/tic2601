@@ -23,6 +23,7 @@ import LogoutIcon from '@mui/icons-material/Logout';
 import AddIcon from '@mui/icons-material/Add';
 import AccountBoxIcon from '@mui/icons-material/AccountBox';
 import CreateCommunityComponent from '../components/CreateCommunityComponent/CreateCommunityComponent';
+import { defaultFlairs } from '../constants/constants';
 
 class BasePage extends React.Component {
     constructor(props) {
@@ -165,11 +166,6 @@ class BasePage extends React.Component {
                                     }}
                                 />
                             </div>
-                            {/* <div style={{ marginLeft: '16px' }}>
-                                <IconButton>
-                                    <NotificationsIcon />
-                                </IconButton>
-                            </div> */}
                             <div style={{ marginLeft: '16px' }}>
                                 <Tooltip title="Account settings">
                                     <Button
