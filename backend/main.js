@@ -11,7 +11,6 @@ const sha256 = require('sha256');
 // Passport core
 const passport = require('passport');
 // Passport Strategies
-<<<<<<< HEAD
 const {
     localStrategy,
     mkAuth,
@@ -23,13 +22,8 @@ const {
     insertToUser,
     getAllPosts,
     getHomePagePosts,
-    insertOneCommunityAndReturnId,
+    insertOneCommunityAndReturnName,
 } = require('./db_utils.js');
-=======
-const { localStrategy, mkAuth, verifyToken } = require('./passport_strategy.js')
-const { SIGN_SECRET } = require('./server_config.js')
-const { checkUserNameAlreadyExists, insertToUser, getAllPosts, insertOneCommunityAndReturnName } = require('./db_utils.js')
->>>>>>> 1cd6119462fc68597b661dd38c74d9fd3cc3e494
 
 /* -------------------------------------------------------------------------- */
 //             ######## DECLARE VARIABLES & CONFIGURATIONS ########
@@ -206,22 +200,11 @@ app.post('/api/create_community', async (req, resp) => {
         });
         return;
     }
-<<<<<<< HEAD
     resp.status(200);
     resp.type('application/json');
-    resp.json({
-        communityName: insertedCommunityName,
-        communityId: insertedCommunityId,
-    });
+    resp.json({ communityName: insertedCommunityName });
     return;
-});
-=======
-    resp.status(200)
-    resp.type('application/json')
-    resp.json({ communityName: insertedCommunityName })
-    return
 })
->>>>>>> 1cd6119462fc68597b661dd38c74d9fd3cc3e494
 
 app.get('/api/all_posts', async (req, resp) => {
     const results = await getAllPosts();
