@@ -172,18 +172,18 @@ CREATE TABLE hide_or_fav_posts (
 	PRIMARY KEY (post_id, user_name)
 );
 
--- [Create notifications table]
-DROP TABLE IF EXISTS notifications CASCADE;
-CREATE TABLE notifications (
-	notification_id SERIAL PRIMARY KEY,
-	user_name VARCHAR(30) NOT NULL REFERENCES users(user_name) ON DELETE CASCADE ON UPDATE CASCADE,
-	post_id INTEGER NOT NULL REFERENCES posts(post_id) ON DELETE CASCADE ON UPDATE CASCADE,
-	unique_comment_id VARCHAR(292) NOT NULL REFERENCES comments(unique_id) ON DELETE CASCADE ON UPDATE CASCADE,
-	date_created TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-	title VARCHAR(300) NOT NULL,
-	content VARCHAR(1000) NOT NULL,
-	is_read TrueOrFalse NOT NULL
-);
+-- -- [Create notifications table]
+-- DROP TABLE IF EXISTS notifications CASCADE;
+-- CREATE TABLE notifications (
+-- 	notification_id SERIAL PRIMARY KEY,
+-- 	user_name VARCHAR(30) NOT NULL REFERENCES users(user_name) ON DELETE CASCADE ON UPDATE CASCADE,
+-- 	post_id INTEGER NOT NULL REFERENCES posts(post_id) ON DELETE CASCADE ON UPDATE CASCADE,
+-- 	unique_comment_id VARCHAR(292) NOT NULL REFERENCES comments(unique_id) ON DELETE CASCADE ON UPDATE CASCADE,
+-- 	date_created TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+-- 	title VARCHAR(300) NOT NULL,
+-- 	content VARCHAR(1000) NOT NULL,
+-- 	is_read TrueOrFalse NOT NULL
+-- );
 
 -- [Create moderators table]
 DROP TABLE IF EXISTS moderators CASCADE;
