@@ -37,23 +37,21 @@ const getHomePagePosts = () => {
 
 // This sql inserts a row into community table with the specified communityName,
 // using the autoincrement id returned from inserting that row,
-// the community_id and user_id is inserted into moderator tables.
-// After that the community_id and community_name is returned back to frontend
-const insertOneCommunityAndReturnId = (user_id, communityName) => {
+// the community_name and user_name is inserted into moderator tables.
+// After that the community_name is returned back to frontend
+const insertOneCommunityAndReturnName = (userName, communityName) => {
     return POOL.query(
         `WITH C_ROWS AS
             (INSERT INTO community (community_name)
-                VALUES ('${communityName}') RETURNING
-                community_id, community_name),
+                VALUES ('${communityName}') RETURNING community_name),
             M_ROWS AS
-            (INSERT INTO MODERATORS (community_id, user_id, is_admin)
-            SELECT community_id, ${user_id}, 'Y'
+            (INSERT INTO MODERATORS (community_name, user_name, is_admin)
+            SELECT community_name, ${userName}, 'Y'
                 FROM C_ROWS)
-        SELECT
-        community_id, community_name
+        SELECT community_name
         FROM C_ROWS;`,
     );
-};
+}
 
 /* -------------------------------------------------------------------------- */
 /* -------------------------------------------------------------------------- */
@@ -65,5 +63,5 @@ module.exports = {
     insertToUser,
     getAllPosts,
     getHomePagePosts,
-    insertOneCommunityAndReturnId,
+    insertOneCommunityAndReturnName,
 };
