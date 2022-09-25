@@ -13,9 +13,7 @@ const passport = require('passport')
 // Passport Strategies
 const { localStrategy, mkAuth, verifyToken } = require('./passport_strategy.js')
 const { SIGN_SECRET } = require('./server_config.js')
-const { checkUserNameAlreadyExists, insertToUser } = require('./db_utils.js')
-
-const USER_LOGGED_IN = []
+const { checkUserNameAlreadyExists, insertToUser, getAllPosts, insertOneCommunityAndReturnName } = require('./db_utils.js')
 
 /* -------------------------------------------------------------------------- */
 //             ######## DECLARE VARIABLES & CONFIGURATIONS ########
@@ -52,20 +50,10 @@ app.use(cors())
 const signToken = (payload) => {
     const currTime = (new Date()).getTime() / 1000
     return jwt.sign({
-        sub: payload.username,
+        ...payload,
         iss: 'readit',
         iat: currTime,
     }, SIGN_SECRET)
-}
-
-const checkUserAlreadyLoggedIn = (username) => {
-    const bool = USER_LOGGED_IN.find(u => {
-        return u == username
-    })
-    if (!bool) {
-        USER_LOGGED_IN.push(username)
-    }
-    return bool
 }
 
 // POST /api/register
@@ -111,14 +99,8 @@ app.post('/api/login',
 // passport middleware to perform login authentication
 localStrategyAuth,
 (req, resp) => {
-    const userInfo = req.body;
-    const token = signToken(userInfo.username)
-    // if(checkUserAlreadyLoggedIn(userInfo.username)) {
-    //     resp.status(406)
-    //     resp.type('application/json')
-    //     resp.json({message: `User [${userInfo.username}] is already logged in.`})
-    //     return
-    // }
+    const userInfo = req.user;
+    const token = signToken(userInfo)
     resp.status(200)
     resp.type('application/json')
     resp.json({message: `Logged in at ${new Date()}`, token, username: userInfo.username})
@@ -151,17 +133,69 @@ app.use((req, resp, next) => {
 //                 ######## AUTHENTICATED REQUESTS ########
 /* -------------------------------------------------------------------------- */
 
+// Note: You can access user information using req.token from requests below
+// code 23505 = Duplicate constraint
+// code 23514 = Check constraint
+
+app.post('/api/create_community', async (req, resp) => {
+    let insertedCommunityName = ''
+    try {
+        const results = await insertOneCommunityAndReturnName(req.token.user_name, req.body.communityName)
+        insertedCommunityName = results.rows[0].community_name
+    } catch (e) {
+        console.info(`ERROR: Insert to community failed with following ${e}`)
+        if (e.code === '23505') {
+            // 409 Conflict
+            resp.status(409)
+            resp.type('application/json')
+            resp.json({message: `Community name [${req.body.communityName}] already exists.`})
+            return
+        } else if (e.code === '23514') {
+            // 409 Unprocessable Entity
+            console.log()
+            resp.status(422)
+            resp.type('application/json')
+            resp.json({message: `Community name [${req.body.communityName}] failed check constraints.`})
+            return
+        }
+        resp.status(400)
+        resp.type('application/json')
+        resp.json({message: `An error has occurred while creating community.`})
+        return
+    }
+    resp.status(200)
+    resp.type('application/json')
+    resp.json({ communityName: insertedCommunityName })
+    return
+})
+
+app.get('/api/all_posts', async (req, resp) => {
+    const results = await getAllPosts()
+    if (results.rows.length == 0) {
+        resp.status(204)
+        resp.type('application/json')
+        resp.json({message: 'No posts found!'})
+        return
+    }
+    resp.status(200)
+    resp.type('application/json')
+    resp.json({rows: results.rows})
+    return
+})
+
 app.get('/api/receive', (req, resp) => {
     const value = req.query.value
     resp.status(200)
     resp.type('application/json')
     resp.json({ value: "Server received your message! [" + value + "]" })
+    return
 })
 
 app.get('/api/getbackendvalue', (req, resp) => {
     resp.status(200)
     resp.type('application/json')
     resp.json({ value: Math.floor(Math.random() * 100) })
+    return
 })
 
 app.listen(PORT, () => {

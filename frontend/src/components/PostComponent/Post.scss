@@ -1,7 +1,7 @@
 .community-box {
-  padding: 5px;
+  padding: 10px;
   background-color: #ffffff;
-  border-radius: 2%;
+  border-radius: 5%;
   // border: solid 1px;
 }
 .community-box * {
@@ -50,4 +50,10 @@ li {
 }
 #iconbutton {
   margin-left: 20px;
+}
+#communityName {
+  margin-left: 10px;
+}
+#communityDescruption {
+  margin: auto;
 }

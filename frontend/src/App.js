@@ -2,7 +2,7 @@ import { Navigate, Route, Routes, useNavigate } from 'react-router-dom';
 import { connect } from 'react-redux';
 import React, { useEffect } from 'react';
 import './App.scss';
-import HomePage from './pages/home-page';
+import DemoPage from './pages/demo-page';
 import SettingPage from './pages/setting-page';
 import ErrorPage from './pages/error-page';
 import LoginPage from './pages/login-page';
@@ -22,23 +22,26 @@ const App = (props) => {
         let token = props.token;
         if (token) {
             if (isLoginPage) {
-                props.navigate('/home');
+                navigate('/home');
             }
-            axios.defaults.headers.common['Authorization'] = `Bearer ${token}`;
         } else {
             token = localStorage.getItem('token');
             if (!props.isLoading && token) {
                 props.setIsLoading(true);
                 verifyToken(`Bearer ${token}`).then((res) => {
                     if (!res.error) {
+                        axios.defaults.headers.common['Authorization'] = `Bearer ${token}`;
                         props.setToken(token);
                         if (isLoginPage) {
                             navigate('/home');
                         }
                     } else {
+                        axios.defaults.headers.common['Authorization'] = '';
+                        localStorage.removeItem('token');
                         navigate('/login');
                     }
                     props.setIsLoading(false);
+                    props.setIsVerifyDone(true);
                 });
             }
             if (token) {
@@ -46,8 +49,8 @@ const App = (props) => {
                     'Authorization'
                 ] = `Bearer ${token}`;
             } else if (!isLoginPage) {
+                // TODO Maybe display snackbar to ask user to log in?
                 axios.defaults.headers.common['Authorization'] = '';
-                // Maybe display snackbar to ask user to log in?
                 navigate('/login');
             }
         }
@@ -61,7 +64,7 @@ const App = (props) => {
                 path="/login"
                 exact
                 element={
-                    <LoginPage navigate={navigate} isRegisterPage={false} />
+                    <LoginPage navigate={navigate} />
                 }
             />
             <Route
@@ -72,7 +75,7 @@ const App = (props) => {
             <Route
                 path="/home"
                 exact
-                element={<HomePage navigate={navigate} />}
+                element={<DemoPage navigate={navigate} />}
             />
             <Route
                 path="/post"
@@ -96,6 +99,7 @@ const mapStateToProps = (state) => ({
 });
 
 const mapDispatchToProps = {
+    setIsVerifyDone: MainActions.setIsVerifyDone,
     setToken: MainActions.setToken,
     setIsLoading: MainActions.setIsLoading,
 };

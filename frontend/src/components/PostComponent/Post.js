@@ -154,10 +154,10 @@ class Post extends React.Component {
                         <div>
                             <Box sx={{ display: 'flex', alignItems: 'center' }}>
                                 <Avatar
-                                    sx={{ width: 24, height: 24 }}
+                                    sx={{ width: 40, height: 40 }}
                                 >H</Avatar>
-                                <Typography variant="caption" display="block" gutterBottom>
-                                    {this.state.community.name}
+                                <Typography variant="caption" display="block" gutterBottom id="communityName">
+                                    <b>{this.state.community.name}</b>
                                 </Typography>
                                 <Typography variant="caption" display="block" gutterBottom>
                                     <div> + Posted by {this.state.user.username} {timeSince(this.state.post.created_at)}</div>
@@ -201,17 +201,23 @@ class Post extends React.Component {
                         </div>
                     </Box>
                     <Box gridColumn="span 4">
+
+                        <div className='community-header'></div>
                         <div className='community-box'>
-                            <div className='community-header'></div>
                             <Box sx={{ display: 'flex', alignItems: 'center' }}>
                                 <Avatar>H</Avatar>
-                                <div><b>{this.state.community.name}</b></div>
+                                <div variant="caption" display="block" gutterBottom id="communityName">
+                                    <b>{this.state.community.name}</b></div>
                             </Box>
-                            <h3>{this.state.community.description}</h3>
-                            <div>{this.state.community.member}</div>
-                            <div> Members</div>
+                            <div variant="caption" display="block" gutterBottom id="communityDescruption">{this.state.community.description}</div>
+                            <br></br>
+                            <div>
+                                <div variant="caption" display="block" gutterBottom id="communityMember"><b>{this.state.community.member}</b></div>
+                                <div> Members</div>
+                            </div>
                             <hr></hr>
-                            <div>Created {this.state.community.created_at.toDateString()}</div>
+                            <div variant="caption" display="block" gutterBottom>Created {this.state.community.created_at.toDateString()}</div>
+                            <br></br>
                             <Button variant="outlined" className='join-button'>{this.state.community.joined ? 'Joined' : 'Not Joined'}</Button>
                         </div>
                     </Box>

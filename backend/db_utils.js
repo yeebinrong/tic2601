@@ -21,10 +21,32 @@ const retrieveUserInfoWithCredentials = (username, password) => {
     )
 }
 
+const getAllPosts = () => {
+    return POOL.query('SELECT * FROM posts')
+}
+
+// This sql inserts a row into community table with the specified communityName,
+// using the autoincrement id returned from inserting that row,
+// the community_name and user_name is inserted into moderator tables.
+// After that the community_name is returned back to frontend
+const insertOneCommunityAndReturnName = (userName, communityName) => {
+    return POOL.query(
+        `WITH C_ROWS AS
+            (INSERT INTO community (community_name)
+                VALUES ('${communityName}') RETURNING community_name),
+            M_ROWS AS
+            (INSERT INTO MODERATORS (community_name, user_name, is_admin)
+            SELECT community_name, ${userName}, 'Y'
+                FROM C_ROWS)
+        SELECT community_name
+        FROM C_ROWS;`
+    )
+}
+
 /* -------------------------------------------------------------------------- */
 /* -------------------------------------------------------------------------- */
 /* -------------------------------------------------------------------------- */
 
 module.exports = {
-    retrieveUserInfoWithCredentials, checkUserNameAlreadyExists, insertToUser
+    retrieveUserInfoWithCredentials, checkUserNameAlreadyExists, insertToUser, getAllPosts, insertOneCommunityAndReturnName
 }
