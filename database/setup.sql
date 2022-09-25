@@ -8,7 +8,61 @@ BEGIN
     IF NOT EXISTS (SELECT 1 FROM pg_type WHERE typname = 'trueorfalse') THEN
         CREATE TYPE TrueOrFalse AS ENUM ('Y', 'N');
     END IF;
+    IF NOT EXISTS (SELECT 1 FROM pg_type WHERE typname = 'flairenum') THEN
+        CREATE TYPE FlairEnum AS ENUM ('Text', 'News', 'Discussion', 'Photo');
+    END IF;
 END$$;
+
+-- [Create functions]
+-- Select posts with params func
+-- TODO join for comments, likes, banlist,
+-- TODO add logic for order by hot, best
+CREATE OR REPLACE FUNCTION searchPostWithParamsFunc(
+	currentUser text, orderParam text, userFilter text, flairFilter text, communityFilter text, queryFilter text)
+  RETURNS TABLE(
+	post_id INTEGER,
+	user_name VARCHAR(30),
+	community_name VARCHAR(21),
+	flair FlairEnum,
+	url VARCHAR(2048),
+	title VARCHAR(300),
+	date_created TIMESTAMP,
+	date_deleted TIMESTAMP
+  )
+  LANGUAGE plpgsql AS
+$func$
+DECLARE
+        paramQuery text := '';
+		appendParam text := ' WHERE ';
+		BEGIN
+		raise notice 'userFilter: %', userFilter;
+        IF userFilter != '' THEN
+            paramQuery = paramQuery || appendParam || 'posts.user_name = ' || '''' || userFilter || '''';
+			appendParam = ' AND ';
+        END IF;
+        IF flairFilter != '' THEN
+            paramQuery = paramQuery || appendParam || 'posts.flair = ' || '''' || flairFilter || '''';
+			appendParam = ' AND ';
+        END IF;
+        IF communityFilter != '' THEN
+            paramQuery = paramQuery || appendParam || 'posts.community_name = ' || '''' || communityFilter || '''';
+			appendParam = ' AND ';
+        END IF;
+        IF queryFilter != '' THEN
+            paramQuery = paramQuery || appendParam || 'posts.title ILIKE ' || '''' || '%' || queryFilter || '%' || '''';
+			appendParam = ' AND ';
+        END IF;
+		CASE orderParam
+			WHEN 'new' THEN
+				paramQuery = paramQuery || ' ORDER BY posts.date_created DESC';
+			WHEN 'hot' THEN
+			WHEN 'best' THEN
+			ELSE
+		END CASE;
+		RAISE NOTICE 'Value: %', 'SELECT * FROM posts' || paramQuery;
+        RETURN QUERY EXECUTE 'SELECT * FROM posts' || paramQuery;
+END;
+$func$;
 
 -- [Create role for backend queries]
 DROP ROLE IF EXISTS readit_user;

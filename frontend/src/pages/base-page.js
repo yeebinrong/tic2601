@@ -68,6 +68,34 @@ class BasePage extends React.Component {
         );
     }
 
+    createSearchParams = (chips) => {
+        const validatedChips = {};
+        chips.forEach(chip => validatedChips[chip.type] = chip);
+        const chipKeys = Object.keys(validatedChips);
+        let searchParamStr = '';
+        for (let i = 0; i < chipKeys.length; i += 1) {
+            if (chipKeys[i] === 'community') {
+                if (searchParamStr !== '')
+                    searchParamStr += '&';
+                searchParamStr += `community=${validatedChips[chipKeys[i]].inputValue}`;
+            } else if (chipKeys[i] === 'flair') {
+                if (searchParamStr !== '')
+                    searchParamStr += '&';
+                searchParamStr += `flair=${validatedChips[chipKeys[i]].inputValue}`;
+            } else if (chipKeys[i] === 'user') {
+                if (searchParamStr !== '')
+                    searchParamStr += '&';
+                searchParamStr += `user=${validatedChips[chipKeys[i]].inputValue}`;
+            }
+        }
+        if (this.state.searchBarText !== '') {
+            if (searchParamStr !== '')
+                searchParamStr += '&';
+            searchParamStr += `q=${this.state.searchBarText}`;
+        }
+        return searchParamStr;
+    }
+
     render() {
         return (
             <>
@@ -88,6 +116,7 @@ class BasePage extends React.Component {
                             <div style={{ display: 'flex', flexGrow: '1', marginLeft: '16px' }}>\
                                 <Autocomplete
                                     multiple
+                                    inputValue={this.state.searchBarText}
                                     value={this.state.searchBarChips}
                                     onChange={(e, chips) => {
                                         const validatedChips = {};
@@ -98,6 +127,7 @@ class BasePage extends React.Component {
                                             finalChips.push(validatedChips[chipKeys[i]]);
                                         }
                                         this.setState({
+                                            searchBarText: '',
                                             searchBarChips: finalChips,
                                         });
                                     }}
@@ -108,7 +138,9 @@ class BasePage extends React.Component {
                                     open={!this.props.isLoading}
                                     handleHomeEndKeys
                                     filterOptions={(options, params) => {
-                                        if (params.inputValue.length <= 2) {
+                                        if (params.inputValue.startsWith('f/')) {
+                                            return defaultFlairs;
+                                        } else if (params.inputValue.length <= 2) {
                                             return [];
                                         }
                                         let toAdd = '';
@@ -120,8 +152,7 @@ class BasePage extends React.Component {
                                             toAdd = 'Add community filter:';
                                             type = 'community';
                                         } else if (params.inputValue.startsWith('f/')) {
-                                            toAdd = 'Add flair filter:';
-                                            type = 'flair';
+                                            return defaultFlairs;
                                         }
                                         if (toAdd === '') {
                                             return [];
@@ -153,11 +184,22 @@ class BasePage extends React.Component {
                                                 inputProps={{
                                                 ...params.inputProps,
                                                 onKeyDown: (e) => {
-                                                    if (e.key === 'Enter') {
+                                                    if (this.state.searchBarText.startsWith('f/') && e.key !== 'Backspace') {
+                                                        e.preventDefault();
+                                                    } else if (e.key === 'Enter') {
                                                         e.stopPropagation();
-                                                        e.target.blur();
-                                                        this.props.setIsLoading(true);
-                                                        // TODO add logic to send search request to backend
+                                                        if (this.state.searchBarChips.length !== 0 || this.state.searchBarText !== '') {
+                                                            this.setState({
+                                                                searchBarText: '',
+                                                                searchBarChips: [],
+                                                            })
+                                                            e.target.blur();
+                                                            this.props.navigate({
+                                                                pathname: '/search/new',
+                                                                search: `?${this.createSearchParams(this.state.searchBarChips)}`,
+                                                                replace: true,
+                                                            });
+                                                        }
                                                     }
                                                 },
                                                 }}

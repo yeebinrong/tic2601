@@ -182,20 +182,21 @@ app.get('/api/all_posts', async (req, resp) => {
     return
 })
 
+// TODO catch / handle errors
 app.get('/api/search', async (req, resp) => {
-    const { order, user, flair, community } = req.query;
-    const results = await searchPostWithParams(req.token.username, order, user, flair, community);
-    // if (results.rows && results.rows.length == 0) {
-    //     resp.status(204)
-    //     resp.type('application/json')
-    //     resp.json({message: 'No posts found!'})
-    //     return
-    // }
-    resp.status(200)
-    resp.type('application/json')
-    resp.json({rows: 'ok' })
-    return
-})
+    const { order, user, flair, community, q } = req.query;
+    const results = await searchPostWithParams(req.token.username, order, user, flair, community, q);
+    if (results.rows && results.rows.length == 0) {
+        resp.status(204);
+        resp.type('application/json');
+        resp.json({rows: [], message: 'No posts found!'});
+        return;
+    }
+    resp.status(200);
+    resp.type('application/json');
+    resp.json({rows: results.rows });
+    return;
+});
 
 app.get('/api/receive', (req, resp) => {
     const value = req.query.value

@@ -55,6 +55,9 @@ export const getQueryParameters = str => {
     if (!parsed.community) {
         parsed.community = '';
     }
+    if (!parsed.q) {
+        parsed.q = '';
+    }
     return parsed;
 };
 

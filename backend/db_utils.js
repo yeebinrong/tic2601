@@ -52,15 +52,19 @@ const insertOneCommunityAndReturnName = (userName, communityName) => {
     )
 }
 
-const searchPostWithParams = (currentUser, order, user, flair, community) => {
-    console.log('current user: ' + currentUser);
-    console.log('order: ' + order);
-    console.log('user: ' + user);
-    console.log('flair: ' + flair);
-    console.log('community: ' + community);
-
-    return '';
-}
+const searchPostWithParams = (currentUser, order, user, flair, community, q) => {
+    return POOL.query(
+        'SELECT * FROM searchPostWithParamsFunc($1, $2, $3, $4, $5, $6);',
+        [
+            escapeQuotes(currentUser),
+            escapeQuotes(order),
+            escapeQuotes(user),
+            escapeQuotes(flair),
+            escapeQuotes(community),
+            escapeQuotes(q),
+        ],
+    );
+};
 
 /* -------------------------------------------------------------------------- */
 /* -------------------------------------------------------------------------- */
