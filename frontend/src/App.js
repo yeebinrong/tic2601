@@ -3,7 +3,6 @@ import { connect } from 'react-redux';
 import React, { useEffect } from 'react';
 import './App.scss';
 import DemoPage from './pages/demo-page';
-import SettingPage from './pages/setting-page';
 import ErrorPage from './pages/error-page';
 import LoginPage from './pages/login-page';
 import { MainSelectors } from './state/selectors';
@@ -77,9 +76,9 @@ const App = (props) => {
                 element={<DemoPage navigate={navigate} />}
             />
             <Route
-                path="/settings"
+                path="/search/:order"
                 exact
-                element={<SettingPage navigate={navigate} />}
+                element={<SearchPage location={location} navigate={navigate} />}
             />
             <Route path="*" element={<ErrorPage navigate={navigate} />} />
         </Routes>
