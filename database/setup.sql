@@ -76,7 +76,8 @@ CREATE TABLE posts (
 	url VARCHAR(2048),
 	title VARCHAR(300) NOT NULL,
 	date_created TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-	date_deleted TIMESTAMP DEFAULT NULL
+	date_deleted TIMESTAMP DEFAULT NULL,
+	view_count INT NOT NULL DEFAULT 0
 );
 
 -- Alter community table to have pinned_post have foreign key
@@ -89,7 +90,6 @@ CREATE TABLE post_contents (
 	content VARCHAR(1000) NOT NULL,
 	is_edited TrueOrFalse NOT NULL DEFAULT 'N',
 	date_edited TIMESTAMP DEFAULT NULL,
-	view_count INT NOT NULL DEFAULT 1,
 	is_archived TrueOrFalse DEFAULT 'N',
 	date_archived TIMESTAMP DEFAULT NULL
 );
