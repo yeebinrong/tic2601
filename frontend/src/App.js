@@ -1,9 +1,8 @@
-import { Navigate, Route, Routes, useNavigate } from 'react-router-dom';
+import { Navigate, Route, Routes, useLocation, useNavigate } from 'react-router-dom';
 import { connect } from 'react-redux';
 import React, { useEffect } from 'react';
 import './App.scss';
 import DemoPage from './pages/demo-page';
-import SettingPage from './pages/setting-page';
 import ErrorPage from './pages/error-page';
 import LoginPage from './pages/login-page';
 import ViewPostPage from './pages/post-page';
@@ -11,9 +10,11 @@ import { MainSelectors } from './state/selectors';
 import { MainActions } from './state/actions';
 import axios from 'axios';
 import { verifyToken } from './apis/app-api';
+import SearchPage from './pages/search-page';
 
 const App = (props) => {
     let navigate = useNavigate();
+    let location = useLocation();
 
     useEffect(() => {
         const isLoginPage =
@@ -57,6 +58,10 @@ const App = (props) => {
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []);
 
+    const mainProps = {
+        location: location,
+        navigate: navigate,
+    };
     return (
         <Routes>
             <Route path="" exact element={<Navigate replace to="/login" />} />
@@ -64,18 +69,18 @@ const App = (props) => {
                 path="/login"
                 exact
                 element={
-                    <LoginPage navigate={navigate} />
+                    <LoginPage {...mainProps} />
                 }
             />
             <Route
                 path="/register"
                 exact
-                element={<LoginPage navigate={navigate} isRegisterPage />}
+                element={<LoginPage {...mainProps} isRegisterPage />}
             />
             <Route
                 path="/home"
                 exact
-                element={<DemoPage navigate={navigate} />}
+                element={<DemoPage {...mainProps} />}
             />
             <Route
                 path="/post"
@@ -84,11 +89,11 @@ const App = (props) => {
             />
 
             <Route
-                path="/settings"
+                path="/search/:order"
                 exact
-                element={<SettingPage navigate={navigate} />}
+                element={<SearchPage {...mainProps} />}
             />
-            <Route path="*" element={<ErrorPage navigate={navigate} />} />
+            <Route path="*" element={<ErrorPage {...mainProps} />} />
         </Routes>
     );
 };

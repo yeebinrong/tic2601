@@ -7,19 +7,23 @@ const morgan = require('morgan')
 const cors = require('cors')
 const jwt = require('jsonwebtoken')
 const sha256 = require('sha256')
+const multer = require('multer')
 
 // Passport core
 const passport = require('passport')
 // Passport Strategies
 const { localStrategy, mkAuth, verifyToken } = require('./passport_strategy.js')
-const { SIGN_SECRET } = require('./server_config.js')
-const { checkUserNameAlreadyExists, insertToUser, getAllPosts, insertOneCommunityAndReturnName } = require('./db_utils.js')
 const { getCommunity } = require('./apis/community');
 const { getPost } = require('./apis/post');
+const { SIGN_SECRET, CHECK_DIGITAL_OCEAN_KEYS, CHECK_POSTGRES_CONN, READ_FILE, UNLINK_ALL_FILES } = require('./server_config.js')
+const { checkUserNameAlreadyExists, insertToUser, getAllPosts, insertOneCommunityAndReturnName, searchPostWithParams, uploadToDigitalOcean } = require('./db_utils.js')
 
 /* -------------------------------------------------------------------------- */
 //             ######## DECLARE VARIABLES & CONFIGURATIONS ########
 /* -------------------------------------------------------------------------- */
+
+// Directory to store files to upload
+const UPLOAD_PATH = `${__dirname}/uploads/`
 
 // Configure passport with a strategy
 passport.use(localStrategy)
@@ -30,6 +34,8 @@ const localStrategyAuth = mkAuth(passport, 'local')
 const PORT = parseInt(process.argv[2]) || parseInt(process.env.PORT) || 3008
 // Create an instance of express
 const app = express()
+// Create an instance of multer
+const upload = multer({dest: UPLOAD_PATH})
 
 /* -------------------------------------------------------------------------- */
 //                          ######## REQUESTS ########
@@ -142,7 +148,7 @@ app.use((req, resp, next) => {
 app.post('/api/create_community', async (req, resp) => {
     let insertedCommunityName = ''
     try {
-        const results = await insertOneCommunityAndReturnName(req.token.user_name, req.body.communityName)
+        const results = await insertOneCommunityAndReturnName(req.token.username, req.body.communityName)
         insertedCommunityName = results.rows[0].community_name
     } catch (e) {
         console.info(`ERROR: Insert to community failed with following ${e}`)
@@ -154,7 +160,6 @@ app.post('/api/create_community', async (req, resp) => {
             return
         } else if (e.code === '23514') {
             // 409 Unprocessable Entity
-            console.log()
             resp.status(422)
             resp.type('application/json')
             resp.json({message: `Community name [${req.body.communityName}] failed check constraints.`})
@@ -176,13 +181,50 @@ app.get('/api/all_posts', async (req, resp) => {
     if (results.rows.length == 0) {
         resp.status(204)
         resp.type('application/json')
-        resp.json({message: 'No posts found!'})
+        resp.json({rows: [], message: 'No posts found!'})
         return
     }
     resp.status(200)
     resp.type('application/json')
     resp.json({rows: results.rows})
     return
+})
+
+// TODO catch / handle errors
+app.get('/api/search', async (req, resp) => {
+    const { order, user, flair, community, q } = req.query;
+    const results = await searchPostWithParams(req.token.username, order, user, flair, community, q);
+    if (results.rows && results.rows.length == 0) {
+        resp.status(204);
+        resp.type('application/json');
+        resp.json({rows: [], message: 'No posts found!'});
+        return;
+    }
+    resp.status(200);
+    resp.type('application/json');
+    resp.json({rows: results.rows });
+    return;
+});
+
+// POST /api/upload
+app.post('/api/upload', upload.single('file'), async (req, resp) => {
+    // Parse the json string sent from client into json object
+    const data = JSON.parse(req.body.data)
+    try {
+        const buffer = await READ_FILE(req.file.path)
+        const key = await uploadToDigitalOcean(buffer, req)
+        data.key = key
+        // const id = await uploadToMongo(data)
+        await UNLINK_ALL_FILES(UPLOAD_PATH)
+        resp.status(200)
+        resp.type('application/json')
+        resp.json({id: id})
+    } catch (e) {
+        console.info(e)
+		resp.status(500)
+		resp.type('application/json')
+		resp.json({msg: `${e}`})
+    }
 })
 
 app.get('/api/receive', (req, resp) => {
@@ -203,6 +245,11 @@ app.get('/api/getbackendvalue', (req, resp) => {
 app.get('/api/community/:communityName', getCommunity)
 app.get('/api/posts/:postId', getPost)
 
-app.listen(PORT, () => {
-    console.info(`Application is listening PORT ${PORT} at ${new Date()}`)
+Promise.all([CHECK_POSTGRES_CONN(), CHECK_DIGITAL_OCEAN_KEYS()])
+.then(() => {
+    app.listen(PORT, () => {
+        console.info(`Application is listening PORT ${PORT} at ${new Date()}`);
+    })
+}).catch(e => {
+    console.info('Error starting the server: ', e);
 })

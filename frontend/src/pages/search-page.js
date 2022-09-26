@@ -1,15 +1,15 @@
 import React from 'react';
-import DemoComponent from '../components/DemoComponent/DemoComponent';
+import SearchComponent from '../components/SearchComponent/SearchComponent';
 import BasePage from './base-page';
 
-class DemoPage extends React.Component {
+class SearchPage extends React.Component {
     render() {
         return (
             <BasePage
                 navigate={this.props.navigate}
                 component={(props) => {
                     return (
-                        <DemoComponent {...props} />
+                        <SearchComponent {...props} location={this.props.location} />
                     );
                 }}
             />
@@ -17,4 +17,4 @@ class DemoPage extends React.Component {
     }
 }
 
-export default DemoPage;
+export default SearchPage;
