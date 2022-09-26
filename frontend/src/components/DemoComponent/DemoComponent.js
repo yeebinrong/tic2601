@@ -190,14 +190,11 @@ class DemoComponent extends React.Component {
 }
 
 const mapStateToProps = (state) => ({
-    isVerifyDone: MainSelectors.getIsVerifyDone(state),
-    isLoading: MainSelectors.getIsLoading(state),
     value: MainSelectors.getValue(state),
     valueFromBackend: MainSelectors.getValueFromBackend(state),
 });
 
 const mapDispatchToProps = {
-    setIsLoading: MainActions.setIsLoading,
     setValue: MainActions.setValue,
     getValueFromBackend: MainSagaActions.getBackEndValue,
 };
