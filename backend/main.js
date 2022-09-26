@@ -14,6 +14,8 @@ const passport = require('passport')
 const { localStrategy, mkAuth, verifyToken } = require('./passport_strategy.js')
 const { SIGN_SECRET } = require('./server_config.js')
 const { checkUserNameAlreadyExists, insertToUser, getAllPosts, insertOneCommunityAndReturnName } = require('./db_utils.js')
+const { getCommunity } = require('./apis/community');
+const { getPost } = require('./apis/post');
 
 /* -------------------------------------------------------------------------- */
 //             ######## DECLARE VARIABLES & CONFIGURATIONS ########
@@ -197,6 +199,9 @@ app.get('/api/getbackendvalue', (req, resp) => {
     resp.json({ value: Math.floor(Math.random() * 100) })
     return
 })
+
+app.get('/api/community/:communityName', getCommunity)
+app.get('/api/posts/:postId', getPost)
 
 app.listen(PORT, () => {
     console.info(`Application is listening PORT ${PORT} at ${new Date()}`)
