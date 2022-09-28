@@ -1,4 +1,5 @@
 const { getPostById } = require('../db/post');
+const { getReplyComments, getCommentsByPostId } = require('../db/comment');
 // return post info
 // example:
 // {
@@ -19,11 +20,37 @@ exports.getPost = async (req, resp) => {
         resp.json({ message: 'Post not found!' });
         return;
     }
+    const post = results.rows[0];
+
+    console.log(post);
+    const commentsResult = await getCommentsByPostId(post.post_id);
+    const comments = commentsResult.rows;
+    console.log(comments);
+
+    for (const cmt of comments) {
+        await queryReplyComments(cmt);
+    }
+
     resp.status(200);
     resp.type('application/json');
     resp.json(
         {
-            ...results.rows[0],
+            ...post,
+            comments,
         },
     );
 };
+
+async function queryReplyComments(comment) {
+    let rs = await getReplyComments(comment.unique_id);
+    let replyComments = rs.rows;
+    if (replyComments.length === 0) {
+        return;
+    }
+
+    for (const cmt of replyComments) {
+        await queryReplyComments(cmt);
+    }
+
+    comment['reply_comments'] = replyComments;
+}
