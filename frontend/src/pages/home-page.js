@@ -7,7 +7,14 @@ class HomePage extends React.Component {
         return (
             <BasePage
                 navigate={this.props.navigate}
-                component={<HomePageComponent />}
+                component={(props) => {
+                    return (
+                        <HomePageComponent
+                            {...props}
+                            location={this.props.location}
+                        />
+                    );
+                }}
             />
         );
     }

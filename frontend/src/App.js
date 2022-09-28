@@ -5,6 +5,7 @@ import './App.scss';
 import DemoPage from './pages/demo-page';
 import ErrorPage from './pages/error-page';
 import LoginPage from './pages/login-page';
+import HomePage from './pages/home-page';
 import { MainSelectors } from './state/selectors';
 import { MainActions } from './state/actions';
 import axios from 'axios';
@@ -79,7 +80,7 @@ const App = (props) => {
             <Route
                 path="/home"
                 exact
-                element={<DemoPage {...mainProps} />}
+                element={<HomePage {...mainProps} />}
             />
             <Route
                 path="/search/:order"
