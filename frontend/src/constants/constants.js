@@ -58,6 +58,9 @@ export const getQueryParameters = str => {
     if (!parsed.q) {
         parsed.q = '';
     }
+    if (!parsed.currentTab) {
+        parsed.currentTab = '';
+    }
     return parsed;
 };
 
