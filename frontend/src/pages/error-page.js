@@ -7,25 +7,27 @@ class ErrorPage extends React.Component {
         return (
             <BasePage
                 navigate={this.props.navigate}
-                component={
-                    <div className={'app-error-container'}>
-                        <img
-                            draggable={false}
-                            src="/static/404_1.png"
-                            className={'app-error'}
-                            alt="error 404"
-                        />
-                        <Button
-                            className={'app-error-button'}
-                            onClick={() => {
-                                this.props.navigate('/home');
-                            }}
-                            variant="outlined"
-                        >
-                            Go Home Page
-                        </Button>
-                    </div>
-                }
+                component={(props) => {
+                    return (
+                        <div className={'app-error-container'}>
+                            <img
+                                draggable={false}
+                                src="/static/404_1.png"
+                                className={'app-error'}
+                                alt="error 404"
+                            />
+                            <Button
+                                className={'app-error-button'}
+                                onClick={() => {
+                                    this.props.navigate('/home');
+                                }}
+                                variant="outlined"
+                            >
+                                Go Home Page
+                            </Button>
+                        </div>
+                    );
+                }}
             />
         );
     }

@@ -85,9 +85,10 @@ export function retrieveAllPosts() {
         }));
 }
 
-export function retrieveHomePagePosts() {
+export function searchForPostWithParams(params) {
     return axios
-        .get(`${HOST}/api/homepage_posts`, {
+        .get(`${HOST}/api/search`, {
+            params,
             headers: {
                 Accept: CONTENT_TYPE_JSON,
             },
