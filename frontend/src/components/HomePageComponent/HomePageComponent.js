@@ -1,9 +1,7 @@
 import React from 'react';
 import './HomePageComponent.scss';
 import { retrieveHomePagePosts } from '../../apis/app-api';
-import { MainActions } from '../../state/actions';
-import { MainSelectors } from '../../state/selectors';
-import { connect } from 'react-redux';
+import { getQueryParameters, withParams } from '../../constants/constants';
 import TabButton from '../TabButton';
 import MenuButton from '../MenuButton';
 import {
@@ -32,11 +30,16 @@ class HomePageComponent extends React.Component {
 
         this.state = {
             isCreateCommunityDialogOpen: false,
+            currentTab: '',
             posts: [],
         };
         if (props.isVerifyDone) {
             this.props.setIsLoading(true);
-            retrieveHomePagePosts().then((res) => {
+            retrieveHomePagePosts({
+                ...getQueryParameters(this.props.location.search),
+                currentTab: this.props.params.currentTab,
+                sortBy: this.props.params.sortBy,
+            }).then((res) => {
                 this.props.setIsLoading(false);
                 this.setState({
                     posts: res.data.rows,
@@ -46,9 +49,16 @@ class HomePageComponent extends React.Component {
     }
 
     shouldComponentUpdate(nextProps) {
-        if (nextProps.isVerifyDone && !this.props.isVerifyDone) {
+        if (
+            (nextProps.isVerifyDone && !this.props.isVerifyDone) ||
+            nextProps.location.search !== this.props.location.search
+        ) {
             this.props.setIsLoading(true);
-            retrieveHomePagePosts().then((res) => {
+            retrieveHomePagePosts({
+                ...getQueryParameters(nextProps.location.search),
+                currentTab: nextProps.params.currentTab,
+                sortBy: nextProps.params.sortBy,
+            }).then((res) => {
                 this.props.setIsLoading(false);
                 this.setState({
                     posts: res.data.rows,
@@ -115,10 +125,7 @@ class HomePageComponent extends React.Component {
                             <Item>
                                 <TabButton />
                             </Item>
-                            {this.state.posts.map((post) => {
-                                {
-                                    console.log(post);
-                                }
+                            {this.state.posts?.map((post) => {
                                 return (
                                     <Item>
                                         <Stack
@@ -158,11 +165,24 @@ class HomePageComponent extends React.Component {
                                                         paddingTop: '11px',
                                                     }}
                                                 >
-                                                    {post.age.days
-                                                        ? post.age.days +
-                                                          ' days ago'
-                                                        : post.age.hours +
-                                                          ' hours ago'}
+                                                    {(post.age.years &&
+                                                        post.age.years +
+                                                            ' years ago') ||
+                                                        (post.age.months &&
+                                                            post.age.months +
+                                                                ' months ago') ||
+                                                        (post.age.days &&
+                                                            post.age.days +
+                                                                ' days ago') ||
+                                                        (post.age.hours &&
+                                                            post.age.hours +
+                                                                ' hours ago') ||
+                                                        (post.age.minutes &&
+                                                            post.age.minutes +
+                                                                ' minutes ago') ||
+                                                        (post.age.seconds &&
+                                                            post.age.seconds +
+                                                                ' seconds ago')}
                                                 </Box>
                                             </Stack>
                                             <Stack
@@ -176,7 +196,7 @@ class HomePageComponent extends React.Component {
                                             >
                                                 <b>{post.title}</b>
                                                 <Chip
-                                                    label={post.flair_name}
+                                                    label={post.flair}
                                                     color="primary"
                                                     variant="outlined"
                                                     size="small"
@@ -196,7 +216,9 @@ class HomePageComponent extends React.Component {
                                                             }}
                                                         />
                                                     </IconButton>
-                                                    {post.favour_point}
+                                                    {post.fav_point
+                                                        ? post.fav_point
+                                                        : 0}
                                                     <IconButton
                                                         sx={{ p: '10px' }}
                                                         aria-label="downvote"
@@ -216,7 +238,8 @@ class HomePageComponent extends React.Component {
                                                     >
                                                         <CommentIcon />
                                                     </IconButton>
-                                                    {post.count} Comments
+                                                    {post.comment_count}{' '}
+                                                    Comments
                                                 </Box>
                                                 <Box>
                                                     <IconButton
@@ -297,13 +320,4 @@ const Item = styled(Paper)(({ theme }) => ({
     color: theme.palette.text.secondary,
 }));
 
-const mapStateToProps = (state) => ({
-    isVerifyDone: MainSelectors.getIsVerifyDone(state),
-    isLoading: MainSelectors.getIsLoading(state),
-});
-
-const mapDispatchToProps = {
-    setIsLoading: MainActions.setIsLoading,
-};
-
-export default connect(mapStateToProps, mapDispatchToProps)(HomePageComponent);
+export default withParams(HomePageComponent);
