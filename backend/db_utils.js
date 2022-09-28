@@ -30,6 +30,28 @@ const getAllPosts = () => {
     return POOL.query('SELECT * FROM posts')
 }
 
+const getHomePagePosts = (currentUser, currentTab, sortBy) => {
+    return POOL.query(
+        `WITH following_communities AS
+            (SELECT fc.community_name, p.user_name, AGE(CURRENT_TIMESTAMP, p.date_created), p.title, p.flair, p.post_id,
+                SUM(f.favour_point) AS fav_point, COUNT(c.comment_id) AS comment_count
+            FROM followed_communities fc
+            INNER JOIN posts p ON p.community_name = fc.community_name
+            LEFT JOIN favours f ON f.post_id = p.post_id
+            LEFT JOIN comments c ON c.post_id = f.post_id
+            GROUP BY fc.community_name, fc.user_name, p.post_id, c.comment_id
+            HAVING fc.user_name = $1)
+            SELECT DISTINCT post_id, community_name, user_name, age, title, flair, fav_point, comment_count
+            FROM following_communities
+            ORDER BY $2 $3`,
+        [
+            escapeQuotes(currentUser),
+            escapeQuotes(currentTab),
+            escapeQuotes(sortBy),
+        ],
+    )
+}
+
 // This sql inserts a row into community table with the specified communityName,
 // using the autoincrement id returned from inserting that row,
 // the community_name and user_name is inserted into moderator tables.
@@ -99,5 +121,5 @@ const uploadToDigitalOcean = (buffer, req) => new Promise((resolve, reject) => {
 /* -------------------------------------------------------------------------- */
 
 module.exports = {
-    retrieveUserInfoWithCredentials, checkUserNameAlreadyExists, insertToUser, getAllPosts, insertOneCommunityAndReturnName, searchPostWithParams, uploadToDigitalOcean
+    retrieveUserInfoWithCredentials, checkUserNameAlreadyExists, insertToUser, getAllPosts, getHomePagePosts, insertOneCommunityAndReturnName, searchPostWithParams, uploadToDigitalOcean
 }
