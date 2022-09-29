@@ -133,3 +133,34 @@ export function getBackEndValueApi() {
             status: err && err.response ? err.response.status : '',
         }));
 }
+
+export function retrievePostById(postId) {
+    return axios
+        .get(`${HOST}/api/posts/${postId}`, {
+            headers: {
+                Accept: CONTENT_TYPE_JSON,
+                Authorization: 'Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VybmFtZSI6InRlc3RhY2NvdW50IiwiZW1haWwiOiJ0ZXN0QGdtYWlsLmNvbSIsInByb2ZpbGVfcGljdHVyZSI6bnVsbCwiZGVzY3JpcHRpb24iOiJIZWxsbyEgV2VsY29tZSB0byB0ZXN0YWNjb3VudCBwcm9maWxlIHBhZ2UiLCJkYXRldGltZV9jcmVhdGVkIjoiMjAyMi0wOS0yNlQxMjozODo0NS42MDZaIiwiaXNzIjoicmVhZGl0IiwiaWF0IjoxNjY0MjAzMTg1LjUyOH0.2ZIJYdRNrrLcSao9G2Lw950uUuSlcKna4RTIvwxgLsw',
+            },
+        })
+        .then((resp) => ({ data: resp.data, error: false }))
+        .catch((err) => ({
+            data: err && err.response ? err.response.data : '',
+            error: true,
+            status: err && err.response ? err.response.status : '',
+        }));
+}
+export function retrieveCommunityByName(communityName) {
+    return axios
+        .get(`${HOST}/api/community/${communityName}`, {
+            headers: {
+                Accept: CONTENT_TYPE_JSON,
+                Authorization: 'Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VybmFtZSI6InRlc3RhY2NvdW50IiwiZW1haWwiOiJ0ZXN0QGdtYWlsLmNvbSIsInByb2ZpbGVfcGljdHVyZSI6bnVsbCwiZGVzY3JpcHRpb24iOiJIZWxsbyEgV2VsY29tZSB0byB0ZXN0YWNjb3VudCBwcm9maWxlIHBhZ2UiLCJkYXRldGltZV9jcmVhdGVkIjoiMjAyMi0wOS0yNlQxMjozODo0NS42MDZaIiwiaXNzIjoicmVhZGl0IiwiaWF0IjoxNjY0MjAzMTg1LjUyOH0.2ZIJYdRNrrLcSao9G2Lw950uUuSlcKna4RTIvwxgLsw',
+            },
+        })
+        .then((resp) => ({ data: resp.data, error: false }))
+        .catch((err) => ({
+            data: err && err.response ? err.response.data : '',
+            error: true,
+            status: err && err.response ? err.response.status : '',
+        }));
+}

@@ -1,4 +1,5 @@
-export function timeSince(date) {
+export function timeSince(dateStr) {
+    let date = Date.parse(dateStr)
 
     let seconds = Math.floor((new Date() - date) / 1000);
 

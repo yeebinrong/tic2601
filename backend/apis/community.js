@@ -11,9 +11,7 @@ const { getCommunityByName, getCommunityMemberCount } = require('../db/community
 //   "profile_picture": null,
 //   "backdrop_picture": null,
 //   "colour": "#E30D00",
-//   "members": {
-//     "count": "1"
-//   }
+//   "member_count": "1"
 // }
 exports.getCommunity = async (req, resp) => {
     const results = await getCommunityByName(req.params.communityName);
@@ -29,7 +27,7 @@ exports.getCommunity = async (req, resp) => {
     resp.json(
         {
             ...results.rows[0],
-            members: memberCount.rows[0],
+            member_count: memberCount.rows[0].count,
         },
     );
 };
