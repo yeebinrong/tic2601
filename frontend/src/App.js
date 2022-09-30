@@ -5,6 +5,7 @@ import './App.scss';
 import DemoPage from './pages/demo-page';
 import ErrorPage from './pages/error-page';
 import LoginPage from './pages/login-page';
+import ViewPostPage from './pages/post-page';
 import { MainSelectors } from './state/selectors';
 import { MainActions } from './state/actions';
 import axios from 'axios';
@@ -54,7 +55,7 @@ const App = (props) => {
                 navigate('/login');
             }
         }
-       // eslint-disable-next-line react-hooks/exhaustive-deps
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []);
 
     const mainProps = {
@@ -80,6 +81,11 @@ const App = (props) => {
                 path="/home"
                 exact
                 element={<DemoPage {...mainProps} />}
+            />
+            <Route
+                path="/community/:community_name/view/:postId"
+                exact
+                element={<ViewPostPage navigate={navigate} />}
             />
             <Route
                 path="/search/:order"
