@@ -30,6 +30,7 @@ const {
     getAllFollowedCommunities,
     insertPost
 } = require('./db_utils.js')
+const { createComment } = require('./apis/comment');
 
 /* -------------------------------------------------------------------------- */
 //             ######## DECLARE VARIABLES & CONFIGURATIONS ########
@@ -345,6 +346,10 @@ app.get('/api/getbackendvalue', (req, resp) => {
     resp.json({ value: Math.floor(Math.random() * 100) })
     return
 })
+
+app.get('/api/community/:communityName', getCommunity)
+app.get('/api/posts/:postId', getPost)
+app.post('/api/posts/:postId/comments', createComment)
 
 Promise.all([CHECK_POSTGRES_CONN(), CHECK_DIGITAL_OCEAN_KEYS()])
 .then(() => {

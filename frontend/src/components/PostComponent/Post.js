@@ -11,7 +11,7 @@ import ArrowDownwardIcon from '@mui/icons-material/ArrowDownward';
 import MoveToInboxOutlinedIcon from '@mui/icons-material/MoveToInboxOutlined';
 import { timeSince } from '../../utils/time';
 import './Post.scss';
-import { retrieveCommunityByName, retrievePostById } from '../../apis/app-api';
+import { createComment, retrieveCommunityByName, retrievePostById } from '../../apis/app-api';
 import { useParams } from 'react-router-dom';
 
 
@@ -55,6 +55,11 @@ const CommentBox = (props) => {
         if (!commentText) {
             return;
         }
+        createComment(props.postId, commentText, props.replyTo)
+            .then(r => {
+                console.log(r);
+                window.location.reload();
+            });
         console.log(`new comment ${commentText} replyTo ${props.replyTo}`);
 
     };
@@ -85,7 +90,6 @@ const Comment = (props) => {
         </li>,
     );
     let [showReplyBox, setShowReplyBox] = useState(false);
-    let parentCommentId = props.parentComment?.comment_id || '';
     return (
 
         <div>
@@ -104,7 +108,7 @@ const Comment = (props) => {
             <Button size='small' onClick={() => {
                 setShowReplyBox(!showReplyBox);
             }}>Reply</Button>
-            {showReplyBox && <CommentBox replyTo={parentCommentId}></CommentBox>}
+            {showReplyBox && <CommentBox postId={props.comment.post_id} replyTo={props.comment.unique_id}></CommentBox>}
 
             <ul>
                 {subComments}
@@ -161,7 +165,7 @@ const Post = (props) => {
                 return resp.data;
             });
         }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [props.isVerifyDone]);
 
 
@@ -210,7 +214,7 @@ const Post = (props) => {
 
                     <hr />
                     <div>
-                        <CommentBox post={post}></CommentBox>
+                        <CommentBox post={post} postId={post.post_id}></CommentBox>
                     </div>
 
                     <hr />
