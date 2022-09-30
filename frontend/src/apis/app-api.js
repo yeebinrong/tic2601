@@ -101,6 +101,56 @@ export function searchForPostWithParams(params) {
         }));
 }
 
+export function retrieveCommunityPosts(community_name) {
+    // console.log("api-function called");
+    console.log(community_name);
+    return axios
+        .get(`${HOST}/api/community`, {
+            params: {
+                community_name,
+            },
+            headers: {
+                Accept: CONTENT_TYPE_JSON,
+            },
+        })
+        .then((resp) => ({ data: resp.data, error: false }))
+        .catch((err) => ({
+            data: err && err.response ? err.response.data : '',
+            error: true,
+            status: err && err.response ? err.response.status : '',
+        }));
+}
+
+// export function retrieveCommunityAdmin() {
+//     return axios
+//         .get(`${HOST}/api/Community_Admin`, {
+//             headers: {
+//                 Accept: CONTENT_TYPE_JSON,
+//             },
+//         })
+//         .then((resp) => ({ data: resp.data, error: false }))
+//         .catch((err) => ({
+//             data: err && err.response ? err.response.data : '',
+//             error: true,
+//             status: err && err.response ? err.response.status : '',
+//         }));
+// }
+
+// export function retrieveCommunityInfo() {
+//     return axios
+//         .get(`${HOST}/api/Community_Info`, {
+//             headers: {
+//                 Accept: CONTENT_TYPE_JSON,
+//             },
+//         })
+//         .then((resp) => ({ data: resp.data, error: false }))
+//         .catch((err) => ({
+//             data: err && err.response ? err.response.data : '',
+//             error: true,
+//             status: err && err.response ? err.response.status : '',
+//         }));
+// }
+
 export function sendMessageApi(value) {
     return axios
         .get(`${HOST}/api/receive`, {

@@ -48,6 +48,7 @@ class SearchComponent extends React.Component {
                 {this.state.posts?.map(post => {
                     return (
                         <div>
+                            <span>{post.order}</span>
                             <span>{post.title}</span>
                         </div>
                     );

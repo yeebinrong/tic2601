@@ -10,6 +10,8 @@ import { MainActions } from './state/actions';
 import axios from 'axios';
 import { verifyToken } from './apis/app-api';
 import SearchPage from './pages/search-page';
+import CommunityPage from './pages/community-page';
+
 
 const App = (props) => {
     let navigate = useNavigate();
@@ -86,6 +88,12 @@ const App = (props) => {
                 exact
                 element={<SearchPage {...mainProps} />}
             />
+            <Route
+                path="/community/:community_name/posts"       
+                exact
+                element={<CommunityPage {...mainProps} />}
+            />
+
             <Route path="*" element={<ErrorPage {...mainProps} />} />
         </Routes>
     );

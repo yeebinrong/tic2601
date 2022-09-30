@@ -53,6 +53,7 @@ const insertOneCommunityAndReturnName = (userName, communityName) => {
 }
 
 const searchPostWithParams = (currentUser, order, user, flair, community, q) => {
+    console.log(currentUser)
     return POOL.query(
         'SELECT * FROM searchPostWithParamsFunc($1, $2, $3, $4, $5, $6);',
         [
@@ -63,6 +64,25 @@ const searchPostWithParams = (currentUser, order, user, flair, community, q) => 
             escapeQuotes(community),
             escapeQuotes(q),
         ],
+    );
+};
+
+
+const retrieveCommunityPostsDB = (community) => {
+    console.log(community);
+    return POOL.query(
+        //    `SELECT * FROM posts`,
+        
+           `SELECT p.community_name, p.user_name, AGE(CURRENT_TIMESTAMP, p.date_created), p.title, p.flair, SUM(f.favour_point), COUNT(c.unique_id), cm.* 
+            FROM posts p
+            INNER JOIN favours f ON f.post_id = p.post_id 
+            INNER JOIN comments c ON c.post_id = f.post_id 
+            INNER JOIN community cm ON cm.community_name = p.community_name
+            WHERE p.community_name = $1 GROUP BY f.post_id,p.post_id,cm.community_name ORDER BY p.date_created DESC`,
+            [
+                escapeQuotes(community),
+            ],
+
     );
 };
 
@@ -99,5 +119,5 @@ const uploadToDigitalOcean = (buffer, req) => new Promise((resolve, reject) => {
 /* -------------------------------------------------------------------------- */
 
 module.exports = {
-    retrieveUserInfoWithCredentials, checkUserNameAlreadyExists, insertToUser, getAllPosts, insertOneCommunityAndReturnName, searchPostWithParams, uploadToDigitalOcean
+    retrieveUserInfoWithCredentials, checkUserNameAlreadyExists, insertToUser, getAllPosts, insertOneCommunityAndReturnName,retrieveCommunityPostsDB, searchPostWithParams, uploadToDigitalOcean
 }
