@@ -78,9 +78,14 @@ const App = (props) => {
                 element={<LoginPage {...mainProps} isRegisterPage />}
             />
             <Route
-                path="/home"
+                path="/home/:currentTab"
                 exact
                 element={<HomePage {...mainProps} />}
+            />
+            <Route
+                path="/home"
+                exact
+                element={<Navigate replace to={"/home/best"} />}
             />
             <Route
                 path="/search/:order"
