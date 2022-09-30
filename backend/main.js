@@ -13,6 +13,8 @@ const multer = require('multer')
 const passport = require('passport')
 // Passport Strategies
 const { localStrategy, mkAuth, verifyToken } = require('./passport_strategy.js')
+const { getCommunity } = require('./apis/community');
+const { getPost } = require('./apis/post');
 const { SIGN_SECRET, CHECK_DIGITAL_OCEAN_KEYS, CHECK_POSTGRES_CONN, READ_FILE, UNLINK_ALL_FILES } = require('./server_config.js')
 const { checkUserNameAlreadyExists, insertToUser, getAllPosts, insertOneCommunityAndReturnName, searchPostWithParams, uploadToDigitalOcean } = require('./db_utils.js')
 
@@ -239,6 +241,9 @@ app.get('/api/getbackendvalue', (req, resp) => {
     resp.json({ value: Math.floor(Math.random() * 100) })
     return
 })
+
+app.get('/api/community/:communityName', getCommunity)
+app.get('/api/posts/:postId', getPost)
 
 Promise.all([CHECK_POSTGRES_CONN(), CHECK_DIGITAL_OCEAN_KEYS()])
 .then(() => {
