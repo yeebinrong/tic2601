@@ -124,7 +124,7 @@ const Community = (props) => {
                         <b>{props.community.name}</b></div>
                 </Box>
                 <div variant='caption' display='block' gutterBottom
-                     id='communityDescruption'>{props.community.description}</div>
+                    id='communityDescruption'>{props.community.description}</div>
                 <br></br>
                 <div>
                     <div variant='caption' display='block' gutterBottom id='communityMember'>
@@ -133,10 +133,10 @@ const Community = (props) => {
                 </div>
                 <hr></hr>
                 <div variant='caption' display='block'
-                     gutterBottom>Created {props.community.datetime_created.toLocaleString()}</div>
+                    gutterBottom>Created {props.community.datetime_created?.toLocaleString()}</div>
                 <br></br>
                 <Button variant='outlined'
-                        className='join-button'>{props.community.joined ? 'Joined' : 'Join'}</Button>
+                    className='join-button'>{props.community.joined ? 'Joined' : 'Join'}</Button>
             </div>
         </div>
     );
@@ -148,23 +148,26 @@ const Post = (props) => {
     let { postId } = useParams();
 
     useEffect(() => {
-        retrievePostById(postId).then((resp) => {
-            setPost(resp.data);
-            console.log(resp.data);
+        console.log(postId);
+        if (postId && postId !== undefined) {
+            retrievePostById(postId).then((resp) => {
+                setPost(resp.data);
+                console.log(resp.data);
 
-            retrieveCommunityByName(resp.data.community_name).then((resp) => {
-                setCommunity({
-                    ...resp.data,
-                    joined: true,
+                retrieveCommunityByName(resp.data.community_name).then((resp) => {
+                    setCommunity({
+                        ...resp.data,
+                        joined: true,
+                    });
                 });
+                return resp.data;
             });
-            return resp.data;
-        });
+        }
     }, []);
 
 
     let commentComponents = null;
-    if (post) {
+    if (post && post.comments) {
         commentComponents = post.comments.map((cmt) => {
             return <Comment key={cmt.comment_id} comment={cmt} />;
         });
@@ -190,7 +193,7 @@ const Post = (props) => {
                         <h2>{post.title}</h2>
                         <div>{post.content}</div>
                         <div id={'post-statusline'}>
-                            <Button disabled>{post.comments.length} comments</Button>
+                            <Button disabled>{post.comments?.length} comments</Button>
                             <UpVote type={'post'} postId={post.post_id}></UpVote>
                             <DownVote type={'post'} postId={post.post_id}></DownVote>
                             {/*<IconButton color='primary' component='label' id='iconbutton'>*/}
