@@ -25,6 +25,10 @@
 li {
   list-style-type: none;
 }
+#post-statusline{
+  display: flex;
+  align-items: center;
+}
 
 .user-avatar {
   margin-right: 5px;

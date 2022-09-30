@@ -6,11 +6,39 @@ import Container from '@mui/material/Container';
 import Avatar from '@mui/material/Avatar';
 import Typography from '@mui/material/Typography';
 import IconButton from '@mui/material/IconButton';
+import ArrowUpwardIcon from '@mui/icons-material/ArrowUpward';
+import ArrowDownwardIcon from '@mui/icons-material/ArrowDownward';
 import MoveToInboxOutlinedIcon from '@mui/icons-material/MoveToInboxOutlined';
 import { timeSince } from '../../utils/time';
 import './Post.scss';
 import { retrieveCommunityByName, retrievePostById } from '../../apis/app-api';
 import { useParams } from 'react-router-dom';
+
+
+const UpVote = (props) => {
+    let callUpVoteAPI = () => {
+        if (props.type == 'post') {
+            console.log(`upvote post ${props.postId}`);
+        } else {
+            console.log(`upvote comment ${props.commentId}`);
+        }
+    };
+    return (
+        <ArrowUpwardIcon onClick={callUpVoteAPI} />
+    );
+};
+const DownVote = (props) => {
+    let callDownVoteAPI = () => {
+        if (props.type == 'post') {
+            console.log(`downvote post ${props.postId}`);
+        } else {
+            console.log(`downvote comment ${props.commentId}`);
+        }
+    };
+    return (
+        <ArrowDownwardIcon onClick={callDownVoteAPI} />
+    );
+};
 
 const User = (props) => {
     return (
@@ -20,14 +48,44 @@ const User = (props) => {
         </Box>
     );
 };
+const CommentBox = (props) => {
+    let [commentText, setCommentText] = useState('');
+
+    let callCommentApi = () => {
+        if (!commentText) {
+            return;
+        }
+        console.log(`new comment ${commentText} replyTo ${props.replyTo}`);
+
+    };
+    return (
+        <div>
+            {props.post && <div>Comment as <u>{props.post.user_name}</u></div>}
+            <TextareaAutosize
+                maxRows={4}
+                aria-label='maximum height'
+                placeholder='Add your comment here'
+                defaultValue={commentText}
+                style={{ width: '100%', height: 70 }}
+                onChange={(e) => {
+                    setCommentText(e.target.value);
+                }}
+            />
+            <br />
+            <Button variant='outlined' size='small' onClick={callCommentApi}>Comment</Button>
+        </div>
+    );
+};
 
 const Comment = (props) => {
 
     const subComments = props.comment.reply_comments && props.comment.reply_comments.map((cmt) =>
         <li key={cmt.comment_id}>
-            <Comment comment={cmt} />
+            <Comment comment={cmt} parentComment={props.comment} />
         </li>,
     );
+    let [showReplyBox, setShowReplyBox] = useState(false);
+    let parentCommentId = props.parentComment?.comment_id || '';
     return (
 
         <div>
@@ -41,9 +99,13 @@ const Comment = (props) => {
             </div>
 
             <div>{props.comment.content}</div>
-            <Button size='small'>Upvote</Button>
-            <Button size='small'>Downvote</Button>
-            <Button size='small'>Reply</Button>
+            <UpVote type={'comment'} commentId={props.comment.comment_id}></UpVote>
+            <DownVote type={'comment'} commentId={props.comment.comment_id}></DownVote>
+            <Button size='small' onClick={() => {
+                setShowReplyBox(!showReplyBox);
+            }}>Reply</Button>
+            {showReplyBox && <CommentBox replyTo={parentCommentId}></CommentBox>}
+
             <ul>
                 {subComments}
             </ul>
@@ -127,15 +189,16 @@ const Post = (props) => {
                         </Box>
                         <h2>{post.title}</h2>
                         <div>{post.content}</div>
-                        <div>
-
+                        <div id={'post-statusline'}>
                             <Button disabled>{post.comments.length} comments</Button>
-                            <IconButton color='primary' component='label' id='iconbutton'>
-                                <div id='upvote'>⬆</div>
-                            </IconButton>
-                            <IconButton color='primary' component='label' id='iconbutton'>
-                                <div id='downvote'>⬇</div>
-                            </IconButton>
+                            <UpVote type={'post'} postId={post.post_id}></UpVote>
+                            <DownVote type={'post'} postId={post.post_id}></DownVote>
+                            {/*<IconButton color='primary' component='label' id='iconbutton'>*/}
+                            {/*    <div id='upvote'>⬆</div>*/}
+                            {/*</IconButton>*/}
+                            {/*<IconButton color='primary' component='label' id='iconbutton'>*/}
+                            {/*    <div id='downvote'>⬇</div>*/}
+                            {/*</IconButton>*/}
                             <IconButton component='label' size='large' id='iconbutton'>
                                 <MoveToInboxOutlinedIcon id='Archive'></MoveToInboxOutlinedIcon></IconButton>
                             <Button></Button>
@@ -145,17 +208,7 @@ const Post = (props) => {
 
                     <hr />
                     <div>
-                        <div>Comment as <u>{post.user_name}</u></div>
-                        <TextareaAutosize
-                            maxRows={4}
-                            aria-label='maximum height'
-                            placeholder='Maximum 4 rows'
-                            defaultValue='Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt
-                        ut labore et dolore magna aliqua.'
-                            style={{ width: '100%', height: 200 }}
-                        />
-                        <br />
-                        <Button variant='outlined' size='small'>Comment</Button>
+                        <CommentBox post={post}></CommentBox>
                     </div>
 
                     <hr />
