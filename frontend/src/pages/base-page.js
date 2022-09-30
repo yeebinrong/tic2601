@@ -222,7 +222,9 @@ class BasePage extends React.Component {
                                         size="small"
                                     >
                                         <Avatar sx={{ width: 32, height: 32 }}>M</Avatar>
-                                        <span style={{ marginLeft: '8px', marginRight: '8px    ' }}>Username</span>
+                                        <span style={{ marginLeft: '8px', marginRight: '8px    ' }}>
+                                            {this.props.userInfo.username ? this.props.userInfo.username : 'Username' }
+                                        </span>
                                         <ExpandMoreIcon style={{ marginRight: '8px' }} />
                                     </Button>
                                 </Tooltip>
@@ -302,12 +304,14 @@ class BasePage extends React.Component {
 }
 
 const mapStateToProps = (state) => ({
+    userInfo: MainSelectors.getUserInfo(state),
     isVerifyDone: MainSelectors.getIsVerifyDone(state),
     token: MainSelectors.getToken(state),
     isLoading: MainSelectors.getIsLoading(state),
 });
 
 const mapDispatchToProps = {
+    setUserInfo: MainActions.setUserInfo,
     setIsVerifyDone: MainActions.setIsVerifyDone,
     setToken: MainActions.setToken,
     setIsLoading: MainActions.setIsLoading,
