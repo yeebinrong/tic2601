@@ -30,7 +30,7 @@ const getAllPosts = () => {
     return POOL.query('SELECT * FROM posts')
 }
 
-const getHomePagePosts = (currentUser, currentTab, sortBy) => {
+const getHomePagePosts = (currentUser) => {
     return POOL.query(
         `WITH following_communities AS
             (SELECT fc.community_name, p.user_name, AGE(CURRENT_TIMESTAMP, p.date_created), p.title, p.flair, p.post_id,
@@ -43,11 +43,9 @@ const getHomePagePosts = (currentUser, currentTab, sortBy) => {
             HAVING fc.user_name = $1)
             SELECT DISTINCT post_id, community_name, user_name, age, title, flair, fav_point, comment_count
             FROM following_communities
-            ORDER BY $2 $3`,
+            ORDER BY post_id DESC`,
         [
-            escapeQuotes(currentUser),
-            escapeQuotes(currentTab),
-            escapeQuotes(sortBy),
+            escapeQuotes(currentUser)
         ],
     )
 }

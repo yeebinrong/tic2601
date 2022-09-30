@@ -189,8 +189,7 @@ app.get('/api/all_posts', async (req, resp) => {
 })
 
 app.get('/api/homepage_posts', async (req, resp) => {
-    const { currentTab, sortBy } = req.query;
-    const results = await getHomePagePosts(req.token.username, currentTab, sortBy);
+    const results = await getHomePagePosts(req.token.username);
     if (results.rows && results.rows.length == 0) {
         resp.status(204);
         resp.type('application/json');
