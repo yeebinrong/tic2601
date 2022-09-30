@@ -17,7 +17,7 @@ import { useParams } from 'react-router-dom';
 
 const UpVote = (props) => {
     let callUpVoteAPI = () => {
-        if (props.type == 'post') {
+        if (props.type === 'post') {
             console.log(`upvote post ${props.postId}`);
         } else {
             console.log(`upvote comment ${props.commentId}`);
@@ -29,7 +29,7 @@ const UpVote = (props) => {
 };
 const DownVote = (props) => {
     let callDownVoteAPI = () => {
-        if (props.type == 'post') {
+        if (props.type === 'post') {
             console.log(`downvote post ${props.postId}`);
         } else {
             console.log(`downvote comment ${props.commentId}`);
@@ -143,17 +143,15 @@ const Community = (props) => {
 };
 
 const Post = (props) => {
-    const [post, setPost] = useState();
-    const [community, setCommunity] = useState();
-    let { postId } = useParams();
+    const [post, setPost] = useState(null);
+    const [community, setCommunity] = useState(null);
+    const { postId } = useParams();
 
     useEffect(() => {
-        console.log(postId);
-        if (postId && postId !== undefined) {
+        if (props.isVerifyDone && !post) {
             retrievePostById(postId).then((resp) => {
                 setPost(resp.data);
                 console.log(resp.data);
-
                 retrieveCommunityByName(resp.data.community_name).then((resp) => {
                     setCommunity({
                         ...resp.data,
@@ -163,7 +161,8 @@ const Post = (props) => {
                 return resp.data;
             });
         }
-    }, []);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [props.isVerifyDone]);
 
 
     let commentComponents = null;

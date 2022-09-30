@@ -83,11 +83,10 @@ const App = (props) => {
                 element={<DemoPage {...mainProps} />}
             />
             <Route
-                path="/post/:postId"
+                path="/community/:community_name/view/:postId"
                 exact
                 element={<ViewPostPage navigate={navigate} />}
             />
-
             <Route
                 path="/search/:order"
                 exact

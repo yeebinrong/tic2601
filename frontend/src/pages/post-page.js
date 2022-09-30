@@ -16,8 +16,8 @@ class ViewPostPage extends React.Component {
         return (
             <BasePage
                 navigate={this.props.navigate}
-                component={() => {
-                    return <Post />;
+                component={(props) => {
+                    return <Post {...props} />;
                 }}
             />
         );
