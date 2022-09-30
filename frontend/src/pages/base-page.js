@@ -112,6 +112,12 @@ class BasePage extends React.Component {
                                 src="/static/readit_logo.png"
                                 className={'app-bar-logo'}
                                 alt="readit logo"
+                                onClick={() => {
+                                    this.props.navigate({
+                                        pathname: '/home',
+                                        replace: true,
+                                    });
+                                }}
                             />
                             <div style={{ display: 'flex', flexGrow: '1', marginLeft: '16px' }}>\
                                 <Autocomplete
