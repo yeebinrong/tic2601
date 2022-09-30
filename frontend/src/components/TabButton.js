@@ -4,18 +4,13 @@ import RocketSharpIcon from '@mui/icons-material/RocketSharp';
 import LocalFireDepartmentIcon from '@mui/icons-material/LocalFireDepartment';
 import AccessTimeFilledSharpIcon from '@mui/icons-material/AccessTimeFilledSharp';
 
-const TabButton = () => {
-    const [value, setValue] = React.useState(0);
-
-    const handleChange = (event, newValue) => {
-        setValue(newValue);
-    };
-
+const TabButton = (props) => {
     return (
         <Tabs
-            value={value ? value : 'best'}
-            onChange={handleChange}
             aria-label="sort post"
+            defaultValue="best"
+            value={props.value}
+            onChange={props.handleChange}
         >
             <Tab
                 icon={<RocketSharpIcon />}

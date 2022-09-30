@@ -30,15 +30,12 @@ class HomePageComponent extends React.Component {
 
         this.state = {
             isCreateCommunityDialogOpen: false,
-            currentTab: '',
             posts: [],
         };
         if (props.isVerifyDone) {
             this.props.setIsLoading(true);
             retrieveHomePagePosts({
                 ...getQueryParameters(this.props.location.search),
-                currentTab: this.props.params.currentTab,
-                sortBy: this.props.params.sortBy,
             }).then((res) => {
                 this.props.setIsLoading(false);
                 this.setState({
@@ -51,13 +48,12 @@ class HomePageComponent extends React.Component {
     shouldComponentUpdate(nextProps) {
         if (
             (nextProps.isVerifyDone && !this.props.isVerifyDone) ||
-            nextProps.location.search !== this.props.location.search
+            nextProps.location.search !== this.props.location.search ||
+            nextProps.params.currentTab !== this.props.params.currentTab
         ) {
             this.props.setIsLoading(true);
             retrieveHomePagePosts({
                 ...getQueryParameters(nextProps.location.search),
-                currentTab: nextProps.params.currentTab,
-                sortBy: nextProps.params.sortBy,
             }).then((res) => {
                 this.props.setIsLoading(false);
                 this.setState({
@@ -67,6 +63,13 @@ class HomePageComponent extends React.Component {
         }
         return true;
     }
+
+    handleChange = (e, newValue) => {
+        this.props.navigate({
+            pathname: `/home/${newValue}`,
+            replace: true,
+        });
+    };
 
     setIsCreateCommunityDialog = (value) => {
         this.setState({
@@ -123,7 +126,10 @@ class HomePageComponent extends React.Component {
                                 </Paper>
                             </Box>
                             <Item>
-                                <TabButton />
+                                <TabButton
+                                    value={this.props.params.currentTab}
+                                    handleChange={this.handleChange}
+                                />
                             </Item>
                             {this.state.posts?.map((post) => {
                                 return (
