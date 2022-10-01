@@ -40,24 +40,25 @@ class CommunityComponent extends React.Component {
         super(props);
         this.state = {
             posts: [],
-            //mode:[],
+            mode:[],
+            url:[],
+            inf:[],
             //order:[],
             // admin: [],
             // info: [],
             //currentTab:'mod'
         };
 
-        console.log("constructor")
         if (props.isVerifyDone) {
             this.props.setIsLoading(true);
             retrieveCommunityPosts({
                 community_name: this.props.params.community_name,
             }).then(res => {
-                console.log('loaded');
                 this.props.setIsLoading(false);
                 this.setState({
                     posts: res.data.rows,
-                    //mode: JSON.stringify(this.props.location.community),
+                    url: this.props.location.pathname,
+    
                 });
             });
 
@@ -74,10 +75,9 @@ class CommunityComponent extends React.Component {
                     this.props.setIsLoading(false);
                     this.setState({
                         posts: res.data.rows,
-                        mode: JSON.stringify(this.props.location.community),
+                        url: this.props.location.pathname,
                     });
                 });
-                console.log("retrieved-2");
             }
             return true;
         }
@@ -134,6 +134,7 @@ class CommunityComponent extends React.Component {
     renderNorm = (inf) => {
         return (
             <>
+            {console.log("hello start of norm")}
             <div className={'container'}>
                 <Box sx={{ flexGrow: 1 }}>
                     <Grid container spacing={2}>
@@ -158,15 +159,13 @@ class CommunityComponent extends React.Component {
                                         </div>
                                         <Item>
                                             <Stack direction="row" justifyContent="left">
-                                                {/* <Button style={{borderRadius:'14px'}} variant="contained" startIcon={<RocketSharpIcon />}>Best</Button>
-                                                <Button style={{borderRadius:'14px'}} variant="outlined" startIcon={<LocalFireDepartmentIcon />}>Hot</Button>
-                                                <Button style={{borderRadius:'14px'}} variant="outlined" startIcon={<AccessTimeFilledSharpIcon />}>New</Button>
-                                                 */}
                                                 <TabButton/>
                                             </Stack>
                                         </Item>
-                                        {this.state.posts.map(post => {
-                                            // {console.log(post)}
+                                        {console.log('im here')}
+                                        {console.log(this.state.posts)}
+                                        {this.state.posts?.map(post => {
+                                            {console.log('hello')}
                                             return (
                                                    <Item style={{ padding: '16px' }}>
                                                     <div style={{ display: 'flex'}}>
@@ -176,14 +175,14 @@ class CommunityComponent extends React.Component {
                                                         </div>
                                                         <div
                                                             style={{marginLeft:'16px'}}>
-                                                            {/* {post.age.days ? post.age.days + ' days ago' : post.age.hours +' hours ago'} */}
+                                                             {post.age.days ? post.age.days + ' day(s) ago' : post.age.hours +' hour(s) ago'}
                                                         </div>
                                                     </div>
                                                     <div
-                                                        style={{textAlign: 'left'}}>
+                                                        style={{textAlign: 'left', marginTop:'16px',marginBottom:'16px'}}>
                                                         <b>{post.title}</b>
                                                         <Chip
-                                                            label={post.flair_name}
+                                                            label={post.flair}
                                                             color="primary"
                                                             variant="outlined"
                                                             size="small"
@@ -195,7 +194,7 @@ class CommunityComponent extends React.Component {
                                                             <ForwardIcon style={{transform:'rotate(270deg)'}}/>
                                                         </IconButton>
                                                         <div style={{alignSelf:'center'}}>
-                                                            2{/* {post.favour} */}
+                                                            {post.favour_points}
                                                         </div>
                                                         <IconButton sx={{ p: '10px'}} aria-label="downvote">
                                                             <ForwardIcon style={{transform:'rotate(90deg)'}}/>
@@ -205,7 +204,7 @@ class CommunityComponent extends React.Component {
                                                             <CommentIcon />
                                                         </IconButton>
                                                         <p style={{ marginRight:'16px'}}>
-                                                            7 {/* {post.noOfComments}{' '} */}
+                                                            {post.comment_count}{' '}
                                                             Comments
                                                         </p>
                                                         <IconButton sx={{ p: '10px' }} aria-label="favourite">
@@ -235,13 +234,13 @@ class CommunityComponent extends React.Component {
                                     <Divider style={{margin:'16px 0'}}></Divider>
                                     <b>Moderators:</b>
                                     <ul>
-                                    {this.state.admin.map((adm) => {
+                                    {/* {this.state.admin.map((adm) => {
                                             return (
                                                 <ul>
                                                     <li>u/{adm.user_name} </li>
                                                 </ul>                                                   
                                             );
-                                        })}
+                                        })} */}
                                     </ul>
                                 </div>
                             </Item>
@@ -273,7 +272,7 @@ class CommunityComponent extends React.Component {
                                                         <th>Total Favours</th>
                                                      </tr>
                                                     <tr>
-                                                        <td>12</td>
+                                                        <td>112</td>
                                                         <td>22</td>
                                                         <td>2</td>
                                                     </tr>
@@ -286,12 +285,15 @@ class CommunityComponent extends React.Component {
                         </Grid>
                         <Grid item xs={4}>
                             <div style={{ backgroundColor: inf.colour, height: '35px', borderRadius: '5px', paddingTop: '10px', textIndent: '16px' }}>
-                                <b>Community Settings:</b>
+                                <div className={'sideBoxHeader'}>Community Settings:</div>
                             </div>
-                            <Item >
-                                <span><b>Allow Comments: </b><Checkbox></Checkbox></span>
-                                <br></br>
-                                <span><b>Allow Favours: </b><Checkbox></Checkbox></span>
+                            <Item>
+                                <Box>
+                                    <Stack spacing={1} direction={'column'}>
+                                        <div><b>Allow Comments: </b><Checkbox></Checkbox></div>
+                                        <div><b>Allow Favours: </b><Checkbox></Checkbox></div>
+                                    </Stack>
+                                </Box>
                             </Item>
                         </Grid>
                     </Grid>
@@ -306,12 +308,11 @@ class CommunityComponent extends React.Component {
     render() {
         return (
             <div>
-                {this.state.posts?.map((inf) => {
+                {this.state.posts?.map(inf => {
                                             return (
                                                 <>
                                                 <div style={{ display: 'block', backgroundColor: inf.colour, height: 175 }}></div>
-                                                    
-                                                 {/* <div style={{ backgroundColor: 'white', height: 135 }}>
+                                                 <div style={{ backgroundColor: 'white', height: 135 }}>
                                                     <div style={{ display: 'flex', marginLeft: '20%', paddingTop: '10px' }}>
                                                         <div>
                                                             <Avatar alt="Community Logo" sx={{ width: 55, height: 55 }} src='logo192.png' />
@@ -326,9 +327,7 @@ class CommunityComponent extends React.Component {
                                                         </div>
                                                     </div>
                                                 </div>
-                                                    {console.log("we're here")}
-                                                    {console.log(this.state.mode)}
-                                                    {this.state.mode === 'mod' ? this.renderMod(inf) : this.renderNorm(inf) } */}
+                                                    {this.state.url.split("/").pop() === 'mod' ? this.renderMod(inf) : this.renderNorm(inf) }
                                                 </>
                                             );
                 })}

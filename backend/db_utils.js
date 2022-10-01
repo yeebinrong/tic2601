@@ -69,16 +69,17 @@ const searchPostWithParams = (currentUser, order, user, flair, community, q) => 
 
 
 const retrieveCommunityPostsDB = (community) => {
-    console.log(community);
+    console.log('retrieving from db');
     return POOL.query(
         //    `SELECT * FROM posts`,
         
-           `SELECT p.community_name, p.user_name, AGE(CURRENT_TIMESTAMP, p.date_created), p.title, p.flair, SUM(f.favour_point), COUNT(c.unique_id), cm.* 
-            FROM posts p
-            INNER JOIN favours f ON f.post_id = p.post_id 
-            INNER JOIN comments c ON c.post_id = f.post_id 
-            INNER JOIN community cm ON cm.community_name = p.community_name
-            WHERE p.community_name = $1 GROUP BY f.post_id,p.post_id,cm.community_name ORDER BY p.date_created DESC`,
+           `SELECT p.community_name, p.user_name, AGE(CURRENT_TIMESTAMP, p.date_created), p.title, p.flair, SUM(f.favour_point) AS favour_points, 
+           COUNT(c.unique_id) AS comment_count, cm.pinned_post, cm.datetime_created::date, cm.description, cm.colour 
+           FROM posts p
+           INNER JOIN favours f ON f.post_id = p.post_id 
+           INNER JOIN comments c ON c.post_id = f.post_id 
+           INNER JOIN community cm ON cm.community_name = p.community_name
+           WHERE p.community_name = $1 GROUP BY f.post_id,p.post_id,cm.community_name ORDER BY p.date_created DESC;`,
             [
                 escapeQuotes(community),
             ],

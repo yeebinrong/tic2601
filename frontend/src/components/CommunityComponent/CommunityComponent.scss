@@ -20,3 +20,17 @@ table, th, td {
     padding: 15px;
     text-align: center;
   }
+
+  .sideBoxHeader{
+    font-weight:bold;
+    font-size:large;
+    color:white;
+    -webkit-text-stroke: 0.2px black;
+  }
+
+  .settings{
+    position:relative;
+    font-weight:bold;
+    font-size:medium;
+    display:inline-block;
+  }

@@ -45,6 +45,7 @@ class SearchComponent extends React.Component {
         return (
             <div>
                 hi welcome to search
+                {console.log(this.state.posts)}
                 {this.state.posts?.map(post => {
                     return (
                         <div>

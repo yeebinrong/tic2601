@@ -89,7 +89,13 @@ const App = (props) => {
                 element={<SearchPage {...mainProps} />}
             />
             <Route
-                path="/community/:community_name/posts"       
+                path="/community/:community_name/posts/:order"       
+                exact
+                element={<CommunityPage {...mainProps} />}
+            />
+
+            <Route
+                path="/community/:community_name/mod"       
                 exact
                 element={<CommunityPage {...mainProps} />}
             />

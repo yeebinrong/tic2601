@@ -205,20 +205,19 @@ app.get('/api/search', async (req, resp) => {
 });
 
 app.get('/api/community', async (req, resp) => {
-    const community = req.body.communityName;
-    console.log(req.params);
-    // console.log(req.bod y);
-    // const results = await retrieveCommunityPostsDB(community);
-    // if (results.rows && results.rows.length == 0) {
-    //     resp.status(204);
-    //     resp.type('application/json');
-    //     resp.json({rows: [], message: 'No posts found!'});
-    //     return;
-    // }
+    const community = req.query.community_name;
+    const results = await retrieveCommunityPostsDB(community);
+    console.log(results);
+    if (results.rows && results.rows.length == 0) {
+        resp.status(204);
+        resp.type('application/json');
+        resp.json({rows: [], message: 'No posts found!'});
+        return;
+    }
     resp.status(200);
     resp.type('application/json');
-    resp.json({ message: 'ok'})
-    // resp.json({rows: results.rows });
+    //resp.json({ message: 'ok'})
+    resp.json({rows: results.rows });
     return;
 });
 
