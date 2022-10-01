@@ -154,7 +154,7 @@ class BasePage extends React.Component {
                                         if (params.inputValue.startsWith('u/')) {
                                             toAdd = 'Add user filter:';
                                             type = 'user';
-                                        } else if (params.inputValue.startsWith('c/')) {
+                                        } else if (params.inputValue.startsWith('r/')) {
                                             toAdd = 'Add community filter:';
                                             type = 'community';
                                         } else if (params.inputValue.startsWith('f/')) {
@@ -201,7 +201,7 @@ class BasePage extends React.Component {
                                                             })
                                                             e.target.blur();
                                                             this.props.navigate({
-                                                                pathname: '/search/new',
+                                                                pathname: '/search/best',
                                                                 search: `?${this.createSearchParams(this.state.searchBarChips)}`,
                                                                 replace: true,
                                                             });

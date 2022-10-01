@@ -16,7 +16,7 @@ const { localStrategy, mkAuth, verifyToken } = require('./passport_strategy.js')
 const { getCommunity } = require('./apis/community');
 const { getPost } = require('./apis/post');
 const { SIGN_SECRET, CHECK_DIGITAL_OCEAN_KEYS, CHECK_POSTGRES_CONN, READ_FILE, UNLINK_ALL_FILES } = require('./server_config.js')
-const { checkUserNameAlreadyExists, insertToUser, getAllPosts, insertOneCommunityAndReturnName, searchPostWithParams, uploadToDigitalOcean } = require('./db_utils.js')
+const { checkUserNameAlreadyExists, insertToUser, getAllPosts, getHomePagePosts, insertOneCommunityAndReturnName, searchPostWithParams, uploadToDigitalOcean } = require('./db_utils.js')
 
 /* -------------------------------------------------------------------------- */
 //             ######## DECLARE VARIABLES & CONFIGURATIONS ########
@@ -189,6 +189,20 @@ app.get('/api/all_posts', async (req, resp) => {
     resp.json({rows: results.rows})
     return
 })
+
+app.get('/api/homepage_posts', async (req, resp) => {
+    const results = await getHomePagePosts(req.token.username);
+    if (results.rows && results.rows.length == 0) {
+        resp.status(204);
+        resp.type('application/json');
+        resp.json({rows: [], message: 'No posts found!'});
+        return;
+    }
+    resp.status(200);
+    resp.type('application/json');
+    resp.json({rows: results.rows });
+    return;
+});
 
 // TODO catch / handle errors
 app.get('/api/search', async (req, resp) => {

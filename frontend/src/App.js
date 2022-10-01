@@ -5,6 +5,7 @@ import './App.scss';
 import DemoPage from './pages/demo-page';
 import ErrorPage from './pages/error-page';
 import LoginPage from './pages/login-page';
+import HomePage from './pages/home-page';
 import ViewPostPage from './pages/post-page';
 import { MainSelectors } from './state/selectors';
 import { MainActions } from './state/actions';
@@ -79,17 +80,22 @@ const App = (props) => {
                 element={<LoginPage {...mainProps} isRegisterPage />}
             />
             <Route
+                path="/home/:currentTab"
+                exact
+                element={<HomePage {...mainProps} />}
+            />
+            <Route
                 path="/home"
                 exact
-                element={<DemoPage {...mainProps} />}
+                element={<Navigate replace to={"/home/best"} />}
             />
             <Route
                 path="/community/:community_name/view/:postId"
                 exact
-                element={<ViewPostPage navigate={navigate} />}
+                element={<ViewPostPage  {...mainProps} />}
             />
             <Route
-                path="/search/:order"
+                path="/search/:currentTab"
                 exact
                 element={<SearchPage {...mainProps} />}
             />

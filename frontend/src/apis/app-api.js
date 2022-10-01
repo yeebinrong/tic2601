@@ -85,6 +85,22 @@ export function retrieveAllPosts() {
         }));
 }
 
+export function retrieveHomePagePosts(params) {
+    return axios
+        .get(`${HOST}/api/homepage_posts`, {
+            params,
+            headers: {
+                Accept: CONTENT_TYPE_JSON,
+            },
+        })
+        .then((resp) => ({ data: resp.data, error: false }))
+        .catch((err) => ({
+            data: err && err.response ? err.response.data : '',
+            error: true,
+            status: err && err.response ? err.response.status : '',
+        }));
+}
+
 export function searchForPostWithParams(params) {
     return axios
         .get(`${HOST}/api/search`, {
