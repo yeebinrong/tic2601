@@ -26,6 +26,13 @@ const retrieveUserInfoWithCredentials = (username, password) => {
     )
 }
 
+const retrieveUserInfo = (username) => {
+    return POOL.query(
+        `SELECT user_name, profile_picture, user_description, datetime_created FROM users WHERE user_name = $1`,
+        [escapeQuotes(username)],
+    )
+}
+
 const getAllPosts = () => {
     return POOL.query('SELECT * FROM posts')
 }
@@ -119,5 +126,13 @@ const uploadToDigitalOcean = (buffer, req) => new Promise((resolve, reject) => {
 /* -------------------------------------------------------------------------- */
 
 module.exports = {
-    retrieveUserInfoWithCredentials, checkUserNameAlreadyExists, insertToUser, getAllPosts, getHomePagePosts, insertOneCommunityAndReturnName, searchPostWithParams, uploadToDigitalOcean
+    retrieveUserInfoWithCredentials,
+    checkUserNameAlreadyExists,
+    insertToUser,
+    getAllPosts,
+    getHomePagePosts,
+    insertOneCommunityAndReturnName,
+    searchPostWithParams,
+    uploadToDigitalOcean,
+    retrieveUserInfo
 }

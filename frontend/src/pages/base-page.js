@@ -277,7 +277,14 @@ class BasePage extends React.Component {
                                     transformOrigin={{ horizontal: 'right', vertical: 'top' }}
                                     anchorOrigin={{ horizontal: 'right', vertical: 'bottom' }}
                                 >
-                                    <MenuItem>
+                                    <MenuItem
+                                        onClick={() => {
+                                            this.props.navigate({
+                                                pathname: `/user/${this.props.userInfo.username}/overview`,
+                                                replace: true,
+                                            })
+                                        }}
+                                    >
                                         <AccountBoxIcon style={{ marginRight: '8px' }} /> Profile
                                     </MenuItem>
                                     <MenuItem

@@ -117,27 +117,9 @@ export function searchForPostWithParams(params) {
         }));
 }
 
-export function sendMessageApi(value) {
+export function getUserProfile(userName) {
     return axios
-        .get(`${HOST}/api/receive`, {
-            params: {
-                value,
-            },
-            headers: {
-                Accept: CONTENT_TYPE_JSON,
-            },
-        })
-        .then((resp) => ({ data: resp.data, error: false }))
-        .catch((err) => ({
-            data: err && err.response ? err.response.data : '',
-            error: true,
-            status: err && err.response ? err.response.status : '',
-        }));
-}
-
-export function getBackEndValueApi() {
-    return axios
-        .get(`${HOST}/api/getbackendvalue`, {
+        .get(`${HOST}/api/users/${userName}`, {
             headers: {
                 Accept: CONTENT_TYPE_JSON,
             },
@@ -167,6 +149,39 @@ export function retrievePostById(postId) {
 export function retrieveCommunityByName(communityName) {
     return axios
         .get(`${HOST}/api/community/${communityName}`, {
+            headers: {
+                Accept: CONTENT_TYPE_JSON,
+            },
+        })
+        .then((resp) => ({ data: resp.data, error: false }))
+        .catch((err) => ({
+            data: err && err.response ? err.response.data : '',
+            error: true,
+            status: err && err.response ? err.response.status : '',
+        }));
+}
+
+export function sendMessageApi(value) {
+    return axios
+        .get(`${HOST}/api/receive`, {
+            params: {
+                value,
+            },
+            headers: {
+                Accept: CONTENT_TYPE_JSON,
+            },
+        })
+        .then((resp) => ({ data: resp.data, error: false }))
+        .catch((err) => ({
+            data: err && err.response ? err.response.data : '',
+            error: true,
+            status: err && err.response ? err.response.status : '',
+        }));
+}
+
+export function getBackEndValueApi() {
+    return axios
+        .get(`${HOST}/api/getbackendvalue`, {
             headers: {
                 Accept: CONTENT_TYPE_JSON,
             },

@@ -1,19 +1,19 @@
 import React from 'react';
-import Post from '../components/PostComponent/Post';
+import ProfilePageComponent from '../components/ProfilePageComponent/ProfilePageComponent';
 import BasePage from './base-page';
 
 
-class ViewPostPage extends React.Component {
+class ProfilePage extends React.Component {
     render() {
         return (
             <BasePage
                 navigate={this.props.navigate}
                 component={(props) => {
-                    return <Post {...props} />;
+                    return <ProfilePageComponent {...props} />;
                 }}
             />
         );
     }
 }
 
-export default ViewPostPage;
+export default ProfilePage;

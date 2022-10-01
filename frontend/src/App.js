@@ -12,6 +12,7 @@ import { MainActions } from './state/actions';
 import axios from 'axios';
 import { verifyToken } from './apis/app-api';
 import SearchPage from './pages/search-page';
+import ProfilePage from './pages/profile-page';
 
 const App = (props) => {
     let navigate = useNavigate();
@@ -98,6 +99,11 @@ const App = (props) => {
                 path="/search/:currentTab"
                 exact
                 element={<SearchPage {...mainProps} />}
+            />
+            <Route
+                path="/user/:userName/overview"
+                exact
+                element={<ProfilePage {...mainProps} />}
             />
             <Route path="*" element={<ErrorPage {...mainProps} />} />
         </Routes>
