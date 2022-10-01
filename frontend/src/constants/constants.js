@@ -42,7 +42,12 @@ export function withParams(Component) {
 
 export const getQueryParameters = str => {
     if (!str || !str.startsWith('?')) {
-        return {};
+        return {
+            user: '',
+            flair: '',
+            community: '',
+            q: '',
+        };
     }
     const search = str.substring(1);
     const parsed = JSON.parse('{"' + search.replace(/&/g, '","').replace(/=/g,'":"') + '"}', function(key, value) { return key===""?value:decodeURIComponent(value) });

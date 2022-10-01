@@ -24,6 +24,184 @@ import StarsIcon from '@mui/icons-material/Stars';
 import ForwardIcon from '@mui/icons-material/Forward';
 import CreateCommunityComponent from '../CreateCommunityComponent/CreateCommunityComponent';
 
+export const renderPostLists = (posts, params, handleChange) => {
+    return (
+    <>
+        <Item>
+            <TabButton
+                value={params.currentTab}
+                handleChange={handleChange}
+            />
+        </Item>
+        {!posts && (
+            <Item key={'no_post_found'} style={{ height: '64px', textAlign: 'center' }}>
+                <p>No posts found!</p>
+            </Item>
+        )}
+        {posts && posts.map((post) => {
+            return (
+                <Item key={post.post_id}>
+                    <Stack
+                        spacing={1}
+                        direction="column"
+                        style={{ margin: '6px' }}
+                    >
+                        <Stack
+                            direction="row"
+                            divider={
+                                <Divider
+                                    orientation="vertical"
+                                    flexItem
+                                />
+                            }
+                            spacing={2}
+                        >
+                            <Box>
+                                <IconButton
+                                    color="primary"
+                                    sx={{ p: '10px' }}
+                                    aria-label="stars"
+                                >
+                                    <StarsIcon />
+                                </IconButton>
+                                r/{post.community_name}
+                            </Box>
+                            <Box
+                                style={{
+                                    paddingTop: '11px',
+                                }}
+                            >
+                                Posted by u/{post.user_name}
+                            </Box>
+                            <Box
+                                style={{
+                                    paddingTop: '11px',
+                                }}
+                            >
+                                {(post.age.years &&
+                                    post.age.years +
+                                        ' years ago') ||
+                                    (post.age.months &&
+                                        post.age.months +
+                                            ' months ago') ||
+                                    (post.age.days &&
+                                        post.age.days +
+                                            ' days ago') ||
+                                    (post.age.hours &&
+                                        post.age.hours +
+                                            ' hours ago') ||
+                                    (post.age.minutes &&
+                                        post.age.minutes +
+                                            ' minutes ago') ||
+                                    (post.age.seconds &&
+                                        post.age.seconds +
+                                            ' seconds ago')}
+                            </Box>
+                        </Stack>
+                        <Stack
+                            direction="row"
+                            spacing={1}
+                            style={{
+                                alignItems: 'center',
+                                textAlign: 'left',
+                                paddingLeft: '11px',
+                            }}
+                        >
+                            <b>{post.title}</b>
+                            <Chip
+                                label={post.flair}
+                                color="primary"
+                                variant="outlined"
+                                size="small"
+                                clickable={true}
+                            />
+                        </Stack>
+                        <Stack direction="row" spacing={1}>
+                            <Box>
+                                <IconButton
+                                    sx={{ p: '10px' }}
+                                    aria-label="upvote"
+                                >
+                                    <ForwardIcon
+                                        style={{
+                                            transform:
+                                                'rotate(270deg)',
+                                        }}
+                                    />
+                                </IconButton>
+                                {post.fav_point
+                                    ? post.fav_point
+                                    : 0}
+                                <IconButton
+                                    sx={{ p: '10px' }}
+                                    aria-label="downvote"
+                                >
+                                    <ForwardIcon
+                                        style={{
+                                            transform:
+                                                'rotate(90deg)',
+                                        }}
+                                    />
+                                </IconButton>
+                            </Box>
+                            <Box>
+                                <IconButton
+                                    sx={{ p: '10px' }}
+                                    aria-label="comment"
+                                >
+                                    <CommentIcon />
+                                </IconButton>
+                                {post.comment_count}{' '}
+                                Comments
+                            </Box>
+                            <Box>
+                                <IconButton
+                                    sx={{ p: '10px' }}
+                                    aria-label="favourite"
+                                >
+                                    <BookmarkIcon />
+                                </IconButton>
+                                Favourite
+                            </Box>
+                            <MenuButton />
+                        </Stack>
+                    </Stack>
+                </Item>
+            );
+        })}
+    </>
+    );
+};
+
+export const Item = styled(Paper)(({ theme }) => ({
+    backgroundColor: '#fff',
+    ...theme.typography.body2,
+    color: theme.palette.text.secondary,
+}));
+
+export const renderBackToTopChip = () => {
+    return (
+        <>
+            <Box
+                style={{
+                    display: 'flex',
+                    justifyContent: 'center',
+                }}
+            >
+                <Chip
+                    label="Back to Top"
+                    color="primary"
+                    clickable={true}
+                    style={{
+                        position: 'fixed',
+                        bottom: '23px',
+                    }}
+                />
+            </Box>
+        </>
+    );
+}
+
 class HomePageComponent extends React.Component {
     constructor(props) {
         super(props);
@@ -83,185 +261,7 @@ class HomePageComponent extends React.Component {
                 <Grid xs={9}>
                     <Box sx={{ width: '100%' }}>
                         <Stack spacing={2}>
-                            <Box>
-                                <Paper
-                                    component="form"
-                                    sx={{
-                                        p: '2px 4px',
-                                        display: 'flex',
-                                        alignItems: 'center',
-                                    }}
-                                >
-                                    <IconButton
-                                        sx={{ p: '10px' }}
-                                        aria-label="profile"
-                                    >
-                                        <AccountCircleIcon />
-                                    </IconButton>
-                                    <InputBase
-                                        sx={{ ml: 1, flex: 1 }}
-                                        placeholder="Create Post"
-                                        inputProps={{
-                                            'aria-label': 'create a post',
-                                        }}
-                                    />
-                                    <Divider
-                                        sx={{ height: 28, m: 0.5 }}
-                                        orientation="vertical"
-                                    />
-                                    <IconButton
-                                        color="primary"
-                                        sx={{ p: '10px' }}
-                                        aria-label="photo"
-                                    >
-                                        <AddPhotoAlternateIcon />
-                                    </IconButton>
-                                    <IconButton
-                                        color="primary"
-                                        sx={{ p: '10px' }}
-                                        aria-label="attach"
-                                    >
-                                        <AttachFileIcon />
-                                    </IconButton>
-                                </Paper>
-                            </Box>
-                            <Item>
-                                <TabButton
-                                    value={this.props.params.currentTab}
-                                    handleChange={this.handleChange}
-                                />
-                            </Item>
-                            {this.state.posts?.map((post) => {
-                                return (
-                                    <Item>
-                                        <Stack
-                                            spacing={1}
-                                            direction="column"
-                                            style={{ margin: '6px' }}
-                                        >
-                                            <Stack
-                                                direction="row"
-                                                divider={
-                                                    <Divider
-                                                        orientation="vertical"
-                                                        flexItem
-                                                    />
-                                                }
-                                                spacing={2}
-                                            >
-                                                <Box>
-                                                    <IconButton
-                                                        color="primary"
-                                                        sx={{ p: '10px' }}
-                                                        aria-label="stars"
-                                                    >
-                                                        <StarsIcon />
-                                                    </IconButton>
-                                                    r/{post.community_name}
-                                                </Box>
-                                                <Box
-                                                    style={{
-                                                        paddingTop: '11px',
-                                                    }}
-                                                >
-                                                    Posted by u/{post.user_name}
-                                                </Box>
-                                                <Box
-                                                    style={{
-                                                        paddingTop: '11px',
-                                                    }}
-                                                >
-                                                    {(post.age.years &&
-                                                        post.age.years +
-                                                            ' years ago') ||
-                                                        (post.age.months &&
-                                                            post.age.months +
-                                                                ' months ago') ||
-                                                        (post.age.days &&
-                                                            post.age.days +
-                                                                ' days ago') ||
-                                                        (post.age.hours &&
-                                                            post.age.hours +
-                                                                ' hours ago') ||
-                                                        (post.age.minutes &&
-                                                            post.age.minutes +
-                                                                ' minutes ago') ||
-                                                        (post.age.seconds &&
-                                                            post.age.seconds +
-                                                                ' seconds ago')}
-                                                </Box>
-                                            </Stack>
-                                            <Stack
-                                                direction="row"
-                                                spacing={1}
-                                                style={{
-                                                    alignItems: 'center',
-                                                    textAlign: 'left',
-                                                    paddingLeft: '11px',
-                                                }}
-                                            >
-                                                <b>{post.title}</b>
-                                                <Chip
-                                                    label={post.flair}
-                                                    color="primary"
-                                                    variant="outlined"
-                                                    size="small"
-                                                    clickable={true}
-                                                />
-                                            </Stack>
-                                            <Stack direction="row" spacing={1}>
-                                                <Box>
-                                                    <IconButton
-                                                        sx={{ p: '10px' }}
-                                                        aria-label="upvote"
-                                                    >
-                                                        <ForwardIcon
-                                                            style={{
-                                                                transform:
-                                                                    'rotate(270deg)',
-                                                            }}
-                                                        />
-                                                    </IconButton>
-                                                    {post.fav_point
-                                                        ? post.fav_point
-                                                        : 0}
-                                                    <IconButton
-                                                        sx={{ p: '10px' }}
-                                                        aria-label="downvote"
-                                                    >
-                                                        <ForwardIcon
-                                                            style={{
-                                                                transform:
-                                                                    'rotate(90deg)',
-                                                            }}
-                                                        />
-                                                    </IconButton>
-                                                </Box>
-                                                <Box>
-                                                    <IconButton
-                                                        sx={{ p: '10px' }}
-                                                        aria-label="comment"
-                                                    >
-                                                        <CommentIcon />
-                                                    </IconButton>
-                                                    {post.comment_count}{' '}
-                                                    Comments
-                                                </Box>
-                                                <Box>
-                                                    <IconButton
-                                                        sx={{ p: '10px' }}
-                                                        aria-label="favourite"
-                                                    >
-                                                        <BookmarkIcon />
-                                                    </IconButton>
-                                                    Favourite
-                                                </Box>
-                                                <MenuButton />
-                                            </Stack>
-                                        </Stack>
-                                    </Item>
-                                );
-                            })}
+                            {renderPostLists(this.state.posts, this.props.params, this.handleChange)}
                         </Stack>
                     </Box>
                 </Grid>
@@ -298,32 +298,11 @@ class HomePageComponent extends React.Component {
                             />
                         </Stack>
                     </Item>
-                    <Box
-                        style={{
-                            display: 'flex',
-                            justifyContent: 'center',
-                        }}
-                    >
-                        <Chip
-                            label="Back to Top"
-                            color="primary"
-                            clickable={true}
-                            style={{
-                                position: 'absolute',
-                                bottom: '23px',
-                            }}
-                        />
-                    </Box>
+                    {renderBackToTopChip()}
                 </Grid>
             </Grid>
         );
     }
 }
-
-const Item = styled(Paper)(({ theme }) => ({
-    backgroundColor: '#fff',
-    ...theme.typography.body2,
-    color: theme.palette.text.secondary,
-}));
 
 export default withParams(HomePageComponent);
