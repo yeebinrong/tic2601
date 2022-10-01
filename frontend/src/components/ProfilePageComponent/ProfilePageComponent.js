@@ -22,7 +22,6 @@ class ProfilePageComponent extends React.Component {
             getUserProfile(this.props.params.userName)
             .then(res => {
                 this.props.setIsLoading(false);
-                console.log(res);
                 this.setState({
                     ...res.data.userInfo,
                 });
@@ -40,7 +39,6 @@ class ProfilePageComponent extends React.Component {
             getUserProfile(nextProps.params.userName)
             .then(res => {
                 this.props.setIsLoading(false);
-                console.log(res);
                 this.setState({
                     ...res.data.userInfo,
                     selectedFile: null,
@@ -51,7 +49,6 @@ class ProfilePageComponent extends React.Component {
     }
 
     onFileChange = (e) => {
-        console.log(e.target.files[0])
         if(e.target.files[0].size > 1000000){
             this.props.enqueueSnackbar(
                 "Maximum file size 1mb, selected file is too big!",
@@ -91,8 +88,6 @@ class ProfilePageComponent extends React.Component {
     }
 
     render() {
-        console.log(this.props.userInfo);
-        console.log(this.state);
         return (
             <div style={{ fontSize: '30px', margin: '32px 184px 0px 184px' }}>
                 <Grid xs style={{ position: 'relative' }}>
