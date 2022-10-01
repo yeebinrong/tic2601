@@ -229,7 +229,9 @@ class BasePage extends React.Component {
                                     >
                                         <Avatar
                                             sx={{ width: 32, height: 32 }}
-                                            src="/static/user-avatar-default.png"
+                                            src={this.props.userInfo.profile_picture ?
+                                                this.props.userInfo.profile_picture:
+                                                `/static/user-avatar-default.png`}
                                         >
                                             M
                                         </Avatar>
@@ -277,7 +279,14 @@ class BasePage extends React.Component {
                                     transformOrigin={{ horizontal: 'right', vertical: 'top' }}
                                     anchorOrigin={{ horizontal: 'right', vertical: 'bottom' }}
                                 >
-                                    <MenuItem>
+                                    <MenuItem
+                                        onClick={() => {
+                                            this.props.navigate({
+                                                pathname: `/user/${this.props.userInfo.username}/overview`,
+                                                replace: true,
+                                            })
+                                        }}
+                                    >
                                         <AccountBoxIcon style={{ marginRight: '8px' }} /> Profile
                                     </MenuItem>
                                     <MenuItem

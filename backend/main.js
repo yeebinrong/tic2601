@@ -16,7 +16,7 @@ const { localStrategy, mkAuth, verifyToken } = require('./passport_strategy.js')
 const { getCommunity } = require('./apis/community');
 const { getPost } = require('./apis/post');
 const { SIGN_SECRET, CHECK_DIGITAL_OCEAN_KEYS, CHECK_POSTGRES_CONN, READ_FILE, UNLINK_ALL_FILES } = require('./server_config.js')
-const { checkUserNameAlreadyExists, insertToUser, getAllPosts, getHomePagePosts, insertOneCommunityAndReturnName, searchPostWithParams, uploadToDigitalOcean } = require('./db_utils.js')
+const { checkUserNameAlreadyExists, insertToUser, getAllPosts, getHomePagePosts, insertOneCommunityAndReturnName, searchPostWithParams, uploadToDigitalOcean, retrieveUserInfo, updateUserProfile } = require('./db_utils.js')
 
 /* -------------------------------------------------------------------------- */
 //             ######## DECLARE VARIABLES & CONFIGURATIONS ########
@@ -120,11 +120,22 @@ localStrategyAuth,
 app.post('/api/verify', (req, resp, next) => {
     const auth = req.body.token
     verifyToken(auth, req, resp, next)
-}, (req, resp) => {
+}, async (req, resp) => {
+    const userInfo = await retrieveUserInfo(req.token.username);
     resp.status(200)
     resp.type('application/json')
-    resp.json({ userInfo: req.token, message: 'Authentication successful'})
-    return
+    resp.json({
+        userInfo: {
+            username: req.token.username,
+            email: req.token.email,
+            profile_picture: req.token.profile_picture,
+            description: req.token.description,
+            datetime_created: req.token.datetime_created,
+            ...userInfo,
+        },
+        message: 'Authentication successful'
+    });
+    return;
 })
 
 /* -------------------------------------------------------------------------- */
@@ -220,26 +231,45 @@ app.get('/api/search', async (req, resp) => {
     return;
 });
 
+// GET /api/users/:userName
+app.get('/api/users/:userName', async (req, resp) => {
+    // Parse the json string sent from client into json object
+    const userName = req.params.userName;
+    const results = await retrieveUserInfo(userName);
+    if (results.rows && results.rows.length == 0) {
+        resp.status(204);
+        resp.type('application/json');
+        resp.json({ userInfo: {}, message: 'User not found!'});
+        return;
+    }
+    resp.status(200);
+    resp.type('application/json');
+    resp.json({ userInfo: results.rows[0] });
+    return;
+})
+
 // POST /api/upload
 app.post('/api/upload', upload.single('file'), async (req, resp) => {
-    // Parse the json string sent from client into json object
-    const data = JSON.parse(req.body.data)
     try {
-        const buffer = await READ_FILE(req.file.path)
-        const key = await uploadToDigitalOcean(buffer, req)
-        data.key = key
-        // const id = await uploadToMongo(data)
-        await UNLINK_ALL_FILES(UPLOAD_PATH)
-        resp.status(200)
-        resp.type('application/json')
-        resp.json({id: id})
+        const buffer = await READ_FILE(req.file.path);
+        const key = await uploadToDigitalOcean(buffer, req);
+        await updateUserProfile('profile_picture', key, req.token.username);
+        await UNLINK_ALL_FILES(UPLOAD_PATH);
+        resp.status(200);
+        resp.type('application/json');
+        resp.json({ profile_picture_url: key });
+        return;
     } catch (e) {
-        console.info(e)
-		resp.status(500)
-		resp.type('application/json')
-		resp.json({msg: `${e}`})
+        console.info(e);
+		resp.status(500);
+		resp.type('application/json');
+		resp.json({ message: `${e}`});
+        return;
     }
 })
+
+app.get('/api/community/:communityName', getCommunity)
+app.get('/api/posts/:postId', getPost)
 
 app.get('/api/receive', (req, resp) => {
     const value = req.query.value
@@ -255,9 +285,6 @@ app.get('/api/getbackendvalue', (req, resp) => {
     resp.json({ value: Math.floor(Math.random() * 100) })
     return
 })
-
-app.get('/api/community/:communityName', getCommunity)
-app.get('/api/posts/:postId', getPost)
 
 Promise.all([CHECK_POSTGRES_CONN(), CHECK_DIGITAL_OCEAN_KEYS()])
 .then(() => {

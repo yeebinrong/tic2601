@@ -154,7 +154,7 @@ class SearchComponent extends React.Component {
                             </Stack>
                         </Box>
                     </Grid>
-                    <Grid xs style={{ position: 'relative' }}>
+                    <Grid xs={3} style={{ position: 'relative' }}>
                         <Item key={'community_panel'} style={{ padding: '16px' }}>
                             <Stack spacing={2} direction="column">
                                 <Box style={{ textAlign: 'left' }}>
@@ -164,14 +164,14 @@ class SearchComponent extends React.Component {
                                     )}
                                     {Object.keys(this.state.communities).map(community => {
                                         return (
-                                            <Box key={community} style={{ marginLeft: '16px', marginTop: '8px' }}>
+                                            <Box key={community} style={{ marginLeft: '16px', marginTop: '8px', display: 'flex' }}>
                                                 r/{community}
                                                 <Button
                                                     style={{ marginLeft: '16px' }}
                                                     variant='outlined'
                                                     size='small'
                                                 >
-                                                    Joined
+                                                    View
                                                 </Button>
                                             </Box>
                                         );
@@ -188,13 +188,18 @@ class SearchComponent extends React.Component {
                                     )}
                                     {Object.keys(this.state.users).map(user => {
                                         return (
-                                            <Box key={user} style={{ marginLeft: '16px', marginTop: '8px' }}>
+                                            <Box key={user} style={{ marginLeft: '16px', marginTop: '8px', display: 'flex' }}>
                                                 u/{user}
                                                 <Button
                                                     style={{ marginLeft: '16px' }}
                                                     variant='outlined'
                                                     size='small'
-
+                                                    onClick={() => {
+                                                        this.props.navigate({
+                                                            pathname: `/user/${user}/overview`,
+                                                            replace: true,
+                                                        })
+                                                    }}
                                                 >
                                                     View
                                                 </Button>
