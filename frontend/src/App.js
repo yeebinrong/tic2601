@@ -42,6 +42,7 @@ const App = (props) => {
                         localStorage.removeItem('token');
                         navigate('/login');
                     }
+                    props.setUserInfo(res.data.userInfo);
                     props.setIsLoading(false);
                     props.setIsVerifyDone(true);
                 });
@@ -109,6 +110,7 @@ const mapStateToProps = (state) => ({
 });
 
 const mapDispatchToProps = {
+    setUserInfo: MainActions.setUserInfo,
     setIsVerifyDone: MainActions.setIsVerifyDone,
     setToken: MainActions.setToken,
     setIsLoading: MainActions.setIsLoading,

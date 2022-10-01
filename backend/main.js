@@ -111,7 +111,7 @@ localStrategyAuth,
     const token = signToken(userInfo)
     resp.status(200)
     resp.type('application/json')
-    resp.json({message: `Logged in at ${new Date()}`, token, username: userInfo.username})
+    resp.json({ userInfo: userInfo, message: `Logged in at ${new Date()}`, token, username: userInfo.username})
     return
 })
 
@@ -123,7 +123,7 @@ app.post('/api/verify', (req, resp, next) => {
 }, (req, resp) => {
     resp.status(200)
     resp.type('application/json')
-    resp.json({message: 'Authentication successful'})
+    resp.json({ userInfo: req.token, message: 'Authentication successful'})
     return
 })
 

@@ -112,6 +112,12 @@ class BasePage extends React.Component {
                                 src="/static/readit_logo.png"
                                 className={'app-bar-logo'}
                                 alt="readit logo"
+                                onClick={() => {
+                                    this.props.navigate({
+                                        pathname: '/home',
+                                        replace: true,
+                                    });
+                                }}
                             />
                             <div style={{ display: 'flex', flexGrow: '1', marginLeft: '16px' }}>\
                                 <Autocomplete
@@ -221,8 +227,15 @@ class BasePage extends React.Component {
                                         variant='text'
                                         size="small"
                                     >
-                                        <Avatar sx={{ width: 32, height: 32 }}>M</Avatar>
-                                        <span style={{ marginLeft: '8px', marginRight: '8px    ' }}>Username</span>
+                                        <Avatar
+                                            sx={{ width: 32, height: 32 }}
+                                            src="/static/user-avatar-default.png"
+                                        >
+                                            M
+                                        </Avatar>
+                                        <span style={{ marginLeft: '8px', marginRight: '8px    ' }}>
+                                            {this.props.userInfo.username ? this.props.userInfo.username : 'Username' }
+                                        </span>
                                         <ExpandMoreIcon style={{ marginRight: '8px' }} />
                                     </Button>
                                 </Tooltip>
@@ -302,12 +315,14 @@ class BasePage extends React.Component {
 }
 
 const mapStateToProps = (state) => ({
+    userInfo: MainSelectors.getUserInfo(state),
     isVerifyDone: MainSelectors.getIsVerifyDone(state),
     token: MainSelectors.getToken(state),
     isLoading: MainSelectors.getIsLoading(state),
 });
 
 const mapDispatchToProps = {
+    setUserInfo: MainActions.setUserInfo,
     setIsVerifyDone: MainActions.setIsVerifyDone,
     setToken: MainActions.setToken,
     setIsLoading: MainActions.setIsLoading,
