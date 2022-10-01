@@ -227,7 +227,12 @@ class BasePage extends React.Component {
                                         variant='text'
                                         size="small"
                                     >
-                                        <Avatar sx={{ width: 32, height: 32 }}>M</Avatar>
+                                        <Avatar
+                                            sx={{ width: 32, height: 32 }}
+                                            src="/static/user-avatar-default.png"
+                                        >
+                                            M
+                                        </Avatar>
                                         <span style={{ marginLeft: '8px', marginRight: '8px    ' }}>
                                             {this.props.userInfo.username ? this.props.userInfo.username : 'Username' }
                                         </span>
