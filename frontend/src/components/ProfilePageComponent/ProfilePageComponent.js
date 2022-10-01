@@ -1,8 +1,9 @@
 import { Box, Button, Divider, Stack, Tab, Tabs } from '@mui/material';
 import Grid from '@mui/material/Unstable_Grid2';
+import { withSnackbar } from 'notistack';
 import React from 'react';
-import { getUserProfile } from '../../apis/app-api';
-import { withParams } from '../../constants/constants';
+import { getUserProfile, uploadProfilePicture } from '../../apis/app-api';
+import { snackBarProps, withParams } from '../../constants/constants';
 import { Item } from '../HomePageComponent/HomePageComponent';
 
 class ProfilePageComponent extends React.Component {
@@ -10,7 +11,10 @@ class ProfilePageComponent extends React.Component {
         super(props);
 
         this.state = {
-            localUserInfo: {},
+            user_name: null,
+            profile_picture: null,
+            selectedFile: null,
+            user_description: null,
         }
 
         if (props.isVerifyDone) {
@@ -20,7 +24,7 @@ class ProfilePageComponent extends React.Component {
                 this.props.setIsLoading(false);
                 console.log(res);
                 this.setState({
-                    localUserInfo: res.data.userInfo,
+                    ...res.data.userInfo,
                 });
             })
         }
@@ -28,22 +32,67 @@ class ProfilePageComponent extends React.Component {
 
     shouldComponentUpdate (nextProps) {
         if ((nextProps.isVerifyDone && !this.props.isVerifyDone) ||
-        nextProps.params.userName !== this.props.params.userName
+        nextProps.params.userName !== this.props.params.userName ||
+        nextProps.userInfo.username !== this.props.userInfo.username ||
+        nextProps.userInfo.profile_picture !== this.props.userInfo.profile_picture
         ) {
             this.props.setIsLoading(true);
-            getUserProfile(this.props.params.userName)
+            getUserProfile(nextProps.params.userName)
             .then(res => {
                 this.props.setIsLoading(false);
                 console.log(res);
                 this.setState({
-                    localUserInfo: res.data.userInfo,
+                    ...res.data.userInfo,
+                    selectedFile: null,
                 });
             })
         }
         return true;
     }
 
+    onFileChange = (e) => {
+        console.log(e.target.files[0])
+        if(e.target.files[0].size > 1000000){
+            this.props.enqueueSnackbar(
+                "Maximum file size 1mb, selected file is too big!",
+                snackBarProps('error'),
+            );
+            e.target.value = null;
+        } else {
+            this.setState({ selectedFile: e.target.files[0] });
+        }
+    }
+
+    onProfilePictureChange = (e) => {
+        this.props.setIsLoading(true);
+        const formData = new FormData();
+        formData.set('username', this.props.userInfo.username)
+        formData.set('file', this.state.selectedFile)
+        uploadProfilePicture(formData)
+        .then(res => {
+            if (!res.error) {
+                this.props.setUserInfo({
+                    ...this.props.userInfo,
+                    profile_picture: `${res.data.profile_picture_url}?${Date.now()}`,
+                });
+                this.props.setIsLoading(false);
+                this.props.enqueueSnackbar(
+                    "Successfully changed profile picture!",
+                    snackBarProps('success'),
+                );
+            } else {
+                this.props.enqueueSnackbar(
+                    "Failed to change profile picture!",
+                    snackBarProps('error'),
+                );
+            }
+        })
+        e.target.value = null;
+    }
+
     render() {
+        console.log(this.props.userInfo);
+        console.log(this.state);
         return (
             <div style={{ fontSize: '30px', margin: '32px 184px 0px 184px' }}>
                 <Grid xs style={{ position: 'relative' }}>
@@ -52,7 +101,7 @@ class ProfilePageComponent extends React.Component {
                             {this.props.isVerifyDone &&
                             this.props.userInfo &&
                             !this.props.isLoading &&
-                            !this.state.localUserInfo?.user_name &&
+                            !this.state.user_name &&
                                 <div className={'app-error-container'}>
                                     <h2 style={{ textAlign: 'center' }}>
                                         {`User [${this.props.params.userName}] does not exists.`}
@@ -74,7 +123,7 @@ class ProfilePageComponent extends React.Component {
                                     </Button>
                                 </div>
                             }
-                            {this.state.localUserInfo && this.state.localUserInfo.user_name &&
+                            {this.state.user_name &&
                             <Box style={{ textAlign: 'left' }}>
                                 <Tabs
                                     defaultValue="overview"
@@ -94,19 +143,19 @@ class ProfilePageComponent extends React.Component {
                                         value="comments"
                                     />
                                     {this.props.userInfo.username !== '' &&
-                                    this.state.localUserInfo?.user_name === this.props.userInfo.username &&
+                                    this.state.user_name === this.props.userInfo.username &&
                                     <Tab
                                         label="Saved"
                                         value="saved"
                                     />}
                                     {this.props.userInfo.username !== '' &&
-                                    this.state.localUserInfo?.user_name === this.props.userInfo.username &&
+                                    this.state.user_name === this.props.userInfo.username &&
                                     <Tab
                                         label="Hidden"
                                         value="hidden"
                                     />}
                                     {this.props.userInfo.username !== '' &&
-                                    this.state.localUserInfo?.user_name === this.props.userInfo.username &&
+                                    this.state.user_name === this.props.userInfo.username &&
                                     <Tab
                                         label="Favoured"
                                         value="favoured"
@@ -117,21 +166,34 @@ class ProfilePageComponent extends React.Component {
                                     <div style={{ display: 'flex', flexDirection: 'column' }}>
                                         <img
                                             draggable={false}
-                                            src="/static/user-avatar-default.png"
+                                            src={this.state.profile_picture ?
+                                                this.state.profile_picture:
+                                                `/static/user-avatar-default.png`}
                                             className={'profile-page-picture'}
                                             alt="readit logo"
                                         />
                                         {this.props.userInfo.username !== '' &&
-                                        this.state.localUserInfo?.user_name === this.props.userInfo.username &&
-                                        <Button>
-                                            Change profile picture
-                                        </Button>}
+                                        this.state.user_name === this.props.userInfo.username &&
+                                        <>
+                                            <input
+                                                type="file"
+                                                style={{ marginTop: '16px' }}
+                                                onChange={this.onFileChange}
+                                                accept="image/png, image/gif, image/jpeg, image/jpg"
+                                            />
+                                            <Button
+                                                disabled={!this.state.selectedFile}
+                                                onClick={this.onProfilePictureChange}
+                                            >
+                                                Change profile picture
+                                            </Button>
+                                        </>}
                                     </div>
                                     <div style={{ marginLeft: '16px' }}>
-                                        <b>{this.state.localUserInfo?.user_name}</b>
-                                        <div>u/{this.state.localUserInfo?.user_name}</div>
+                                        <b>{this.state.username}</b>
+                                        <div>u/{this.state.user_name}</div>
                                         {this.props.userInfo.username !== '' &&
-                                        this.state.localUserInfo?.user_name === this.props.userInfo.username &&
+                                        this.state.user_name === this.props.userInfo.username &&
                                         <div>{this.props.userInfo.email}</div>}
                                     </div>
                                     <div style={{ marginLeft: '32px' }}>
@@ -139,13 +201,15 @@ class ProfilePageComponent extends React.Component {
                                     </div>
                                     <div style={{ marginLeft: '32px' }}>
                                         <div>
-                                            {this.state.localUserInfo?.user_description &&
-                                            this.state.localUserInfo?.user_description !== '' ?
-                                            this.state.localUserInfo?.user_description : 'User has not entered a description!'}
+                                            {this.state.user_description &&
+                                            this.state.user_description !== '' ?
+                                            this.state.user_description : 'User has not entered a description!'}
                                         </div>
                                         {this.props.userInfo.username !== '' &&
-                                        this.state.localUserInfo?.user_name === this.props.userInfo.username &&
-                                        <Button style={{ marginTop: 'auto' }}>
+                                        this.state.user_name === this.props.userInfo.username &&
+                                        <Button
+                                            style={{ marginTop: 'auto' }}
+                                        >
                                             Change description
                                         </Button>}
                                     </div>
@@ -159,4 +223,4 @@ class ProfilePageComponent extends React.Component {
     }
 }
 
-export default withParams(ProfilePageComponent);
+export default withSnackbar(withParams(ProfilePageComponent));

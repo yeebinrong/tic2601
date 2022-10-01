@@ -132,6 +132,21 @@ export function getUserProfile(userName) {
         }));
 }
 
+export function uploadProfilePicture(formData) {
+    return axios
+        .post(`${HOST}/api/upload`, formData, {
+            headers: {
+                Accept: CONTENT_TYPE_JSON,
+            },
+        })
+        .then((resp) => ({ data: resp.data, error: false }))
+        .catch((err) => ({
+            data: err && err.response ? err.response.data : '',
+            error: true,
+            status: err && err.response ? err.response.status : '',
+        }));
+}
+
 export function retrievePostById(postId) {
     return axios
         .get(`${HOST}/api/posts/${postId}`, {

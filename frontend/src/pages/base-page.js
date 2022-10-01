@@ -229,7 +229,9 @@ class BasePage extends React.Component {
                                     >
                                         <Avatar
                                             sx={{ width: 32, height: 32 }}
-                                            src="/static/user-avatar-default.png"
+                                            src={this.props.userInfo.profile_picture ?
+                                                this.props.userInfo.profile_picture:
+                                                `/static/user-avatar-default.png`}
                                         >
                                             M
                                         </Avatar>
