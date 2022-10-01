@@ -216,7 +216,6 @@ app.get('/api/community', async (req, resp) => {
     }
     resp.status(200);
     resp.type('application/json');
-    //resp.json({ message: 'ok'})
     resp.json({rows: results.rows });
     return;
 });

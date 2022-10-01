@@ -1,8 +1,5 @@
 import './CommunityComponent.scss';
 import { retrieveCommunityPosts} from '../../apis/app-api';
-import { retrieveAllPosts } from '../../apis/app-api';
-import { retrieveCommunityAdmin} from '../../apis/app-api';
-import { retrieveCommunityInfo} from '../../apis/app-api';
 import * as React from 'react';
 import Chip from '@mui/material/Chip'
 import Box from '@mui/material/Box';
@@ -42,11 +39,6 @@ class CommunityComponent extends React.Component {
             posts: [],
             mode:[],
             url:[],
-            inf:[],
-            //order:[],
-            // admin: [],
-            // info: [],
-            //currentTab:'mod'
         };
 
         if (props.isVerifyDone) {
@@ -81,55 +73,6 @@ class CommunityComponent extends React.Component {
             }
             return true;
         }
-
-    
-
-        // if (props.isVerifyDone) {
-        //     this.props.setIsLoading(true);
-        //     retrieveCommunityPosts().then(res => {
-        //         this.props.setIsLoading(false);
-        //         this.setState({
-        //             posts: res.data.rows,
-        //         });
-        //     });
-        //     retrieveCommunityAdmin().then(res => {
-        //         this.props.setIsLoading(false);
-        //         this.setState({
-        //             admin: res.data.rows,
-        //         });
-        //     });
-        //     retrieveCommunityInfo().then(res => {
-        //         this.props.setIsLoading(false);
-        //         this.setState({
-        //             info: res.data.rows,
-        //         });
-        //     });
-        // }
-
-    // shouldComponentUpdate (nextProps) {
-    //     if (nextProps.isVerifyDone && !this.props.isVerifyDone) {
-    //         this.props.setIsLoading(true);
-    //         retrieveCommunityPosts().then(res => {
-    //             this.props.setIsLoading(false);
-    //             this.setState({
-    //                 posts: res.data.rows,
-    //             });
-    //         });
-    //         retrieveCommunityAdmin().then(res => {
-    //             this.props.setIsLoading(false);
-    //             this.setState({
-    //                 admin: res.data.rows,
-    //             });
-    //         });
-    //         retrieveCommunityInfo().then(res => {
-    //             this.props.setIsLoading(false);
-    //             this.setState({
-    //                 info: res.data.rows,
-    //             });
-    //         });
-    //     }
-    //     return true;
-    // }
 
     renderNorm = (inf) => {
         return (
