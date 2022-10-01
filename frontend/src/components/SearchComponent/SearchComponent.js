@@ -85,22 +85,22 @@ class SearchComponent extends React.Component {
         } else {
             queryParams.q = '';
         }
-        const searchParams = '';
+        let searchParams = '';
         if (queryParams.community !== '') {
-            searchParams += queryParams.community;
+            searchParams += `community=${queryParams.community}&`;
         }
         if (queryParams.user !== '') {
-            searchParams += queryParams.user;
+            searchParams += `user=${queryParams.user}&`;
         }
         if (queryParams.flair !== '') {
-            searchParams += queryParams.flair;
+            searchParams += `flair=${queryParams.flair}&`;
         }
         if (queryParams.q !== '') {
-            searchParams += queryParams.q;
+            searchParams += `q=${queryParams.q}&`;
         }
         this.props.navigate({
             pathname: `/search/${this.props.params.currentTab}`,
-            search: searchParams !== '' ? `?${searchParams}` : '',
+            search: searchParams !== '' ? `?${searchParams.slice(0, -1)}` : '',
             replace: true,
         });
     }
@@ -125,6 +125,7 @@ class SearchComponent extends React.Component {
         return chipArray.map(((val, index) => {
             return (
                 <Chip
+                    style={{ marginLeft: '8px' }}
                     key={index}
                     value={val}
                     label={val}
