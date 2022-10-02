@@ -53,7 +53,6 @@ const insertOneCommunityAndReturnName = (userName, communityName) => {
 }
 
 const searchPostWithParams = (currentUser, order, user, flair, community, q) => {
-    console.log(currentUser)
     return POOL.query(
         'SELECT * FROM searchPostWithParamsFunc($1, $2, $3, $4, $5, $6);',
         [
