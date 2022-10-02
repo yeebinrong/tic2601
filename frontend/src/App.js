@@ -2,7 +2,6 @@ import { Navigate, Route, Routes, useLocation, useNavigate } from 'react-router-
 import { connect } from 'react-redux';
 import React, { useEffect } from 'react';
 import './App.scss';
-import DemoPage from './pages/demo-page';
 import ErrorPage from './pages/error-page';
 import LoginPage from './pages/login-page';
 import HomePage from './pages/home-page';
