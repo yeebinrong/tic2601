@@ -32,8 +32,7 @@ class ProfilePageComponent extends React.Component {
     shouldComponentUpdate (nextProps) {
         if ((nextProps.isVerifyDone && !this.props.isVerifyDone) ||
         nextProps.params.userName !== this.props.params.userName ||
-        nextProps.userInfo.username !== this.props.userInfo.username ||
-        nextProps.userInfo.profile_picture !== this.props.userInfo.profile_picture
+        nextProps.userInfo.username !== this.props.userInfo.username
         ) {
             this.props.setIsLoading(true);
             getUserProfile(nextProps.params.userName)
@@ -68,9 +67,13 @@ class ProfilePageComponent extends React.Component {
         uploadProfilePicture(formData)
         .then(res => {
             if (!res.error) {
+                const profile_pic_url = `${res.data.profile_picture_url}?${Date.now()}`;
                 this.props.setUserInfo({
                     ...this.props.userInfo,
-                    profile_picture: `${res.data.profile_picture_url}?${Date.now()}`,
+                    profile_picture: profile_pic_url,
+                });
+                this.setState({
+                    profile_picture: profile_pic_url,
                 });
                 this.props.setIsLoading(false);
                 this.props.enqueueSnackbar(
