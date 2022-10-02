@@ -16,7 +16,18 @@ const { localStrategy, mkAuth, verifyToken } = require('./passport_strategy.js')
 const { getCommunity } = require('./apis/community');
 const { getPost } = require('./apis/post');
 const { SIGN_SECRET, CHECK_DIGITAL_OCEAN_KEYS, CHECK_POSTGRES_CONN, READ_FILE, UNLINK_ALL_FILES } = require('./server_config.js')
-const { checkUserNameAlreadyExists, insertToUser, getAllPosts, getHomePagePosts, insertOneCommunityAndReturnName, searchPostWithParams, uploadToDigitalOcean, retrieveUserInfo, updateUserProfile } = require('./db_utils.js')
+const {
+    checkUserNameAlreadyExists,
+    insertToUser,
+    getAllPosts,
+    getHomePagePosts,
+    insertOneCommunityAndReturnName,
+    searchPostWithParams,
+    uploadToDigitalOcean,
+    retrieveUserInfo,
+    updateUserProfile,
+    retrieveCommunityPostsDB
+} = require('./db_utils.js')
 
 /* -------------------------------------------------------------------------- */
 //             ######## DECLARE VARIABLES & CONFIGURATIONS ########
@@ -231,6 +242,22 @@ app.get('/api/search', async (req, resp) => {
     return;
 });
 
+app.get('/api/community', async (req, resp) => {
+    const community = req.query.community_name;
+    const results = await retrieveCommunityPostsDB(community);
+    console.log(results);
+    if (results.rows && results.rows.length == 0) {
+        resp.status(204);
+        resp.type('application/json');
+        resp.json({rows: [], message: 'No posts found!'});
+        return;
+    }
+    resp.status(200);
+    resp.type('application/json');
+    resp.json({rows: results.rows });
+    return;
+});
+
 // GET /api/users/:userName
 app.get('/api/users/:userName', async (req, resp) => {
     // Parse the json string sent from client into json object
@@ -246,7 +273,7 @@ app.get('/api/users/:userName', async (req, resp) => {
     resp.type('application/json');
     resp.json({ userInfo: results.rows[0] });
     return;
-})
+});
 
 // POST /api/upload
 app.post('/api/upload', upload.single('file'), async (req, resp) => {

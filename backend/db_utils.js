@@ -93,6 +93,27 @@ const searchPostWithParams = (currentUser, order, user, flair, community, q) => 
     );
 };
 
+const retrieveCommunityPostsDB = (community) => {
+    return POOL.query(
+           `WITH one_community AS
+           (SELECT oc.community_name, p.user_name, AGE(CURRENT_TIMESTAMP, p.date_created), p.title, p.flair,
+           p.post_id, SUM(f.favour_point) AS fav_point, COUNT(c.comment_id) AS comment_count
+               FROM community oc
+               INNER JOIN posts p ON p.community_name = oc.community_name
+               LEFT JOIN favours f ON f.post_id = p.post_id
+               LEFT JOIN comments c ON c.post_id = f.post_id
+               GROUP BY oc.community_name, p.post_id, c.comment_id
+               HAVING oc.community_name = $1)
+            SELECT DISTINCT post_id, community_name, user_name, age, title,
+                flair, fav_point, comment_count
+            FROM one_community ORDER BY age DESC;`,
+            [
+                escapeQuotes(community),
+            ],
+
+    );
+};
+
 const updateUserProfile = (columnName, value, userName) => {
     return POOL.query(`UPDATE users SET ${columnName} = $1 WHERE user_name = $2`,
         [
@@ -144,5 +165,6 @@ module.exports = {
     searchPostWithParams,
     uploadToDigitalOcean,
     retrieveUserInfo,
-    updateUserProfile
+    updateUserProfile,
+    retrieveCommunityPostsDB
 }

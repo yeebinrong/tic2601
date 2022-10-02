@@ -12,6 +12,7 @@ import { MainActions } from './state/actions';
 import axios from 'axios';
 import { verifyToken } from './apis/app-api';
 import SearchPage from './pages/search-page';
+import CommunityPage from './pages/community-page';
 import ProfilePage from './pages/profile-page';
 
 const App = (props) => {
@@ -99,6 +100,17 @@ const App = (props) => {
                 path="/search/:currentTab"
                 exact
                 element={<SearchPage {...mainProps} />}
+            />
+            <Route
+                path="/community/:community_name/posts/:currentTab"
+                exact
+                element={<CommunityPage {...mainProps} />}
+            />
+
+            <Route
+                path="/community/:community_name/mod"       
+                exact
+                element={<CommunityPage {...mainProps} />}
             />
             <Route
                 path="/user/:userName/overview"

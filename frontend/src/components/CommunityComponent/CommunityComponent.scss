@@ -1,0 +1,29 @@
+.container {
+    margin-top: 16px;
+    margin-left: 10%;
+    margin-right: 10%;
+}
+
+.postLayout{
+    margin: 10%
+}
+.modPage{
+    margin-top:16px;
+    margin-left:  15%;
+    margin-right: 15%;
+}
+
+table, th, td {
+    margin:16px;
+    border: 1px solid black;
+    border-collapse: collapse;
+    padding: 15px;
+    text-align: center;
+  }
+
+  .sideBoxHeader{
+    font-weight:bold;
+    font-size:large;
+    color:white;
+    -webkit-text-stroke: 0.2px black;
+  }

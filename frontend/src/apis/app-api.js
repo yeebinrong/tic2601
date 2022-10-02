@@ -117,6 +117,25 @@ export function searchForPostWithParams(params) {
         }));
 }
 
+export function retrieveCommunityPosts(community_name) {
+    console.log(community_name);
+    return axios
+        .get(`${HOST}/api/community`, {
+            params: {
+                community_name,
+            },
+            headers: {
+                Accept: CONTENT_TYPE_JSON,
+            },
+        })
+        .then((resp) => ({ data: resp.data, error: false }))
+        .catch((err) => ({
+            data: err && err.response ? err.response.data : '',
+            error: true,
+            status: err && err.response ? err.response.status : '',
+        }));
+}
+
 export function getUserProfile(userName) {
     return axios
         .get(`${HOST}/api/users/${userName}`, {
