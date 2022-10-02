@@ -94,17 +94,19 @@ const searchPostWithParams = (currentUser, order, user, flair, community, q) => 
 };
 
 const retrieveCommunityPostsDB = (community) => {
-    console.log('retrieving from db');
     return POOL.query(
-        //    `SELECT * FROM posts`,
-        
-           `SELECT p.community_name, p.user_name, AGE(CURRENT_TIMESTAMP, p.date_created), p.title, p.flair, SUM(f.favour_point) AS favour_points, 
-           COUNT(c.unique_id) AS comment_count, cm.pinned_post, cm.datetime_created::date, cm.description, cm.colour 
-           FROM posts p
-           INNER JOIN favours f ON f.post_id = p.post_id 
-           INNER JOIN comments c ON c.post_id = f.post_id 
-           INNER JOIN community cm ON cm.community_name = p.community_name
-           WHERE p.community_name = $1 GROUP BY f.post_id,p.post_id,cm.community_name ORDER BY p.date_created DESC;`,
+           `WITH one_community AS
+           (SELECT oc.community_name, p.user_name, AGE(CURRENT_TIMESTAMP, p.date_created), p.title, p.flair,
+           p.post_id, SUM(f.favour_point) AS fav_point, COUNT(c.comment_id) AS comment_count
+               FROM community oc
+               INNER JOIN posts p ON p.community_name = oc.community_name
+               LEFT JOIN favours f ON f.post_id = p.post_id
+               LEFT JOIN comments c ON c.post_id = f.post_id
+               GROUP BY oc.community_name, p.post_id, c.comment_id
+               HAVING oc.community_name = $1)
+            SELECT DISTINCT post_id, community_name, user_name, age, title,
+                flair, fav_point, comment_count
+            FROM one_community ORDER BY age DESC;`,
             [
                 escapeQuotes(community),
             ],

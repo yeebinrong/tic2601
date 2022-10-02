@@ -102,7 +102,7 @@ const App = (props) => {
                 element={<SearchPage {...mainProps} />}
             />
             <Route
-                path="/community/:community_name/posts/:order"       
+                path="/community/:community_name/posts/:currentTab"
                 exact
                 element={<CommunityPage {...mainProps} />}
             />

@@ -1,28 +1,19 @@
 import './CommunityComponent.scss';
 import { retrieveCommunityPosts} from '../../apis/app-api';
 import * as React from 'react';
-import Chip from '@mui/material/Chip'
 import Box from '@mui/material/Box';
 import Paper from '@mui/material/Paper';
 import Stack from '@mui/material/Stack';
 import { styled } from '@mui/material/styles';
-import Grid from '@mui/material/Grid';
-import InputBase from '@mui/material/InputBase';
+import Grid from '@mui/material/Unstable_Grid2';
 import Divider from '@mui/material/Divider';
-import IconButton from '@mui/material/IconButton';
-import AccountCircleIcon from '@mui/icons-material/AccountCircle';
-import AttachFileIcon from '@mui/icons-material/AttachFile';
-import AddPhotoAlternateIcon from '@mui/icons-material/AddPhotoAlternate';
 import Avatar from '@mui/material/Avatar';
 import Button from '@mui/material/Button';
-import CommentIcon from '@mui/icons-material/Comment';
-import BookmarkIcon from '@mui/icons-material/Bookmark';
-import ForwardIcon from '@mui/icons-material/Forward';
-import MenuButton from './MenuButton'
 import PostModButton from './PostModButton';
-import { Checkbox, Radio, RadioGroup, Tab, tableBodyClasses } from '@mui/material';
-import TabButton from './TabButton';
+import { Checkbox } from '@mui/material';
 import {withParams } from '../../constants/constants';
+import { renderPostLists } from '../HomePageComponent/HomePageComponent';
+
 
 const Item = styled(Paper)(({ theme }) => ({
     backgroundColor: theme.palette.mode === 'dark' ? '#1A2027' : '#fff',
@@ -59,140 +50,65 @@ class CommunityComponent extends React.Component {
 
     }
 
-        shouldComponentUpdate (nextProps) {
-            if ((nextProps.isVerifyDone && !this.props.isVerifyDone) ||
-            (nextProps.location.community !== this.props.location.community)) {
-                this.props.setIsLoading(true);
-                retrieveCommunityPosts(this.props.params.community_name).then(res => {
-                    this.props.setIsLoading(false);
-                    this.setState({
-                        posts: res.data.rows,
-                        url: this.props.location.pathname,
-                    });
+    shouldComponentUpdate (nextProps) {
+        if ((nextProps.isVerifyDone && !this.props.isVerifyDone) ||
+        (nextProps.location.community !== this.props.location.community)) {
+            this.props.setIsLoading(true);
+            retrieveCommunityPosts(this.props.params.community_name).then(res => {
+                this.props.setIsLoading(false);
+                this.setState({
+                    posts: res.data.rows,
+                    url: this.props.location.pathname,
                 });
-            }
-            return true;
+            });
         }
+        return true;
+    }
+
+    handleChange = (e, newValue) => {
+        this.props.navigate({
+            pathname: `/community/${this.props.params.community_name}/posts/${newValue}`,
+            replace: true,
+        });
+    };
 
     renderNorm = (inf) => {
         return (
-            <>
-            {console.log("hello start of norm")}
-            <div className={'container'}>
-                <Box sx={{ flexGrow: 1 }}>
-                    <Grid container spacing={2}>
-                        <Grid item xs={8}>
-                            <div>
-                                <Box sx={{ width: '100%' }}>
-                                    <Stack spacing={1}>
-                                        <div>
-                                            <Paper component="form" sx={{ p: '2px 4px', display: 'flex', alignItems: 'center' }}>
-                                                <IconButton sx={{ p: '10px' }} aria-label="menu">
-                                                    <AccountCircleIcon />
-                                                </IconButton>
-                                                <InputBase sx={{ ml: 1, flex: 1 }} placeholder="Post Something New" inputProps={{ 'aria-label': 'post text' }} />
-                                                <Divider sx={{ height: 28, m: 0.5 }} orientation="vertical" />
-                                                <IconButton color="primary" sx={{ p: '10px' }} aria-label="directions">
-                                                    <AddPhotoAlternateIcon />
-                                                </IconButton>
-                                                <IconButton color="primary" sx={{ p: '10px' }} aria-label="directions">
-                                                    <AttachFileIcon />
-                                                </IconButton>
-                                            </Paper>
-                                        </div>
-                                        <Item>
-                                            <Stack direction="row" justifyContent="left">
-                                                <TabButton/>
-                                            </Stack>
-                                        </Item>
-                                        {console.log('im here')}
-                                        {console.log(this.state.posts)}
-                                        {this.state.posts?.map(post => {
-                                            {console.log('hello')}
-                                            return (
-                                                   <Item style={{ padding: '16px' }}>
-                                                    <div style={{ display: 'flex'}}>
-                                                    <div>r/{post.community_name}</div>
-                                                        <div style= {{marginLeft:'16px',}}>
-                                                            Posted by u/{post.user_name}
-                                                        </div>
-                                                        <div
-                                                            style={{marginLeft:'16px'}}>
-                                                             {post.age.days ? post.age.days + ' day(s) ago' : post.age.hours +' hour(s) ago'}
-                                                        </div>
-                                                    </div>
-                                                    <div
-                                                        style={{textAlign: 'left', marginTop:'16px',marginBottom:'16px'}}>
-                                                        <b>{post.title}</b>
-                                                        <Chip
-                                                            label={post.flair}
-                                                            color="primary"
-                                                            variant="outlined"
-                                                            size="small"
-                                                            clickable={true}
-                                                        />
-                                                    </div>
-                                                    <div style={{display: 'flex'}}>
-                                                        <IconButton sx={{ p: '10px'}} aria-label="upvote">
-                                                            <ForwardIcon style={{transform:'rotate(270deg)'}}/>
-                                                        </IconButton>
-                                                        <div style={{alignSelf:'center'}}>
-                                                            {post.favour_points}
-                                                        </div>
-                                                        <IconButton sx={{ p: '10px'}} aria-label="downvote">
-                                                            <ForwardIcon style={{transform:'rotate(90deg)'}}/>
-                                                        </IconButton>
+            <Grid container spacing={6} style={{ margin: '0px 160px' }}>
+                <Grid xs={9}>
+                    <Box sx={{ width: '100%' }}>
+                        <Stack spacing={2}>
+                        {renderPostLists(this.state.posts, this.props.params, this.handleChange)}
+                        </Stack>
+                    </Box>
+                </Grid>
+                <Grid xs={3} style={{ position: 'relative' }}>
+                    <div style={{ backgroundColor: inf.colour, height: '35px', borderRadius: '5px', paddingTop: '10px', textIndent: '16px' }}>
+                        <b>About Community</b>
+                    </div>
+                    <Item>
 
-                                                        <IconButton sx={{ p: '10px' }} aria-label="comment">
-                                                            <CommentIcon />
-                                                        </IconButton>
-                                                        <p style={{ marginRight:'16px'}}>
-                                                            {post.comment_count}{' '}
-                                                            Comments
-                                                        </p>
-                                                        <IconButton sx={{ p: '10px' }} aria-label="favourite">
-                                                            <BookmarkIcon />
-                                                        </IconButton>
-                                                        <p>Favourite</p>
-                                                        <MenuButton/>
-                                                    </div>
-                                                </Item>
-                                            );
-                                        })}
-                                    </Stack>
-                                </Box>
-                            </div>
-                        </Grid>
-                        <Grid item xs={4}>
-                            <div style={{ backgroundColor: inf.colour, height: '35px', borderRadius: '5px', paddingTop: '10px', textIndent: '16px' }}>
-                                <b>About Community</b>
-                            </div>
-                            <Item>
+                        <div style={{ textAlign: 'left', padding: 10 }}>
+                            <b>Welcome to r/{inf.community_name}</b>
+                            <p></p>
+                            <Divider style={{margin:'16px 0'}}></Divider>
+                            <b>Creation Date: {inf.datetime_created}</b>
+                            <Divider style={{margin:'16px 0'}}></Divider>
+                            <b>Moderators:</b>
+                            <ul>
+                            {/* {this.state.admin.map((adm) => {
+                                    return (
+                                        <ul>
+                                            <li>u/{adm.user_name} </li>
+                                        </ul>
+                                    );
+                                })} */}
+                            </ul>
+                        </div>
+                    </Item>
 
-                                <div style={{ textAlign: 'left', padding: 10 }}>
-                                    <b>Welcome to r/{inf.community_name}</b>
-                                    <p></p>
-                                    <Divider style={{margin:'16px 0'}}></Divider>
-                                    <b>Creation Date: {inf.datetime_created}</b>
-                                    <Divider style={{margin:'16px 0'}}></Divider>
-                                    <b>Moderators:</b>
-                                    <ul>
-                                    {/* {this.state.admin.map((adm) => {
-                                            return (
-                                                <ul>
-                                                    <li>u/{adm.user_name} </li>
-                                                </ul>                                                   
-                                            );
-                                        })} */}
-                                    </ul>
-                                </div>
-                            </Item>
-
-                        </Grid>
-                    </Grid>
-                </Box>
-            </div>
-        </>
+                </Grid>
+            </Grid>
         )
     }
 

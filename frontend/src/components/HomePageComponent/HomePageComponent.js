@@ -9,15 +9,12 @@ import {
     Box,
     Stack,
     Paper,
-    InputBase,
     IconButton,
     Divider,
     Chip,
+    Button,
 } from '@mui/material';
 import Grid from '@mui/material/Unstable_Grid2';
-import AccountCircleIcon from '@mui/icons-material/AccountCircle';
-import AddPhotoAlternateIcon from '@mui/icons-material/AddPhotoAlternate';
-import AttachFileIcon from '@mui/icons-material/AttachFile';
 import CommentIcon from '@mui/icons-material/Comment';
 import BookmarkIcon from '@mui/icons-material/Bookmark';
 import StarsIcon from '@mui/icons-material/Stars';
@@ -64,14 +61,18 @@ export const renderPostLists = (posts, params, handleChange) => {
                                 >
                                     <StarsIcon />
                                 </IconButton>
-                                r/{post.community_name}
+                                <a href={`/community/${post.community_name}/posts/best`}>
+                                    r/{post.community_name}
+                                </a>
                             </Box>
                             <Box
                                 style={{
                                     paddingTop: '11px',
                                 }}
                             >
-                                Posted by u/{post.user_name}
+                                <a href={`/user/${post.user_name}/overview`}>
+                                    Posted by u/{post.user_name}
+                                </a>
                             </Box>
                             <Box
                                 style={{
