@@ -145,14 +145,16 @@ export const renderPostLists = (posts, params, handleChange) => {
                                 </IconButton>
                             </Box>
                             <Box>
-                                <IconButton
-                                    sx={{ p: '10px' }}
-                                    aria-label="comment"
-                                >
-                                    <CommentIcon />
-                                </IconButton>
-                                {post.comment_count}{' '}
-                                Comments
+                                <a href={`/community/test_community/view/${post.post_id}`}>
+                                    <IconButton
+                                        sx={{ p: '10px' }}
+                                        aria-label="comment"
+                                    >
+                                        <CommentIcon />
+                                    </IconButton>
+                                    {post.comment_count}{' '}
+                                    Comments
+                                </a>
                             </Box>
                             <Box>
                                 <IconButton
