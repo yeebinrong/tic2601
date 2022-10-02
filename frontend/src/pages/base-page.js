@@ -112,6 +112,12 @@ class BasePage extends React.Component {
                                 src="/static/readit_logo.png"
                                 className={'app-bar-logo'}
                                 alt="readit logo"
+                                onClick={() => {
+                                    this.props.navigate({
+                                        pathname: '/home',
+                                        replace: true,
+                                    });
+                                }}
                             />
                             <div style={{ display: 'flex', flexGrow: '1', marginLeft: '16px' }}>\
                                 <Autocomplete
@@ -148,7 +154,7 @@ class BasePage extends React.Component {
                                         if (params.inputValue.startsWith('u/')) {
                                             toAdd = 'Add user filter:';
                                             type = 'user';
-                                        } else if (params.inputValue.startsWith('c/')) {
+                                        } else if (params.inputValue.startsWith('r/')) {
                                             toAdd = 'Add community filter:';
                                             type = 'community';
                                         } else if (params.inputValue.startsWith('f/')) {
@@ -195,7 +201,7 @@ class BasePage extends React.Component {
                                                             })
                                                             e.target.blur();
                                                             this.props.navigate({
-                                                                pathname: '/search/new',
+                                                                pathname: '/search/best',
                                                                 search: `?${this.createSearchParams(this.state.searchBarChips)}`,
                                                                 replace: true,
                                                             });
@@ -221,8 +227,17 @@ class BasePage extends React.Component {
                                         variant='text'
                                         size="small"
                                     >
-                                        <Avatar sx={{ width: 32, height: 32 }}>M</Avatar>
-                                        <span style={{ marginLeft: '8px', marginRight: '8px    ' }}>Username</span>
+                                        <Avatar
+                                            sx={{ width: 32, height: 32 }}
+                                            src={this.props.userInfo.profile_picture ?
+                                                this.props.userInfo.profile_picture:
+                                                `/static/user-avatar-default.png`}
+                                        >
+                                            M
+                                        </Avatar>
+                                        <span style={{ marginLeft: '8px', marginRight: '8px    ' }}>
+                                            {this.props.userInfo.username ? this.props.userInfo.username : 'Username' }
+                                        </span>
                                         <ExpandMoreIcon style={{ marginRight: '8px' }} />
                                     </Button>
                                 </Tooltip>
@@ -264,7 +279,14 @@ class BasePage extends React.Component {
                                     transformOrigin={{ horizontal: 'right', vertical: 'top' }}
                                     anchorOrigin={{ horizontal: 'right', vertical: 'bottom' }}
                                 >
-                                    <MenuItem>
+                                    <MenuItem
+                                        onClick={() => {
+                                            this.props.navigate({
+                                                pathname: `/user/${this.props.userInfo.username}/overview`,
+                                                replace: true,
+                                            })
+                                        }}
+                                    >
                                         <AccountBoxIcon style={{ marginRight: '8px' }} /> Profile
                                     </MenuItem>
                                     <MenuItem
@@ -302,12 +324,14 @@ class BasePage extends React.Component {
 }
 
 const mapStateToProps = (state) => ({
+    userInfo: MainSelectors.getUserInfo(state),
     isVerifyDone: MainSelectors.getIsVerifyDone(state),
     token: MainSelectors.getToken(state),
     isLoading: MainSelectors.getIsLoading(state),
 });
 
 const mapDispatchToProps = {
+    setUserInfo: MainActions.setUserInfo,
     setIsVerifyDone: MainActions.setIsVerifyDone,
     setToken: MainActions.setToken,
     setIsLoading: MainActions.setIsLoading,

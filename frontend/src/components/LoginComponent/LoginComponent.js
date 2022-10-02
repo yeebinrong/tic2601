@@ -96,6 +96,7 @@ class LoginComponent extends React.Component {
                             this.props.setToken(res.data.token);
                             this.props.setIsVerifyDone(true);
                             this.props.navigate('/home');
+                            this.props.setUserInfo(res.data.userInfo);
                         }
                         this.props.setIsLoading(false);
                     });

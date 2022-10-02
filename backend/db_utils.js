@@ -2,7 +2,7 @@
 //                        ######## POSTGRES ########
 /* -------------------------------------------------------------------------- */
 
-const { POOL, DIGITAL_OCEAN_SPACE } = require('./server_config.js')
+const { POOL, DIGITAL_OCEAN_SPACE, GET_DIGITAL_IMAGE_URL, DIGITALOCEAN_BUCKET_NAME } = require('./server_config.js')
 
 const escapeQuotes = (str) => {
     return str.replace(/'/g, "''");
@@ -26,8 +26,35 @@ const retrieveUserInfoWithCredentials = (username, password) => {
     )
 }
 
+const retrieveUserInfo = (username) => {
+    return POOL.query(
+        `SELECT user_name, profile_picture, user_description, datetime_created FROM users WHERE user_name = $1`,
+        [escapeQuotes(username)],
+    )
+}
+
 const getAllPosts = () => {
     return POOL.query('SELECT * FROM posts')
+}
+
+const getHomePagePosts = (currentUser) => {
+    return POOL.query(
+        `WITH following_communities AS
+            (SELECT fc.community_name, p.user_name, AGE(CURRENT_TIMESTAMP, p.date_created), p.title, p.flair, p.post_id,
+                SUM(f.favour_point) AS fav_point, COUNT(c.comment_id) AS comment_count
+            FROM followed_communities fc
+            INNER JOIN posts p ON p.community_name = fc.community_name
+            LEFT JOIN favours f ON f.post_id = p.post_id
+            LEFT JOIN comments c ON c.post_id = f.post_id
+            GROUP BY fc.community_name, fc.user_name, p.post_id, c.comment_id
+            HAVING fc.user_name = $1)
+            SELECT DISTINCT post_id, community_name, user_name, age, title, flair, fav_point, comment_count
+            FROM following_communities
+            ORDER BY post_id DESC`,
+        [
+            escapeQuotes(currentUser)
+        ],
+    )
 }
 
 // This sql inserts a row into community table with the specified communityName,
@@ -66,7 +93,6 @@ const searchPostWithParams = (currentUser, order, user, flair, community, q) => 
     );
 };
 
-
 const retrieveCommunityPostsDB = (community) => {
     console.log('retrieving from db');
     return POOL.query(
@@ -86,15 +112,24 @@ const retrieveCommunityPostsDB = (community) => {
     );
 };
 
+const updateUserProfile = (columnName, value, userName) => {
+    return POOL.query(`UPDATE users SET ${columnName} = $1 WHERE user_name = $2`,
+        [
+            escapeQuotes(value),
+            escapeQuotes(userName),
+        ]
+    );
+}
+
 /* -------------------------------------------------------------------------- */
 //                        ######## DIGITALOCEAN METHODS ########
 /* -------------------------------------------------------------------------- */
 
 // Handles the uploading to digital ocean space and returns the key as a promise
 const uploadToDigitalOcean = (buffer, req) => new Promise((resolve, reject) => {
-    const key = req.file.filename + '_' + req.file.originalname;
+    const key = req.token.username;
     const params = {
-        Bucket: 'tic2601',
+        Bucket: DIGITALOCEAN_BUCKET_NAME,
         Key: key,
         Body: buffer,
         ACL: 'public-read',
@@ -107,9 +142,9 @@ const uploadToDigitalOcean = (buffer, req) => new Promise((resolve, reject) => {
     }
     DIGITAL_OCEAN_SPACE.putObject(params, (err, result) => {
         if (err == null) {
-            resolve(key)
+            resolve(GET_DIGITAL_IMAGE_URL(key))
         } else {
-            reject("uploadToDigitalOcean Err: ", err)
+            reject("uploadToDigitalOcean Error: " + err)
         }
     })
 })
@@ -119,5 +154,15 @@ const uploadToDigitalOcean = (buffer, req) => new Promise((resolve, reject) => {
 /* -------------------------------------------------------------------------- */
 
 module.exports = {
-    retrieveUserInfoWithCredentials, checkUserNameAlreadyExists, insertToUser, getAllPosts, insertOneCommunityAndReturnName,retrieveCommunityPostsDB, searchPostWithParams, uploadToDigitalOcean
+    retrieveUserInfoWithCredentials,
+    checkUserNameAlreadyExists,
+    insertToUser,
+    getAllPosts,
+    getHomePagePosts,
+    insertOneCommunityAndReturnName,
+    searchPostWithParams,
+    uploadToDigitalOcean,
+    retrieveUserInfo,
+    updateUserProfile,
+    retrieveCommunityPostsDB
 }

@@ -5,13 +5,15 @@ import './App.scss';
 import DemoPage from './pages/demo-page';
 import ErrorPage from './pages/error-page';
 import LoginPage from './pages/login-page';
+import HomePage from './pages/home-page';
+import ViewPostPage from './pages/post-page';
 import { MainSelectors } from './state/selectors';
 import { MainActions } from './state/actions';
 import axios from 'axios';
 import { verifyToken } from './apis/app-api';
 import SearchPage from './pages/search-page';
 import CommunityPage from './pages/community-page';
-
+import ProfilePage from './pages/profile-page';
 
 const App = (props) => {
     let navigate = useNavigate();
@@ -42,6 +44,7 @@ const App = (props) => {
                         localStorage.removeItem('token');
                         navigate('/login');
                     }
+                    props.setUserInfo(res.data.userInfo);
                     props.setIsLoading(false);
                     props.setIsVerifyDone(true);
                 });
@@ -56,7 +59,7 @@ const App = (props) => {
                 navigate('/login');
             }
         }
-       // eslint-disable-next-line react-hooks/exhaustive-deps
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []);
 
     const mainProps = {
@@ -79,12 +82,22 @@ const App = (props) => {
                 element={<LoginPage {...mainProps} isRegisterPage />}
             />
             <Route
-                path="/home"
+                path="/home/:currentTab"
                 exact
-                element={<DemoPage {...mainProps} />}
+                element={<HomePage {...mainProps} />}
             />
             <Route
-                path="/search/:order"
+                path="/home"
+                exact
+                element={<Navigate replace to={"/home/best"} />}
+            />
+            <Route
+                path="/community/:community_name/view/:postId"
+                exact
+                element={<ViewPostPage  {...mainProps} />}
+            />
+            <Route
+                path="/search/:currentTab"
                 exact
                 element={<SearchPage {...mainProps} />}
             />
@@ -99,7 +112,11 @@ const App = (props) => {
                 exact
                 element={<CommunityPage {...mainProps} />}
             />
-
+            <Route
+                path="/user/:userName/overview"
+                exact
+                element={<ProfilePage {...mainProps} />}
+            />
             <Route path="*" element={<ErrorPage {...mainProps} />} />
         </Routes>
     );
@@ -111,6 +128,7 @@ const mapStateToProps = (state) => ({
 });
 
 const mapDispatchToProps = {
+    setUserInfo: MainActions.setUserInfo,
     setIsVerifyDone: MainActions.setIsVerifyDone,
     setToken: MainActions.setToken,
     setIsLoading: MainActions.setIsLoading,

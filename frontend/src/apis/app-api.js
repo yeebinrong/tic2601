@@ -85,6 +85,22 @@ export function retrieveAllPosts() {
         }));
 }
 
+export function retrieveHomePagePosts(params) {
+    return axios
+        .get(`${HOST}/api/homepage_posts`, {
+            params,
+            headers: {
+                Accept: CONTENT_TYPE_JSON,
+            },
+        })
+        .then((resp) => ({ data: resp.data, error: false }))
+        .catch((err) => ({
+            data: err && err.response ? err.response.data : '',
+            error: true,
+            status: err && err.response ? err.response.status : '',
+        }));
+}
+
 export function searchForPostWithParams(params) {
     return axios
         .get(`${HOST}/api/search`, {
@@ -108,6 +124,65 @@ export function retrieveCommunityPosts(community_name) {
             params: {
                 community_name,
             },
+            headers: {
+                Accept: CONTENT_TYPE_JSON,
+            },
+        })
+        .then((resp) => ({ data: resp.data, error: false }))
+        .catch((err) => ({
+            data: err && err.response ? err.response.data : '',
+            error: true,
+            status: err && err.response ? err.response.status : '',
+        }));
+}
+
+export function getUserProfile(userName) {
+    return axios
+        .get(`${HOST}/api/users/${userName}`, {
+            headers: {
+                Accept: CONTENT_TYPE_JSON,
+            },
+        })
+        .then((resp) => ({ data: resp.data, error: false }))
+        .catch((err) => ({
+            data: err && err.response ? err.response.data : '',
+            error: true,
+            status: err && err.response ? err.response.status : '',
+        }));
+}
+
+export function uploadProfilePicture(formData) {
+    return axios
+        .post(`${HOST}/api/upload`, formData, {
+            headers: {
+                Accept: CONTENT_TYPE_JSON,
+            },
+        })
+        .then((resp) => ({ data: resp.data, error: false }))
+        .catch((err) => ({
+            data: err && err.response ? err.response.data : '',
+            error: true,
+            status: err && err.response ? err.response.status : '',
+        }));
+}
+
+export function retrievePostById(postId) {
+    return axios
+        .get(`${HOST}/api/posts/${postId}`, {
+            headers: {
+                Accept: CONTENT_TYPE_JSON,
+            },
+        })
+        .then((resp) => ({ data: resp.data, error: false }))
+        .catch((err) => ({
+            data: err && err.response ? err.response.data : '',
+            error: true,
+            status: err && err.response ? err.response.status : '',
+        }));
+}
+export function retrieveCommunityByName(communityName) {
+    return axios
+        .get(`${HOST}/api/community/${communityName}`, {
             headers: {
                 Accept: CONTENT_TYPE_JSON,
             },

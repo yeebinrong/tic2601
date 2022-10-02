@@ -5,6 +5,8 @@
 const secure = require('secure-env')
 const { Pool } = require('pg')
 const AWS = require('aws-sdk')
+const fs = require('fs')
+const path = require('path')
 
 // Retrieve environment variables from .env
 global.env = secure({secret: process.env.ENV_PASS})
@@ -28,10 +30,10 @@ const POOL = new Pool({
 })
 
 //######## DIGITAL OCEAN ########
-const DIGITAL_OCEAN_ENDPOINT = new AWS.Endpoint(global.env.DIGITALOCEAN_ENDPOINT)
-
+const DIGITALOCEAN_ENDPOINT_URL = global.env.DIGITALOCEAN_ENDPOINT
+const DIGITALOCEAN_BUCKET_NAME = global.env.DIGITALOCEAN_BUCKET_NAME
 const DIGITAL_OCEAN_SPACE = new AWS.S3({
-    endpoint: DIGITAL_OCEAN_ENDPOINT,
+    endpoint: new AWS.Endpoint(DIGITALOCEAN_ENDPOINT_URL),
     accessKeyId: global.env.DIGITALOCEAN_ACCESS_KEY,
     secretAccessKey: global.env.DIGITALOCEAN_SECRET_ACCESS_KEY
 })
@@ -59,6 +61,10 @@ const UNLINK_ALL_FILES = (directory) => new Promise((resolve, reject) => {
         resolve()
     });
 })
+
+const GET_DIGITAL_IMAGE_URL = (key) => {
+    return `https://${DIGITALOCEAN_BUCKET_NAME}.${DIGITALOCEAN_ENDPOINT_URL}/${key}`;
+}
 
 // Tests the digital ocean spaces server
 const CHECK_DIGITAL_OCEAN_KEYS = () => new Promise((resolve, reject) => {
@@ -90,5 +96,15 @@ const CHECK_POSTGRES_CONN = () => {
 /* -------------------------------------------------------------------------- */
 
 module.exports = {
-    SIGN_SECRET, EMAIL_USER, EMAIL_PASS, POOL, DIGITAL_OCEAN_SPACE, CHECK_DIGITAL_OCEAN_KEYS, CHECK_POSTGRES_CONN, READ_FILE, UNLINK_ALL_FILES
+    SIGN_SECRET,
+    EMAIL_USER,
+    EMAIL_PASS,
+    POOL,
+    DIGITAL_OCEAN_SPACE,
+    CHECK_DIGITAL_OCEAN_KEYS,
+    CHECK_POSTGRES_CONN,
+    READ_FILE,
+    UNLINK_ALL_FILES,
+    GET_DIGITAL_IMAGE_URL,
+    DIGITALOCEAN_BUCKET_NAME
 }

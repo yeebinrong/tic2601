@@ -19,6 +19,7 @@ body {
     margin-left: 16px;
     margin-right: 16px;
     height: 48px;
+    cursor: pointer;
 }
 
 .main-router-content {
@@ -30,17 +31,12 @@ body {
 }
 
 .app-error-container {
-    width: 50%;
     display: flex;
-    justify-content: center;
     flex-direction: column;
-    margin: 12% auto auto auto;
 }
 
 .app-error {
-    top: 30%;
-    width: 1000px;
-    margin: auto;
+    width: 100%;
 }
 
 .app-error-button {
@@ -55,10 +51,15 @@ body {
     margin-bottom: 12px;
 }
 
-.dialog-flex{
-     display: flex;
+.dialog-flex {
+    display: flex;
 }
 
-.margin-top{
-     margin-top: 8px;
+.margin-top {
+    margin-top: 8px;
+}
+
+.profile-page-picture {
+    width: 160px;
+    margin: auto;
 }
