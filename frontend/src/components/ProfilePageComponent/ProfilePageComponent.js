@@ -15,6 +15,7 @@ class ProfilePageComponent extends React.Component {
             profile_picture: null,
             selectedFile: null,
             user_description: null,
+            profileLoaded: false,
         }
 
         if (props.isVerifyDone) {
@@ -24,6 +25,7 @@ class ProfilePageComponent extends React.Component {
                 this.props.setIsLoading(false);
                 this.setState({
                     ...res.data.userInfo,
+                    profileLoaded: true,
                 });
             })
         }
@@ -41,6 +43,7 @@ class ProfilePageComponent extends React.Component {
                 this.setState({
                     ...res.data.userInfo,
                     selectedFile: null,
+                    profileLoaded: true,
                 });
             })
         }
@@ -67,7 +70,7 @@ class ProfilePageComponent extends React.Component {
         uploadProfilePicture(formData)
         .then(res => {
             if (!res.error) {
-                const profile_pic_url = `${res.data.profile_picture_url}?${Date.now()}`;
+                const profile_pic_url = `${res.data.profile_picture}?${Date.now()}`;
                 this.props.setUserInfo({
                     ...this.props.userInfo,
                     profile_picture: profile_pic_url,
@@ -100,6 +103,7 @@ class ProfilePageComponent extends React.Component {
                             this.props.userInfo &&
                             !this.props.isLoading &&
                             !this.state.user_name &&
+                            this.state.profileLoaded &&
                                 <div className={'app-error-container'}>
                                     <h2 style={{ textAlign: 'center' }}>
                                         {`User [${this.props.params.userName}] does not exists.`}

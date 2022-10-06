@@ -139,10 +139,9 @@ app.post('/api/verify', (req, resp, next) => {
         userInfo: {
             username: req.token.username,
             email: req.token.email,
-            profile_picture: req.token.profile_picture,
-            description: req.token.description,
             datetime_created: req.token.datetime_created,
-            ...userInfo,
+            description: userInfo.rows[0].user_description,
+            profile_picture: userInfo.rows[0].profile_picture,
         },
         message: 'Authentication successful'
     });
@@ -200,7 +199,7 @@ app.post('/api/create_community', async (req, resp) => {
 
 app.get('/api/all_posts', async (req, resp) => {
     const results = await getAllPosts()
-    if (results.rows.length == 0) {
+    if (results.rows && results.rows.length == 0) {
         resp.status(204)
         resp.type('application/json')
         resp.json({rows: [], message: 'No posts found!'})
@@ -231,7 +230,7 @@ app.get('/api/search', async (req, resp) => {
     const { order, user, flair, community, q } = req.query;
     const results = await searchPostWithParams(req.token.username, order, user, flair, community, q);
     if (results.rows && results.rows.length == 0) {
-        resp.status(204);
+        resp.status(404);
         resp.type('application/json');
         resp.json({rows: [], message: 'No posts found!'});
         return;
@@ -245,11 +244,10 @@ app.get('/api/search', async (req, resp) => {
 app.get('/api/community', async (req, resp) => {
     const community = req.query.community_name;
     const results = await retrieveCommunityPostsDB(community);
-    console.log(results);
     if (results.rows && results.rows.length == 0) {
         resp.status(204);
         resp.type('application/json');
-        resp.json({rows: [], message: 'No posts found!'});
+        resp.json({rows: [], message: 'No posts for community found!'});
         return;
     }
     resp.status(200);
@@ -264,9 +262,9 @@ app.get('/api/users/:userName', async (req, resp) => {
     const userName = req.params.userName;
     const results = await retrieveUserInfo(userName);
     if (results.rows && results.rows.length == 0) {
-        resp.status(204);
+        resp.status(404);
         resp.type('application/json');
-        resp.json({ userInfo: {}, message: 'User not found!'});
+        resp.json({ message: 'User not found!' });
         return;
     }
     resp.status(200);
@@ -280,11 +278,11 @@ app.post('/api/upload', upload.single('file'), async (req, resp) => {
     try {
         const buffer = await READ_FILE(req.file.path);
         const key = await uploadToDigitalOcean(buffer, req);
-        await updateUserProfile('profile_picture', key, req.token.username);
+        await updateUserProfile('profile_picture', `${key}?${Date.now()}`, req.token.username);
         await UNLINK_ALL_FILES(UPLOAD_PATH);
         resp.status(200);
         resp.type('application/json');
-        resp.json({ profile_picture_url: key });
+        resp.json({ profile_picture: key });
         return;
     } catch (e) {
         console.info(e);
