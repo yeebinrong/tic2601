@@ -82,7 +82,7 @@ const CHECK_POSTGRES_CONN = () => {
         return POOL.connect()
         .then ((conn) => {
             conn.query('SELECT NOW()', () => {
-                console.log('PostgreSQL server is working.')
+                console.info('PostgreSQL server is working.')
                 conn.end();
               })
         })
