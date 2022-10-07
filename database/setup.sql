@@ -381,3 +381,79 @@ INSERT INTO comments (post_id, comment_id,replying_to,commenter,datetime_created
     VALUES (10, 3,'10#2','Benji', '20220830','Thank you!!');
 INSERT INTO favours (unique_comment_id, favour_point, giver, receiver)
 	VALUES ('10#3', 1, 'Arial', 'Benji');
+
+INSERT INTO users(user_name,password, email,user_description)
+    VALUES ('Debra', 'debra', 'debra@gmail.com', 'Golden Retriever');
+INSERT INTO users(user_name,password, email,user_description)
+    VALUES ('Eli', 'eli', 'eli@gmail.com', 'Golden Retriever');
+INSERT INTO users(user_name,password, email,user_description)
+    VALUES ('Jacky', 'jacky', 'jacky@gmail.com', 'Golden Retriever');
+INSERT INTO users(user_name,password, email,user_description)
+    VALUES ('Kiki', 'kiki', 'kiki@gmail.com', 'Golden Retriever');
+INSERT INTO users(user_name,password, email,user_description)
+    VALUES ('Lucki', 'lucki', 'lucki@gmail.com', 'Golden Retriever');
+INSERT INTO users(user_name,password, email,user_description)
+    VALUES ('Coco','coco', 'coco@gmail.com', 'Golden Retriever');
+INSERT INTO users(user_name,password, email,user_description)
+    VALUES ('Penny', 'penny', 'penny@gmail.com', 'Golden Retriever');
+INSERT INTO users(user_name,password, email,user_description)
+    VALUES ('Suki', 'suki', 'suki@gmail.com', 'Golden Retriever');
+INSERT INTO users(user_name,password, email,user_description)
+    VALUES ('Tami', 'tami', 'tami@gmail.com', 'Golden Retriever');
+INSERT INTO users(user_name,password, email,user_description)
+    VALUES ('Vicki', 'vicki', 'vicki@gmail.com', 'Golden Retriever');
+INSERT INTO users(user_name,password, email,user_description)
+    VALUES ('Wiley', 'wiley', 'wiley@gmail.com', 'Golden Retriever');
+INSERT INTO community(community_name, datetime_created )
+    VALUES ('GoldenRetri','20220101');
+INSERT INTO moderators (community_name, user_name, is_admin)
+	VALUES ('DogOwners', 'Cody', 'Y');
+INSERT INTO moderators (community_name, user_name, is_admin)
+	VALUES ('GoldenRetri', 'Wiley', 'Y');
+INSERT INTO moderators (community_name, user_name, is_admin)
+	VALUES ('GoldenRetri', 'Eli', 'Y');
+INSERT INTO rules (unique_id, community_name, title, description) VALUES ('Dogs#1','Dogs','#1', 'No Swearing Words');
+INSERT INTO rules (unique_id, community_name, title, description) VALUES ('Dogs#2','Dogs', '#2', 'Let us create a peaceful community!');	
+INSERT INTO rules (unique_id, community_name, title, description) VALUES ('DogOwners#1', 'DogOwners', '#1', 'No Swearing Words');
+INSERT INTO rules (unique_id, community_name, title, description) VALUES ('GoldenRetri#1','GoldenRetri', '#1', 'No Swearing Words');	
+-- INSERT INTO banlist (unique_rule_id, community_name, user_name, is_approved)
+-- 	VALUES ('DogOwners#1','DogOwners', 'Tami', 'Y');
+-- INSERT INTO banlist (unique_rule_id,community_name, user_name, is_approved)
+-- 	VALUES ('Dogs#1','Dogs', 'Coco', 'N'); 
+INSERT INTO followed_communities (community_name, user_name) VALUES ('Dogs', 'Cody');
+INSERT INTO followed_communities (community_name, user_name) VALUES ('DogOwners', 'Cody');
+INSERT INTO followed_communities (community_name, user_name) VALUES ('GoldenRetri', 'Cody');
+INSERT INTO followed_communities (community_name, user_name) VALUES ('GoldenRetri', 'Wiley');
+-- Insert posts and comment 
+INSERT INTO posts (community_name, title, user_name, date_created, flair)
+    VALUES ('DogOwners', 'Do you allow your dog sleep on your bed', 'Cody', '20220825', 'Text' );
+INSERT INTO post_contents(post_id, content)
+    VALUES (11,'If you have a dog, will you aloow it to sleep with you on your bed?'); 
+INSERT INTO comments (post_id, comment_id,commenter,datetime_created,content)
+    VALUES (11, 4, 'Arial', '20220825','yes, definitely! they need to stay with you to feel safe');
+INSERT INTO favours (unique_comment_id, favour_point, giver, receiver)
+	VALUES ('11#4', 1, 'Cody', 'Arial');
+INSERT INTO comments (post_id, comment_id,commenter,datetime_created,content)
+    VALUES (11, 5, 'Benji', '20220826','It depends on the dog, my dog likes to sleep alone');
+INSERT INTO favours (unique_comment_id, favour_point, giver, receiver)
+	VALUES ('11#5', 1, 'Cody', 'Benji');
+INSERT INTO favours (unique_comment_id, favour_point, giver, receiver)
+	VALUES ('11#5', 1, 'Cooper', 'Benji');
+INSERT INTO comments (post_id, comment_id,commenter,datetime_created,content)
+    VALUES (11, 6, 'Kiki', '20220826','My dog needs her space to fully stretch, she hates to stay on my bed');
+INSERT INTO favours (unique_comment_id, favour_point, giver, receiver)
+	VALUES ('11#6', 1, 'Cooper', 'Kiki');
+INSERT INTO favours (unique_comment_id, favour_point, giver, receiver)
+	VALUES ('11#5', 1, 'Cody', 'Benji'); 
+INSERT INTO comments (post_id, comment_id,commenter,datetime_created,content)
+    VALUES (11, 7, 'Suki', '20220827','We had a dog for 14 years that would get in bed with us for "snuggle puppy time", about 15 minutes, then get down and get in her kennel to sleep.');
+INSERT INTO favours (unique_comment_id, favour_point, giver, receiver)
+	VALUES ('11#7', 1, 'Cody', 'Suki'); 
+INSERT INTO favours (unique_comment_id, favour_point, giver, receiver)
+	VALUES ('11#7', 1, 'Debra', 'Suki'); 
+INSERT INTO favours (unique_comment_id, favour_point, giver, receiver)
+	VALUES ('11#7', 1, 'Eli', 'Suki'); 
+INSERT INTO favours (unique_comment_id, favour_point, giver, receiver)
+	VALUES ('11#7', 1, 'Jacky', 'Suki'); 
+INSERT INTO favours (unique_comment_id, favour_point, giver, receiver)
+	VALUES ('11#7', 1, 'Lucki', 'Suki'); 
