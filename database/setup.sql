@@ -17,19 +17,17 @@ END$$;
 -- Select posts with params func
 -- TODO join for comments, likes, banlist,
 -- TODO add logic for order by hot, best
-DROP FUNCTION searchPostWithParamsFunc;
 CREATE OR REPLACE FUNCTION searchPostWithParamsFunc(
 	currentUser text, orderParam text, userFilter text, flairFilter text, communityFilter text, queryFilter text)
   RETURNS TABLE(
 	post_id INTEGER,
-	community_name VARCHAR(21),
 	user_name VARCHAR(30),
-	age INTERVAL,
-	title VARCHAR(300),
+	community_name VARCHAR(21),
 	flair FlairEnum,
-	fav_point BIGINT,
-	comment_count BIGINT,
-	view_count INTEGER
+	url VARCHAR(2048),
+	title VARCHAR(300),
+	date_created TIMESTAMP,
+	date_deleted TIMESTAMP
   )
   LANGUAGE plpgsql AS
 $func$
@@ -39,41 +37,30 @@ DECLARE
 		BEGIN
 		raise notice 'userFilter: %', userFilter;
         IF userFilter != '' THEN
-            paramQuery = paramQuery || appendParam || 'user_name = ' || '''' || userFilter || '''';
+            paramQuery = paramQuery || appendParam || 'posts.user_name = ' || '''' || userFilter || '''';
 			appendParam = ' AND ';
         END IF;
         IF flairFilter != '' THEN
-            paramQuery = paramQuery || appendParam || 'flair = ' || '''' || flairFilter || '''';
+            paramQuery = paramQuery || appendParam || 'posts.flair = ' || '''' || flairFilter || '''';
 			appendParam = ' AND ';
         END IF;
         IF communityFilter != '' THEN
-            paramQuery = paramQuery || appendParam || 'community_name = ' || '''' || communityFilter || '''';
+            paramQuery = paramQuery || appendParam || 'posts.community_name = ' || '''' || communityFilter || '''';
 			appendParam = ' AND ';
         END IF;
         IF queryFilter != '' THEN
-            paramQuery = paramQuery || appendParam || 'title ILIKE ' || '''' || '%' || queryFilter || '%' || '''';
+            paramQuery = paramQuery || appendParam || 'posts.title ILIKE ' || '''' || '%' || queryFilter || '%' || '''';
 			appendParam = ' AND ';
         END IF;
 		CASE orderParam
 			WHEN 'new' THEN
-				paramQuery = paramQuery || ' ORDER BY age DESC';
+				paramQuery = paramQuery || ' ORDER BY posts.date_created DESC';
 			WHEN 'hot' THEN
-				paramQuery = paramQuery || ' ORDER BY view_count DESC';
 			WHEN 'best' THEN
-				paramQuery = paramQuery || ' ORDER BY fav_point DESC';
 			ELSE
 		END CASE;
 		RAISE NOTICE 'Value: %', 'SELECT * FROM posts' || paramQuery;
-        RETURN QUERY EXECUTE 'WITH all_communities AS
-            (SELECT ac.community_name, p.user_name, AGE(CURRENT_TIMESTAMP, p.date_created), p.title, p.flair, p.post_id,
-                SUM(f.favour_point) AS fav_point, COUNT(c.comment_id) AS comment_count, p.view_count
-            FROM community ac
-            INNER JOIN posts p ON p.community_name = ac.community_name
-            LEFT JOIN favours f ON f.post_id = p.post_id
-            LEFT JOIN comments c ON c.post_id = f.post_id
-            GROUP BY ac.community_name, p.post_id, c.comment_id)
-            SELECT DISTINCT post_id, community_name, user_name, age, title, flair, fav_point, comment_count, view_count
-            FROM all_communities' || paramQuery;
+        RETURN QUERY EXECUTE 'SELECT * FROM posts' || paramQuery;
 END;
 $func$;
 
@@ -120,7 +107,7 @@ CREATE TABLE posts (
 	title VARCHAR(300) NOT NULL,
 	date_created TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
 	date_deleted TIMESTAMP DEFAULT NULL,
-	view_count INTEGER NOT NULL DEFAULT 0
+	view_count INT NOT NULL DEFAULT 0
 );
 
 -- Alter community table to have pinned_post have foreign key
@@ -312,7 +299,7 @@ INSERT INTO post_contents (post_id, content)
 UPDATE community SET pinned_post = 3 WHERE community_name = 'test_community';
 --
 INSERT INTO posts (community_name, title, user_name, flair)
-	VALUES ('test_community', 'This post should have 4 comments and 2 likes!', 'testaccount', 'Text');
+	VALUES ('test_community', 'This post should have 5 comments and 2 likes!', 'testaccount', 'Text');
 INSERT INTO favours (post_id, favour_point, giver, receiver)
 	VALUES (6, 1, 'testaccount', 'testaccount');
 INSERT INTO favours (post_id, favour_point, giver, receiver)
@@ -352,3 +339,45 @@ INSERT INTO posts (community_name, title, user_name, flair)
 INSERT INTO post_contents (post_id, content)
 	VALUES (8, 'testaccount should not be able to see this post... as he is banned.');
 --
+INSERT INTO users(user_name,password, email,user_description)
+    VALUES ('Arial', 'arial', 'arial@gmail.com', 'Golden Retriever');
+INSERT INTO users(user_name,password, email,user_description)
+    VALUES ('Benji', 'benji', 'benji@gmail.com', 'Jack Russsel');	
+INSERT INTO users(user_name,password, email,user_description)
+    VALUES ('Carter', 'carter', 'carter@gmail.com', 'German Shepherd');
+INSERT INTO users (user_name,password, email,user_description)
+    VALUES ('Cooper', 'cooper', 'cooper@gmail.com', 'Bulldog');
+INSERT INTO users (user_name,password, email,user_description)
+    VALUES ('Cody', 'cody', 'cody@gmail.com', 'Siberian Husky');	
+INSERT INTO community (community_name)
+     VALUES ('Dogs');	 
+INSERT INTO community (community_name)
+     VALUES ('DogOwners');
+INSERT INTO moderators (community_name, user_name, is_admin)
+	VALUES ('Dogs', 'Benji', 'Y');
+INSERT INTO posts (community_name, title, user_name, date_created, flair)
+    VALUES ('Dogs', 'Missing Dog', 'Benji', '20220823', 'Text' );	
+INSERT INTO post_contents (post_id, content)
+	VALUES (9,'My dog benji is lost yesterday, it is a Jack Russel with full black hair, please contact me if anyone sees it');
+INSERT INTO comments (post_id, comment_id,commenter,datetime_created,content)
+    VALUES (9, 1, 'Arial', '20220823','I have found your dog, we are at dog park now, please come and pick up');	
+INSERT INTO favours (unique_comment_id,favour_point, giver, receiver)
+	VALUES ('9#1', 1, 'Benji', 'Arial');
+INSERT INTO favours (unique_comment_id, favour_point, giver, receiver)
+	VALUES ('9#1', 1, 'Cooper', 'Arial');
+INSERT INTO favours (unique_comment_id, favour_point, giver, receiver)
+	VALUES ('9#1', 1, 'Cody', 'Arial');
+INSERT INTO posts(community_name, title, user_name, date_created, flair)
+    VALUES ('Dogs', 'How did I find my dog', 'Benji', '20220830', 'Text');
+INSERT INTO post_contents(post_id, content)
+     VALUES (10, 'The owner of Arial have found my dog in the park');
+INSERT INTO favours (post_id, favour_point, giver, receiver)
+	VALUES (10, 1, 'Cooper', 'Benji');
+INSERT INTO favours (post_id, favour_point, giver, receiver)
+	VALUES (10, 1, 'Cody', 'Benji');
+INSERT INTO comments (post_id, comment_id,commenter,datetime_created,content)
+    VALUES (10, 2, 'Arial', '20220830','Happy to help:)');
+INSERT INTO comments (post_id, comment_id,replying_to,commenter,datetime_created,content)
+    VALUES (10, 3,'10#2','Benji', '20220830','Thank you!!');
+INSERT INTO favours (unique_comment_id, favour_point, giver, receiver)
+	VALUES ('10#3', 1, 'Arial', 'Benji');
