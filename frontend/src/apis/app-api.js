@@ -267,6 +267,26 @@ export function createComment(postId, content, replyTo) {
         }));
 }
 
+export function updateComment(commentId, content) {
+    return axios
+        .put(
+            `${HOST}/api/comments/${commentId}`,
+            {
+                content,
+            },
+            {
+                headers: {
+                    Accept: CONTENT_TYPE_JSON,
+                },
+            })
+        .then((resp) => ({ data: resp.data, error: false }))
+        .catch((err) => ({
+            data: err && err.response ? err.response.data : '',
+            error: true,
+            status: err && err.response ? err.response.status : '',
+        }));
+}
+
 export function retrieveCommunityByName(communityName) {
     return axios
         .get(`${HOST}/api/community/${communityName}`, {
