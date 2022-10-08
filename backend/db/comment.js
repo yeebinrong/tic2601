@@ -2,7 +2,6 @@ const { POOL } = require('../server_config.js');
 
 
 exports.getCommentsByPostId = (id) => {
-    console.log(`getCommentsByPostId ${id}`);
     return POOL.query('SELECT * FROM comments WHERE post_id = $1 AND replying_to IS NULL', [id]);
 };
 

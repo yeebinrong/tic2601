@@ -196,7 +196,7 @@ const Post = (props) => {
                         <h2>{post.title}</h2>
                         <div>{post.content}</div>
                         <div id={'post-statusline'}>
-                            <Button disabled>{post.comments?.length} comments</Button>
+                            <Button disabled>{post['comment_count']} comments</Button>
                             <UpVote type={'post'} postId={post.post_id}></UpVote>
                             <DownVote type={'post'} postId={post.post_id}></DownVote>
                             {/*<IconButton color='primary' component='label' id='iconbutton'>*/}
