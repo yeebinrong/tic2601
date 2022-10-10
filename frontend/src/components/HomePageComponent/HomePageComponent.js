@@ -282,6 +282,12 @@ class HomePageComponent extends React.Component {
                                 label="Create Post"
                                 color="primary"
                                 clickable={true}
+                                onClick={() =>
+                                    this.props.navigate({
+                                        pathname: '/create_post',
+                                        replace: true,
+                                    })
+                                }
                             />
                             <Chip
                                 label="Create Community"

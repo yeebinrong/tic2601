@@ -1,4 +1,4 @@
-import { Box, Stack, Chip, IconButton, Button } from '@mui/material';
+import { Box, Stack, Chip, Button } from '@mui/material';
 import Grid from '@mui/material/Unstable_Grid2';
 import React from 'react';
 import { searchForPostWithParams } from '../../apis/app-api';

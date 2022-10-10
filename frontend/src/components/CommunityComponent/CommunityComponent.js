@@ -10,7 +10,7 @@ import Divider from '@mui/material/Divider';
 import Avatar from '@mui/material/Avatar';
 import Button from '@mui/material/Button';
 import PostModButton from './PostModButton';
-import { Checkbox } from '@mui/material';
+import { Checkbox, Chip } from '@mui/material';
 import {withParams } from '../../constants/constants';
 import { renderPostLists } from '../HomePageComponent/HomePageComponent';
 
@@ -92,6 +92,21 @@ class CommunityComponent extends React.Component {
                             <p></p>
                             <Divider style={{margin:'16px 0'}}></Divider>
                             <b>Creation Date: {inf.datetime_created}</b>
+                            <Divider style={{margin:'16px 0'}}></Divider>
+                            <div style={{ marginTop: '16px' }}>
+                                <Chip
+                                    style={{ display: 'flex' }}
+                                    label="Create Post"
+                                    color="primary"
+                                    clickable={true}
+                                    onClick={() =>
+                                        this.props.navigate({
+                                            pathname: '/create_post',
+                                            replace: true,
+                                        })
+                                    }
+                                />
+                            </div>
                             <Divider style={{margin:'16px 0'}}></Divider>
                             <b>Moderators:</b>
                             <ul>
