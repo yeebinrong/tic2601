@@ -170,6 +170,12 @@ class SearchComponent extends React.Component {
                                                     style={{ marginLeft: '16px' }}
                                                     variant='outlined'
                                                     size='small'
+                                                    onClick={() => {
+                                                        this.props.navigate({
+                                                            pathname: `/community/${community}/posts/best`,
+                                                            replace: true,
+                                                        })
+                                                    }}
                                                 >
                                                     View
                                                 </Button>

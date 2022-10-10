@@ -34,9 +34,8 @@ class CommunityComponent extends React.Component {
 
         if (props.isVerifyDone) {
             this.props.setIsLoading(true);
-            retrieveCommunityPosts({
-                community_name: this.props.params.community_name,
-            }).then(res => {
+            retrieveCommunityPosts(this.props.params.community_name)
+            .then(res => {
                 this.props.setIsLoading(false);
                 this.setState({
                     posts: res.data.rows,
