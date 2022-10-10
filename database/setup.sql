@@ -17,17 +17,19 @@ END$$;
 -- Select posts with params func
 -- TODO join for comments, likes, banlist,
 -- TODO add logic for order by hot, best
+DROP FUNCTION searchPostWithParamsFunc;
 CREATE OR REPLACE FUNCTION searchPostWithParamsFunc(
 	currentUser text, orderParam text, userFilter text, flairFilter text, communityFilter text, queryFilter text)
   RETURNS TABLE(
 	post_id INTEGER,
-	user_name VARCHAR(30),
 	community_name VARCHAR(21),
-	flair FlairEnum,
-	url VARCHAR(2048),
+	user_name VARCHAR(30),
+	age INTERVAL,
 	title VARCHAR(300),
-	date_created TIMESTAMP,
-	date_deleted TIMESTAMP
+	flair FlairEnum,
+	fav_point BIGINT,
+	comment_count BIGINT,
+	view_count INTEGER
   )
   LANGUAGE plpgsql AS
 $func$
@@ -37,30 +39,41 @@ DECLARE
 		BEGIN
 		raise notice 'userFilter: %', userFilter;
         IF userFilter != '' THEN
-            paramQuery = paramQuery || appendParam || 'posts.user_name = ' || '''' || userFilter || '''';
+            paramQuery = paramQuery || appendParam || 'user_name = ' || '''' || userFilter || '''';
 			appendParam = ' AND ';
         END IF;
         IF flairFilter != '' THEN
-            paramQuery = paramQuery || appendParam || 'posts.flair = ' || '''' || flairFilter || '''';
+            paramQuery = paramQuery || appendParam || 'flair = ' || '''' || flairFilter || '''';
 			appendParam = ' AND ';
         END IF;
         IF communityFilter != '' THEN
-            paramQuery = paramQuery || appendParam || 'posts.community_name = ' || '''' || communityFilter || '''';
+            paramQuery = paramQuery || appendParam || 'community_name = ' || '''' || communityFilter || '''';
 			appendParam = ' AND ';
         END IF;
         IF queryFilter != '' THEN
-            paramQuery = paramQuery || appendParam || 'posts.title ILIKE ' || '''' || '%' || queryFilter || '%' || '''';
+            paramQuery = paramQuery || appendParam || 'title ILIKE ' || '''' || '%' || queryFilter || '%' || '''';
 			appendParam = ' AND ';
         END IF;
 		CASE orderParam
 			WHEN 'new' THEN
-				paramQuery = paramQuery || ' ORDER BY posts.date_created DESC';
+				paramQuery = paramQuery || ' ORDER BY age DESC';
 			WHEN 'hot' THEN
+				paramQuery = paramQuery || ' ORDER BY view_count DESC';
 			WHEN 'best' THEN
+				paramQuery = paramQuery || ' ORDER BY fav_point DESC';
 			ELSE
 		END CASE;
 		RAISE NOTICE 'Value: %', 'SELECT * FROM posts' || paramQuery;
-        RETURN QUERY EXECUTE 'SELECT * FROM posts' || paramQuery;
+        RETURN QUERY EXECUTE 'WITH all_communities AS
+            (SELECT ac.community_name, p.user_name, AGE(CURRENT_TIMESTAMP, p.date_created), p.title, p.flair, p.post_id,
+                SUM(f.favour_point) AS fav_point, COUNT(c.comment_id) AS comment_count, p.view_count
+            FROM community ac
+            INNER JOIN posts p ON p.community_name = ac.community_name
+            LEFT JOIN favours f ON f.post_id = p.post_id
+            LEFT JOIN comments c ON c.post_id = f.post_id
+            GROUP BY ac.community_name, p.post_id, c.comment_id)
+            SELECT DISTINCT post_id, community_name, user_name, age, title, flair, fav_point, comment_count, view_count
+            FROM all_communities' || paramQuery;
 END;
 $func$;
 
@@ -107,7 +120,7 @@ CREATE TABLE posts (
 	title VARCHAR(300) NOT NULL,
 	date_created TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
 	date_deleted TIMESTAMP DEFAULT NULL,
-	view_count INT NOT NULL DEFAULT 0
+	view_count INTEGER NOT NULL DEFAULT 0
 );
 
 -- Alter community table to have pinned_post have foreign key
@@ -299,7 +312,7 @@ INSERT INTO post_contents (post_id, content)
 UPDATE community SET pinned_post = 3 WHERE community_name = 'test_community';
 --
 INSERT INTO posts (community_name, title, user_name, flair)
-	VALUES ('test_community', 'This post should have 5 comments and 2 likes!', 'testaccount', 'Text');
+	VALUES ('test_community', 'This post should have 4 comments and 2 likes!', 'testaccount', 'Text');
 INSERT INTO favours (post_id, favour_point, giver, receiver)
 	VALUES (6, 1, 'testaccount', 'testaccount');
 INSERT INTO favours (post_id, favour_point, giver, receiver)
