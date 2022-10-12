@@ -89,9 +89,7 @@ CREATE TABLE users (
 	email VARCHAR(256) UNIQUE NOT NULL CHECK (email ~* '^[A-Za-z0-9._+%-]+@[A-Za-z0-9.-]+[.][A-Za-z]+$'),
 	profile_picture VARCHAR(256),
 	user_description VARCHAR(256),
-	datetime_created TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-	reset_token VARCHAR(256),
-	reset_token_time TIMESTAMP
+	datetime_created TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 
 -- [Create community table]
@@ -101,7 +99,7 @@ CREATE TABLE community (
 		PRIMARY KEY,
 		CHECK(length(community_name) > 3 AND length(community_name) < 21
 		AND community_name ~* '^[A-Za-z0-9_\-]+$' AND community_name !~* '\_%'),
-	pinned_post INTEGER DEFAULT NULL, -- foreign key is added after post table is created
+	pinned_post VARCHAR(292) DEFAULT NULL, -- foreign key is added after post table is created
 	datetime_created TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
 	description VARCHAR(256) NOT NULL DEFAULT 'Describe the community.',
 	profile_picture VARCHAR(256),
@@ -112,7 +110,8 @@ CREATE TABLE community (
 -- [Create posts table]
 DROP TABLE IF EXISTS posts CASCADE;
 CREATE TABLE posts (
-	post_id SERIAL PRIMARY KEY,
+	unique_id VARCHAR(292) UNIQUE, -- unique_id is built using post_id and community_name used as a foreign key for other tables
+	post_id INTEGER,
 	user_name VARCHAR(30) NOT NULL REFERENCES users(user_name) ON DELETE CASCADE ON UPDATE CASCADE,
 	community_name VARCHAR(21) NOT NULL REFERENCES community(community_name) ON DELETE CASCADE ON UPDATE CASCADE,
 	flair FlairEnum NOT NULL,
@@ -120,16 +119,29 @@ CREATE TABLE posts (
 	title VARCHAR(300) NOT NULL,
 	date_created TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
 	date_deleted TIMESTAMP DEFAULT NULL,
-	view_count INTEGER NOT NULL DEFAULT 0
+	view_count INTEGER NOT NULL DEFAULT 0,
+	PRIMARY KEY (post_id, community_name)
 );
 
+-- [Create function to concentate unique_id for posts to be used as foreign key]
+CREATE OR REPLACE FUNCTION posts_insert() RETURNS trigger AS '
+     BEGIN
+         NEW.unique_id := NEW.community_name||''#''||NEW.post_id;
+         RETURN NEW;
+     END;
+ ' LANGUAGE plpgsql;
+
+CREATE OR REPLACE TRIGGER posts_insert
+	BEFORE INSERT OR UPDATE ON posts
+	FOR EACH ROW EXECUTE PROCEDURE posts_insert();
+
 -- Alter community table to have pinned_post have foreign key
-ALTER TABLE community ADD FOREIGN KEY (pinned_post) REFERENCES posts(post_id) ON DELETE CASCADE ON UPDATE CASCADE;
+ALTER TABLE community ADD FOREIGN KEY (pinned_post) REFERENCES posts(unique_id) ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- [Create post contents table]
 DROP TABLE IF EXISTS post_contents CASCADE;
 CREATE TABLE post_contents (
-	post_id INTEGER PRIMARY KEY REFERENCES posts(post_id) ON DELETE CASCADE ON UPDATE CASCADE,
+	unique_post_id VARCHAR(292) PRIMARY KEY REFERENCES posts(unique_id) ON DELETE CASCADE ON UPDATE CASCADE,
 	content VARCHAR(1000) NOT NULL,
 	is_edited TrueOrFalse NOT NULL DEFAULT 'N',
 	date_edited TIMESTAMP DEFAULT NULL,
@@ -140,22 +152,22 @@ CREATE TABLE post_contents (
 -- [Create comments table]
 DROP TABLE IF EXISTS comments CASCADE;
 CREATE TABLE comments(
-	unique_id VARCHAR(292) UNIQUE, -- unique_id is built using post_id and comment_id used as a foreign key for other tables
-	post_id INTEGER NOT NULL REFERENCES posts(post_id) ON DELETE CASCADE ON UPDATE CASCADE,
-	comment_id SERIAL,
+	unique_id VARCHAR(292) UNIQUE, -- unique_id is built using unique_post_id and comment_id used as a foreign key for other tables
+	unique_post_id VARCHAR(292) NOT NULL REFERENCES posts(unique_id) ON DELETE CASCADE ON UPDATE CASCADE,
+	comment_id INTEGER,
 	replying_to VARCHAR(30) NULL REFERENCES comments(unique_id) ON DELETE CASCADE ON UPDATE CASCADE,
 	commenter VARCHAR(30) NOT NULL REFERENCES users(user_name) ON DELETE CASCADE ON UPDATE CASCADE,
 	datetime_created DATE NOT NULL DEFAULT CURRENT_DATE,
 	is_deleted TrueOrFalse NOT NULL DEFAULT 'N',
 	is_edited TrueOrFalse NOT NULL DEFAULT 'N',
 	content VARCHAR(1000) NOT NULL,
-	PRIMARY KEY (post_id, comment_id)
+	PRIMARY KEY (unique_post_id, comment_id)
 );
 
 -- [Create function to concentate unique_id for comments to be used as foreign key]
 CREATE OR REPLACE FUNCTION comments_insert() RETURNS trigger AS '
      BEGIN
-         NEW.unique_id := NEW.post_id||''#''||NEW.comment_id;
+         NEW.unique_id := NEW.unique_post_id||''#''||NEW.comment_id;
          RETURN NEW;
      END;
  ' LANGUAGE plpgsql;
@@ -200,7 +212,7 @@ CREATE OR REPLACE TRIGGER rules_insert
 -- post_id or comment_id is default null
 DROP TABLE IF EXISTS favours CASCADE;
 CREATE TABLE favours (
-	post_id INTEGER DEFAULT NULL REFERENCES posts(post_id) ON DELETE CASCADE ON UPDATE CASCADE,
+	unique_post_id VARCHAR(292) DEFAULT NULL REFERENCES posts(unique_id) ON DELETE CASCADE ON UPDATE CASCADE,
 	unique_comment_id VARCHAR(292) DEFAULT NULL REFERENCES comments(unique_id) ON DELETE CASCADE ON UPDATE CASCADE,
 	favour_point INTEGER NOT NULL CHECK(favour_point=1 OR favour_point=-1),
 	giver VARCHAR(30) NOT NULL REFERENCES users(user_name) ON DELETE CASCADE ON UPDATE CASCADE,
@@ -211,10 +223,10 @@ CREATE TABLE favours (
 -- [Create hide_or_fav_posts table]
 DROP TABLE IF EXISTS hide_or_fav_posts CASCADE;
 CREATE TABLE hide_or_fav_posts (
-	post_id INTEGER DEFAULT NULL REFERENCES posts(post_id) ON DELETE CASCADE ON UPDATE CASCADE,
+	unique_post_id VARCHAR(292) DEFAULT NULL REFERENCES posts(unique_id) ON DELETE CASCADE ON UPDATE CASCADE,
 	user_name VARCHAR(30) NOT NULL REFERENCES users(user_name) ON DELETE CASCADE ON UPDATE CASCADE,
 	hide_or_favourite TrueOrFalse NOT NULL,
-	PRIMARY KEY (post_id, user_name)
+	PRIMARY KEY (unique_post_id, user_name)
 );
 
 -- [Create moderators table]
@@ -281,76 +293,88 @@ INSERT INTO moderators (community_name, user_name, is_admin)
 	VALUES ('another_community', 'test3', 'Y');
 -- Insert Posts data
 --
-INSERT INTO posts (community_name, title, user_name, flair)
-	VALUES ('test_community', 'Hello World One!', 'testaccount', 'Text');
-INSERT INTO post_contents (post_id, content)
-	VALUES (1, 'This is post content for hello world one.');
+INSERT INTO posts (post_id, community_name, title, user_name, flair)
+	VALUES (COALESCE((SELECT max(post_id) +1 FROM posts WHERE community_name = 'test_community'), 1),
+	'test_community', 'Hello World One!', 'testaccount', 'Text');
+INSERT INTO post_contents (unique_post_id, content)
+	VALUES ('test_community#1', 'This is post content for hello world one.');
 --
-INSERT INTO posts (community_name, title, user_name, flair)
-	VALUES ('test_community', 'Hello World Two!', 'test2', 'Text');
-INSERT INTO post_contents (post_id, content)
-	VALUES (2, 'This is post content for hello world two.');
+INSERT INTO posts (post_id, community_name, title, user_name, flair)
+	VALUES (COALESCE((SELECT max(post_id) +1 FROM posts WHERE community_name = 'test_community'), 1),
+	'test_community', 'Hello World Two!', 'test2', 'Text');
+INSERT INTO post_contents (unique_post_id, content)
+	VALUES ('test_community#2', 'This is post content for hello world two.');
 --
-INSERT INTO posts (community_name, title, user_name, flair)
-	VALUES ('test_community', 'This post should be hidden for testaccount user!', 'anotheraccount', 'Text');
-INSERT INTO post_contents (post_id, content)
-	VALUES (3, 'testaccount user should not be able to view this post!');
-INSERT INTO hide_or_fav_posts (post_id, user_name, hide_or_favourite)
-	VALUES (3, 'testaccount', 'Y');
+INSERT INTO posts (post_id, community_name, title, user_name, flair)
+	VALUES (COALESCE((SELECT max(post_id) +1 FROM posts WHERE community_name = 'test_community'), 1),
+	'test_community', 'This post should be hidden for testaccount user!', 'anotheraccount', 'Text');
+INSERT INTO post_contents (unique_post_id, content)
+	VALUES ('test_community#3', 'testaccount user should not be able to view this post!');
+INSERT INTO hide_or_fav_posts (unique_post_id, user_name, hide_or_favourite)
+	VALUES ('test_community#3', 'testaccount', 'Y');
 --
-INSERT INTO posts (community_name, title, user_name, flair)
-	VALUES ('test_community', 'This post should be favourited for testaccount user!', 'test3', 'Text');
-INSERT INTO post_contents (post_id, content)
-	VALUES (4, 'This post should appear as favourited for testaccount user!');
-INSERT INTO hide_or_fav_posts (post_id, user_name, hide_or_favourite)
-	VALUES (4, 'testaccount', 'N');
+INSERT INTO posts (post_id, community_name, title, user_name, flair)
+	VALUES (COALESCE((SELECT max(post_id) +1 FROM posts WHERE community_name = 'test_community'), 1),
+	'test_community', 'This post should be favourited for testaccount user!', 'test3', 'Text');
+INSERT INTO post_contents (unique_post_id, content)
+	VALUES ('test_community#4', 'This post should appear as favourited for testaccount user!');
+INSERT INTO hide_or_fav_posts (unique_post_id, user_name, hide_or_favourite)
+	VALUES ('test_community#4', 'testaccount', 'N');
 --
-INSERT INTO posts (community_name, title, user_name, flair)
-	VALUES ('test_community', 'This post should be pinned when viewing test_community!', 'testaccount', 'Text');
-INSERT INTO post_contents (post_id, content)
-	VALUES (5, 'This post should be pinned for test_community.');
-UPDATE community SET pinned_post = 3 WHERE community_name = 'test_community';
+INSERT INTO posts (post_id, community_name, title, user_name, flair)
+	VALUES (COALESCE((SELECT max(post_id) +1 FROM posts WHERE community_name = 'test_community'), 1),
+	'test_community', 'This post should be pinned when viewing test_community!', 'testaccount', 'Text');
+INSERT INTO post_contents (unique_post_id, content)
+	VALUES ('test_community#5', 'This post should be pinned for test_community.');
+UPDATE community SET pinned_post = 'test_community#3' WHERE community_name = 'test_community';
 --
-INSERT INTO posts (community_name, title, user_name, flair)
-	VALUES ('test_community', 'This post should have 4 comments and 2 likes!', 'testaccount', 'Text');
-INSERT INTO favours (post_id, favour_point, giver, receiver)
-	VALUES (6, 1, 'testaccount', 'testaccount');
-INSERT INTO favours (post_id, favour_point, giver, receiver)
-	VALUES (6, 1, 'anotheraccount', 'testaccount');
-INSERT INTO favours (post_id, favour_point, giver, receiver)
-	VALUES (6, 1, 'test1', 'testaccount');
-INSERT INTO favours (post_id, favour_point, giver, receiver)
-	VALUES (6, -1, 'test2', 'testaccount');
-INSERT INTO post_contents (post_id, content)
-	VALUES (6, 'This post should be pinned for test_community.');
-INSERT INTO comments (post_id, commenter, content)
-	VALUES (6, 'testaccount', 'This should be the first comment.');
-INSERT INTO comments (post_id, replying_to, commenter, is_edited, content)
-	VALUES (6, '6#1', 'anotheraccount', 'Y', 'The second comment should be replying the first comment and show as edited.');
-INSERT INTO comments (post_id, replying_to, commenter, is_deleted, content)
-	VALUES (6, '6#2', 'anotheraccount', 'Y', 'The third comment should be replying the second comment and show should show as deleted.');
-INSERT INTO comments (post_id, commenter, content)
-	VALUES (6, 'test1', 'This should be a comment by itself with 3 likes.');
+INSERT INTO posts (post_id, community_name, title, user_name, flair)
+	VALUES (COALESCE((SELECT max(post_id) +1 FROM posts WHERE community_name = 'test_community'), 1),
+	'test_community', 'This post should have 4 comments and 2 likes!', 'testaccount', 'Text');
+INSERT INTO favours (unique_post_id, favour_point, giver, receiver)
+	VALUES ('test_community#6', 1, 'testaccount', 'testaccount');
+INSERT INTO favours (unique_post_id, favour_point, giver, receiver)
+	VALUES ('test_community#6', 1, 'anotheraccount', 'testaccount');
+INSERT INTO favours (unique_post_id, favour_point, giver, receiver)
+	VALUES ('test_community#6', 1, 'test1', 'testaccount');
+INSERT INTO favours (unique_post_id, favour_point, giver, receiver)
+	VALUES ('test_community#6', -1, 'test2', 'testaccount');
+INSERT INTO post_contents (unique_post_id, content)
+	VALUES ('test_community#6', 'This post should be pinned for test_community.');
+INSERT INTO comments (comment_id, unique_post_id, commenter, content)
+	VALUES (COALESCE((SELECT max(comment_id) +1 FROM comments WHERE unique_post_id = 'test_community#6'), 1),
+	'test_community#6', 'testaccount', 'This should be the first comment.');
+INSERT INTO comments (comment_id, unique_post_id, replying_to, commenter, is_edited, content)
+	VALUES (COALESCE((SELECT max(comment_id) +1 FROM comments WHERE unique_post_id = 'test_community#6'), 1),
+	'test_community#6', 'test_community#6#1', 'anotheraccount', 'Y', 'The second comment should be replying the first comment and show as edited.');
+INSERT INTO comments (comment_id, unique_post_id, replying_to, commenter, is_deleted, content)
+	VALUES (COALESCE((SELECT max(comment_id) +1 FROM comments WHERE unique_post_id = 'test_community#6'), 1),
+	'test_community#6', 'test_community#6#2', 'anotheraccount', 'Y', 'The third comment should be replying the second comment and show should show as deleted.');
+INSERT INTO comments (comment_id, unique_post_id, commenter, content)
+	VALUES (COALESCE((SELECT max(comment_id) +1 FROM comments WHERE unique_post_id = 'test_community#6'), 1),
+	'test_community#6', 'test1', 'This should be a comment by itself with 3 likes.');
 INSERT INTO favours (unique_comment_id, favour_point, giver, receiver)
-	VALUES ('6#4', 1, 'testaccount', 'test1');
+	VALUES ('test_community#6#4', 1, 'testaccount', 'test1');
 INSERT INTO favours (unique_comment_id, favour_point, giver, receiver)
-	VALUES ('6#4', 1, 'test2', 'test1');
+	VALUES ('test_community#6#4', 1, 'test2', 'test1');
 INSERT INTO favours (unique_comment_id, favour_point, giver, receiver)
-	VALUES ('6#4', 1, 'test3', 'test1');
+	VALUES ('test_community#6#4', 1, 'test3', 'test1');
 INSERT INTO favours (unique_comment_id, favour_point, giver, receiver)
-	VALUES ('6#4', -1, 'anotheraccount', 'test1');
+	VALUES ('test_community#6#4', -1, 'anotheraccount', 'test1');
 INSERT INTO favours (unique_comment_id, favour_point, giver, receiver)
-	VALUES ('6#4', 1, 'test1', 'test1');
+	VALUES ('test_community#6#4', 1, 'test1', 'test1');
 --
-INSERT INTO posts (community_name, title, user_name, flair)
-	VALUES ('another_community', 'Hello World One for another_community!', 'test1', 'Text');
-INSERT INTO post_contents (post_id, content)
-	VALUES (7, 'This is post content for hello world for another_community post.');
+INSERT INTO posts (post_id, community_name, title, user_name, flair)
+	VALUES (COALESCE((SELECT max(post_id) +1 FROM posts WHERE community_name = 'another_community'), 1),
+	'another_community', 'Hello World One for another_community!', 'test1', 'Text');
+INSERT INTO post_contents (unique_post_id, content)
+	VALUES ('another_community#1', 'This is post content for hello world for another_community post.');
 --
-INSERT INTO posts (community_name, title, user_name, flair)
-	VALUES ('banned_community', 'testaccount should not be able to see this post as he is banned from here!', 'anotheraccount', 'Text');
-INSERT INTO post_contents (post_id, content)
-	VALUES (8, 'testaccount should not be able to see this post... as he is banned.');
+INSERT INTO posts (post_id, community_name, title, user_name, flair)
+	VALUES (COALESCE((SELECT max(post_id) +1 FROM posts WHERE community_name = 'banned_community'), 1),
+	'banned_community', 'testaccount should not be able to see this post as he is banned from here!', 'anotheraccount', 'Text');
+INSERT INTO post_contents (unique_post_id, content)
+	VALUES ('banned_community#1', 'testaccount should not be able to see this post... as he is banned.');
 --
 INSERT INTO users(user_name,password, email,user_description)
     VALUES ('Arial', 'arial', 'arial@gmail.com', 'Golden Retriever');
