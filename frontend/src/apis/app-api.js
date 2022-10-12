@@ -118,7 +118,6 @@ export function searchForPostWithParams(params) {
 }
 
 export function retrieveCommunityPosts(community_name) {
-    console.log(community_name);
     return axios
         .get(`${HOST}/api/community`, {
             params: {
@@ -183,6 +182,38 @@ export function retrievePostById(postId) {
 export function retrieveCommunityByName(communityName) {
     return axios
         .get(`${HOST}/api/community/${communityName}`, {
+            headers: {
+                Accept: CONTENT_TYPE_JSON,
+            },
+        })
+        .then((resp) => ({ data: resp.data, error: false }))
+        .catch((err) => ({
+            data: err && err.response ? err.response.data : '',
+            error: true,
+            status: err && err.response ? err.response.status : '',
+        }));
+}
+
+export function retrieveAllFollowedCommunities() {
+    return axios
+        .get(`${HOST}/api/all_followed_communities`, {
+            headers: {
+                Accept: CONTENT_TYPE_JSON,
+            },
+        })
+        .then((resp) => ({ data: resp.data, error: false }))
+        .catch((err) => ({
+            data: err && err.response ? err.response.data : '',
+            error: true,
+            status: err && err.response ? err.response.status : '',
+        }));
+}
+
+export function createPostApi(selectedCommunity, title, content, selectedFlair) {
+    return axios
+        .post(`${HOST}/api/create_post`,
+        {
+            selectedCommunity, title, content, selectedFlair,
             headers: {
                 Accept: CONTENT_TYPE_JSON,
             },

@@ -13,6 +13,7 @@ import { verifyToken } from './apis/app-api';
 import SearchPage from './pages/search-page';
 import CommunityPage from './pages/community-page';
 import ProfilePage from './pages/profile-page';
+import CreatePostPage from './pages/create-post-page';
 
 const App = (props) => {
     let navigate = useNavigate();
@@ -110,6 +111,11 @@ const App = (props) => {
                 path="/community/:community_name/mod"       
                 exact
                 element={<CommunityPage {...mainProps} />}
+            />
+            <Route
+                path="/create_post"
+                exact
+                element={<CreatePostPage {...mainProps} />}
             />
             <Route
                 path="/user/:userName/overview"
