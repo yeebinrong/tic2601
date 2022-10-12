@@ -37,6 +37,12 @@ const getAllPosts = () => {
     return POOL.query('SELECT * FROM posts')
 }
 
+const getAllFollowedCommunities = (username) => {
+    return POOL.query('SELECT community_name FROM followed_communities WHERE user_name = $1',
+    [escapeQuotes(username)],
+    )
+}
+
 const getHomePagePosts = (currentUser) => {
     return POOL.query(
         `WITH following_communities AS
@@ -77,6 +83,27 @@ const insertOneCommunityAndReturnName = (userName, communityName) => {
             escapeQuotes(userName),
         ],
     )
+}
+
+const insertPost = (username, selectedCommunity, title, content, selectedFlair) => {
+    return POOL.query(
+        `WITH P_ROWS AS
+            (INSERT INTO posts (community_name, title, user_name, flair)
+                VALUES ($1, $2, $3, $4) RETURNING post_id),
+            PC_ROWS AS
+            (INSERT INTO post_contents (post_id, content)
+            SELECT post_id, $5
+                FROM P_ROWS)
+        SELECT post_id
+        FROM P_ROWS;`,
+        [
+            escapeQuotes(selectedCommunity),
+            escapeQuotes(title),
+            escapeQuotes(username),
+            escapeQuotes(selectedFlair),
+            escapeQuotes(content),
+        ],
+    );
 }
 
 const searchPostWithParams = (currentUser, order, user, flair, community, q) => {
@@ -166,5 +193,7 @@ module.exports = {
     uploadToDigitalOcean,
     retrieveUserInfo,
     updateUserProfile,
-    retrieveCommunityPostsDB
+    retrieveCommunityPostsDB,
+    getAllFollowedCommunities,
+    insertPost
 }

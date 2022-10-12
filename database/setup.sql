@@ -56,7 +56,7 @@ DECLARE
         END IF;
 		CASE orderParam
 			WHEN 'new' THEN
-				paramQuery = paramQuery || ' ORDER BY age DESC';
+				paramQuery = paramQuery || ' ORDER BY age ASC';
 			WHEN 'hot' THEN
 				paramQuery = paramQuery || ' ORDER BY view_count DESC';
 			WHEN 'best' THEN

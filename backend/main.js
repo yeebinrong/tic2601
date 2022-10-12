@@ -26,7 +26,9 @@ const {
     uploadToDigitalOcean,
     retrieveUserInfo,
     updateUserProfile,
-    retrieveCommunityPostsDB
+    retrieveCommunityPostsDB,
+    getAllFollowedCommunities,
+    insertPost
 } = require('./db_utils.js')
 
 /* -------------------------------------------------------------------------- */
@@ -210,6 +212,39 @@ app.get('/api/all_posts', async (req, resp) => {
     resp.json({rows: results.rows})
     return
 })
+
+app.post('/api/create_post', async (req, resp) => {
+    let insertedPostId = -1;
+    const { selectedCommunity, title, content, selectedFlair } = req.body;
+    try {
+        const results = await insertPost(req.token.username, selectedCommunity, title, content, selectedFlair)
+        insertedPostId = results.rows[0].post_id
+    } catch (e) {
+        console.info(`ERROR: Insert to posts failed with following ${e}`)
+        resp.status(400)
+        resp.type('application/json')
+        resp.json({message: `An error has occurred while creating post.`})
+        return
+    }
+    resp.status(200)
+    resp.type('application/json')
+    resp.json({ community_name: selectedCommunity, post_id: insertedPostId })
+    return
+})
+
+app.get('/api/all_followed_communities', async (req, resp) => {
+    const results = await getAllFollowedCommunities(req.token.username);
+    if (results.rows && results.rows.length == 0) {
+        resp.status(204)
+        resp.type('application/json')
+        resp.json({rows: [], message: 'No followed communities!'})
+        return
+    }
+    resp.status(200)
+    resp.type('application/json')
+    resp.json({rows: results.rows})
+    return
+});
 
 app.get('/api/homepage_posts', async (req, resp) => {
     const results = await getHomePagePosts(req.token.username);
