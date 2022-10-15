@@ -36,7 +36,7 @@ export const renderPostLists = (posts, params, handleChange) => {
         )}
         {posts && posts.map((post) => {
             return (
-                <Item key={post.post_id}>
+                <Item key={`${post.community_name}${post.post_id}`}>
                     <Stack
                         spacing={1}
                         direction="column"

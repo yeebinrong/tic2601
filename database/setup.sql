@@ -69,9 +69,9 @@ DECLARE
                 SUM(f.favour_point) AS fav_point, COUNT(c.comment_id) AS comment_count, p.view_count
             FROM community ac
             INNER JOIN posts p ON p.community_name = ac.community_name
-            LEFT JOIN favours f ON f.post_id = p.post_id
+            LEFT JOIN post_favours f ON f.post_id = p.post_id
             LEFT JOIN comments c ON c.post_id = f.post_id
-            GROUP BY ac.community_name, p.post_id, c.comment_id)
+			GROUP BY ac.community_name, p.user_name, p.post_id, p.date_created, p.title, p.flair, p.view_count, c.comment_id)
             SELECT DISTINCT post_id, community_name, user_name, age, title, flair, fav_point, comment_count, view_count
             FROM all_communities' || paramQuery;
 END;
@@ -99,7 +99,7 @@ CREATE TABLE community (
 		PRIMARY KEY,
 		CHECK(length(community_name) > 3 AND length(community_name) < 21
 		AND community_name ~* '^[A-Za-z0-9_\-]+$' AND community_name !~* '\_%'),
-	pinned_post VARCHAR(292) DEFAULT NULL, -- foreign key is added after post table is created
+	pinned_post_id INTEGER DEFAULT NULL, -- foreign key is added after post table is created
 	datetime_created TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
 	description VARCHAR(256) NOT NULL DEFAULT 'Describe the community.',
 	profile_picture VARCHAR(256),
@@ -110,10 +110,9 @@ CREATE TABLE community (
 -- [Create posts table]
 DROP TABLE IF EXISTS posts CASCADE;
 CREATE TABLE posts (
-	unique_id VARCHAR(292) UNIQUE, -- unique_id is built using post_id and community_name used as a foreign key for other tables
-	post_id INTEGER,
-	user_name VARCHAR(30) NOT NULL REFERENCES users(user_name) ON DELETE CASCADE ON UPDATE CASCADE,
 	community_name VARCHAR(21) NOT NULL REFERENCES community(community_name) ON DELETE CASCADE ON UPDATE CASCADE,
+	post_id INTEGER NOT NULL,
+	user_name VARCHAR(30) NOT NULL REFERENCES users(user_name) ON DELETE CASCADE ON UPDATE CASCADE,
 	flair FlairEnum NOT NULL,
 	url VARCHAR(2048),
 	title VARCHAR(300) NOT NULL,
@@ -123,110 +122,108 @@ CREATE TABLE posts (
 	PRIMARY KEY (post_id, community_name)
 );
 
--- [Create function to concentate unique_id for posts to be used as foreign key]
-CREATE OR REPLACE FUNCTION posts_insert() RETURNS trigger AS '
-     BEGIN
-         NEW.unique_id := NEW.community_name||''#''||NEW.post_id;
-         RETURN NEW;
-     END;
- ' LANGUAGE plpgsql;
-
-CREATE OR REPLACE TRIGGER posts_insert
-	BEFORE INSERT OR UPDATE ON posts
-	FOR EACH ROW EXECUTE PROCEDURE posts_insert();
-
 -- Alter community table to have pinned_post have foreign key
-ALTER TABLE community ADD FOREIGN KEY (pinned_post) REFERENCES posts(unique_id) ON DELETE CASCADE ON UPDATE CASCADE;
+ALTER TABLE community ADD FOREIGN KEY (community_name, pinned_post_id) REFERENCES posts(community_name, post_id) ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- [Create post contents table]
 DROP TABLE IF EXISTS post_contents CASCADE;
 CREATE TABLE post_contents (
-	unique_post_id VARCHAR(292) PRIMARY KEY REFERENCES posts(unique_id) ON DELETE CASCADE ON UPDATE CASCADE,
+	community_name VARCHAR(21) NOT NULL,
+	post_id INTEGER NOT NULL,
 	content VARCHAR(1000) NOT NULL,
 	is_edited TrueOrFalse NOT NULL DEFAULT 'N',
 	date_edited TIMESTAMP DEFAULT NULL,
 	is_archived TrueOrFalse DEFAULT 'N',
-	date_archived TIMESTAMP DEFAULT NULL
+	date_archived TIMESTAMP DEFAULT NULL,
+	PRIMARY KEY (post_id, community_name),
+	CONSTRAINT PFK
+	FOREIGN KEY (community_name, post_id)
+	REFERENCES  posts(community_name, post_id)
+	ON DELETE CASCADE ON UPDATE CASCADE
 );
 
 -- [Create comments table]
 DROP TABLE IF EXISTS comments CASCADE;
 CREATE TABLE comments(
-	unique_id VARCHAR(292) UNIQUE, -- unique_id is built using unique_post_id and comment_id used as a foreign key for other tables
-	unique_post_id VARCHAR(292) NOT NULL REFERENCES posts(unique_id) ON DELETE CASCADE ON UPDATE CASCADE,
-	comment_id INTEGER,
-	replying_to VARCHAR(30) NULL REFERENCES comments(unique_id) ON DELETE CASCADE ON UPDATE CASCADE,
+	community_name VARCHAR(21) NOT NULL,
+	post_id INTEGER NOT NULL,
+	comment_id INTEGER NOT NULL,
+	replying_to INTEGER DEFAULT NULL,
 	commenter VARCHAR(30) NOT NULL REFERENCES users(user_name) ON DELETE CASCADE ON UPDATE CASCADE,
 	datetime_created DATE NOT NULL DEFAULT CURRENT_DATE,
 	is_deleted TrueOrFalse NOT NULL DEFAULT 'N',
 	is_edited TrueOrFalse NOT NULL DEFAULT 'N',
 	content VARCHAR(1000) NOT NULL,
-	PRIMARY KEY (unique_post_id, comment_id)
+	PRIMARY KEY (community_name, post_id, comment_id),
+	CONSTRAINT PFK
+	FOREIGN KEY (community_name, post_id)
+	REFERENCES post_contents(community_name, post_id)
+	ON DELETE CASCADE ON UPDATE CASCADE
 );
-
--- [Create function to concentate unique_id for comments to be used as foreign key]
-CREATE OR REPLACE FUNCTION comments_insert() RETURNS trigger AS '
-     BEGIN
-         NEW.unique_id := NEW.unique_post_id||''#''||NEW.comment_id;
-         RETURN NEW;
-     END;
- ' LANGUAGE plpgsql;
-
-CREATE OR REPLACE TRIGGER comments_insert
-	BEFORE INSERT OR UPDATE ON comments
-	FOR EACH ROW EXECUTE PROCEDURE comments_insert();
 
 -- [Create followed_communities]
 DROP TABLE IF EXISTS followed_communities CASCADE;
 CREATE TABLE followed_communities(
 	community_name VARCHAR(21) NOT NULL REFERENCES community(community_name) ON DELETE CASCADE ON UPDATE CASCADE,
 	user_name VARCHAR(30) NOT NULL REFERENCES users(user_name) ON DELETE CASCADE ON UPDATE CASCADE,
-	followed_date TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
+	followed_date TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+	PRIMARY KEY (community_name, user_name)
 );
 
 -- [Create rules table]
 DROP TABLE IF EXISTS rules CASCADE;
 CREATE TABLE rules (
-	unique_id VARCHAR(292) UNIQUE, -- unique_id is built using community_name and rules_id used as a foreign key for other tables
 	community_name VARCHAR(21) NOT NULL REFERENCES community(community_name) ON DELETE CASCADE ON UPDATE CASCADE,
-	rules_id SERIAL,
+	rule_id INTEGER NOT NULL,
 	title VARCHAR(300) NOT NULL,
 	description VARCHAR(1000) NOT NULL,
-	PRIMARY KEY (community_name, rules_id)
+	PRIMARY KEY (community_name, rule_id)
 -- TODO allow sorting order of rules
 );
 
--- [Create function to concentate unique_id for rules to be used as foreign key ]
-CREATE OR REPLACE FUNCTION rules_insert() RETURNS trigger AS '
-     BEGIN
-         NEW.unique_id := NEW.community_name||''#''||NEW.rules_id;
-         RETURN NEW;
-     END;
- ' LANGUAGE plpgsql;
-
-CREATE OR REPLACE TRIGGER rules_insert
-	BEFORE INSERT OR UPDATE ON rules
-	FOR EACH ROW EXECUTE PROCEDURE rules_insert();
-
--- [Create favours table]
--- post_id or comment_id is default null
-DROP TABLE IF EXISTS favours CASCADE;
-CREATE TABLE favours (
-	unique_post_id VARCHAR(292) DEFAULT NULL REFERENCES posts(unique_id) ON DELETE CASCADE ON UPDATE CASCADE,
-	unique_comment_id VARCHAR(292) DEFAULT NULL REFERENCES comments(unique_id) ON DELETE CASCADE ON UPDATE CASCADE,
-	favour_point INTEGER NOT NULL CHECK(favour_point=1 OR favour_point=-1),
+-- [Create post_favours table]
+DROP TABLE IF EXISTS post_favours CASCADE;
+CREATE TABLE post_favours (
+	community_name VARCHAR(21) NOT NULL,
+	post_id INTEGER NOT NULL,
 	giver VARCHAR(30) NOT NULL REFERENCES users(user_name) ON DELETE CASCADE ON UPDATE CASCADE,
-	receiver VARCHAR(30) NOT NULL REFERENCES users(user_name) ON DELETE CASCADE ON UPDATE CASCADE
-	-- TODO check for both post_id and comment_id cannot be null at same time, one of them must be null
+	receiver VARCHAR(30) NOT NULL REFERENCES users(user_name) ON DELETE CASCADE ON UPDATE CASCADE,
+	favour_point INTEGER NOT NULL CHECK(favour_point=1 OR favour_point=-1),
+	PRIMARY KEY (community_name, post_id, giver, receiver),
+	CONSTRAINT PFK
+	FOREIGN KEY (community_name, post_id)
+	REFERENCES posts(community_name, post_id)
+	ON DELETE CASCADE ON UPDATE CASCADE
+);
+
+-- [Create comment_favours table]
+DROP TABLE IF EXISTS comment_favours CASCADE;
+CREATE TABLE comment_favours (
+	community_name VARCHAR(21) NOT NULL,
+	post_id INTEGER NOT NULL,
+	comment_id INTEGER NOT NULL,
+	giver VARCHAR(30) NOT NULL REFERENCES users(user_name) ON DELETE CASCADE ON UPDATE CASCADE,
+	receiver VARCHAR(30) NOT NULL REFERENCES users(user_name) ON DELETE CASCADE ON UPDATE CASCADE,
+	favour_point INTEGER NOT NULL CHECK(favour_point=1 OR favour_point=-1),
+	PRIMARY KEY (community_name, post_id, comment_id, giver),
+	CONSTRAINT PFK
+	FOREIGN KEY (community_name, post_id, comment_id)
+	REFERENCES comments(community_name, post_id, comment_id)
+	ON DELETE CASCADE ON UPDATE CASCADE
 );
 
 -- [Create hide_or_fav_posts table]
 DROP TABLE IF EXISTS hide_or_fav_posts CASCADE;
 CREATE TABLE hide_or_fav_posts (
-	unique_post_id VARCHAR(292) DEFAULT NULL REFERENCES posts(unique_id) ON DELETE CASCADE ON UPDATE CASCADE,
+	community_name VARCHAR(21) NOT NULL,
+	post_id INTEGER NOT NULL,
 	user_name VARCHAR(30) NOT NULL REFERENCES users(user_name) ON DELETE CASCADE ON UPDATE CASCADE,
 	hide_or_favourite TrueOrFalse NOT NULL,
-	PRIMARY KEY (unique_post_id, user_name)
+	PRIMARY KEY (community_name, post_id, user_name),
+	CONSTRAINT PFK
+	FOREIGN KEY (community_name, post_id)
+	REFERENCES posts(community_name, post_id)
+	ON DELETE CASCADE ON UPDATE CASCADE
 );
 
 -- [Create moderators table]
@@ -234,17 +231,22 @@ DROP TABLE IF EXISTS moderators CASCADE;
 CREATE TABLE moderators(
 	community_name VARCHAR(21) NOT NULL REFERENCES community(community_name) ON DELETE CASCADE ON UPDATE CASCADE,
 	user_name VARCHAR(30) NOT NULL REFERENCES users(user_name) ON DELETE CASCADE ON UPDATE CASCADE,
-	is_admin TrueOrFalse NOT NULL DEFAULT 'N'
+	is_admin TrueOrFalse NOT NULL DEFAULT 'N',
+	PRIMARY KEY (community_name, user_name)
 );
 
 -- [Create banlist table]
 DROP TABLE IF EXISTS banlist CASCADE;
 CREATE TABLE banlist(
-	unique_rule_id VARCHAR(292) NOT NULL REFERENCES rules(unique_id) ON DELETE CASCADE ON UPDATE CASCADE,
-	community_name VARCHAR(21) NOT NULL REFERENCES community(community_name) ON DELETE CASCADE ON UPDATE CASCADE,
 	user_name VARCHAR(30) NOT NULL REFERENCES users(user_name) ON DELETE CASCADE ON UPDATE CASCADE,
+	community_name VARCHAR(21) NOT NULL,
+	rule_id INTEGER NOT NULL,
 	is_approved TrueOrFalse NOT NULL DEFAULT 'N',
-	PRIMARY KEY (community_name, user_name)
+	PRIMARY KEY (community_name, user_name),
+	CONSTRAINT PFK
+	FOREIGN KEY (community_name, rule_id)
+	REFERENCES rules(community_name, rule_id)
+	ON DELETE CASCADE ON UPDATE CASCADE
 );
 
 -- Insert default user testaccount
@@ -264,15 +266,19 @@ INSERT INTO community (community_name, colour) VALUES ('another_community', '#0D
 INSERT INTO community (community_name, description) VALUES ('community_w_no_posts', 'This is an empty community that should not have any posts');
 INSERT INTO community (community_name, description) VALUES ('banned_community', 'testaccount should be banned from this community and not be able to view it');
 -- Insert rules
-INSERT INTO rules (community_name, title, description) VALUES ('test_community', 'This is the first rule', 'This is the first rule for test_community.');
-INSERT INTO rules (community_name, title, description) VALUES ('test_community', 'This is the second rule', 'This is the second rule for test_community.');
-INSERT INTO rules (community_name, title, description) VALUES ('community_w_no_posts', 'This a lonely rule here.', 'There is only one rule here in community_w_no_posts.');
-INSERT INTO rules (community_name, title, description) VALUES ('banned_community', 'Rules 1 for banned_community', 'Testaccount ought to be banned from here.');
+INSERT INTO rules (rule_id, community_name, title, description)
+	VALUES (1, 'test_community', 'This is the first rule', 'This is the first rule for test_community.');
+INSERT INTO rules (rule_id, community_name, title, description)
+	VALUES (2, 'test_community', 'This is the second rule', 'This is the second rule for test_community.');
+INSERT INTO rules (rule_id, community_name, title, description)
+	VALUES (1, 'community_w_no_posts', 'This a lonely rule here.', 'There is only one rule here in community_w_no_posts.');
+INSERT INTO rules (rule_id, community_name, title, description)
+	VALUES (1, 'banned_community', 'Rules 1 for banned_community', 'Testaccount ought to be banned from here.');
 -- Insert banlist
-INSERT INTO banlist (unique_rule_id, community_name, user_name, is_approved)
-	VALUES ('banned_community#4', 'banned_community', 'testaccount', 'Y');
-INSERT INTO banlist (unique_rule_id, community_name, user_name, is_approved)
-	VALUES ('test_community#2', 'test_community', 'test3', 'N');
+INSERT INTO banlist (community_name, rule_id, user_name, is_approved)
+	VALUES ('banned_community', 1,'testaccount', 'Y');
+INSERT INTO banlist (community_name, rule_id, user_name, is_approved)
+	VALUES ('test_community', 2, 'test3', 'N');
 -- Insert followed community
 INSERT INTO followed_communities (community_name, user_name) VALUES ('test_community', 'testaccount');
 INSERT INTO followed_communities (community_name, user_name) VALUES ('another_community', 'testaccount');
@@ -294,131 +300,121 @@ INSERT INTO moderators (community_name, user_name, is_admin)
 -- Insert Posts data
 --
 INSERT INTO posts (post_id, community_name, title, user_name, flair)
-	VALUES (COALESCE((SELECT max(post_id) +1 FROM posts WHERE community_name = 'test_community'), 1),
-	'test_community', 'Hello World One!', 'testaccount', 'Text');
-INSERT INTO post_contents (unique_post_id, content)
-	VALUES ('test_community#1', 'This is post content for hello world one.');
+	VALUES (1, 'test_community', 'Hello World One!', 'testaccount', 'Text');
+INSERT INTO post_contents (community_name, post_id, content)
+	VALUES ('test_community', 1, 'This is post content for hello world one.');
 --
 INSERT INTO posts (post_id, community_name, title, user_name, flair)
-	VALUES (COALESCE((SELECT max(post_id) +1 FROM posts WHERE community_name = 'test_community'), 1),
-	'test_community', 'Hello World Two!', 'test2', 'Text');
-INSERT INTO post_contents (unique_post_id, content)
-	VALUES ('test_community#2', 'This is post content for hello world two.');
+	VALUES (2, 'test_community', 'Hello World Two!', 'test2', 'Text');
+INSERT INTO post_contents (community_name, post_id, content)
+	VALUES ('test_community', 2, 'This is post content for hello world two.');
 --
 INSERT INTO posts (post_id, community_name, title, user_name, flair)
-	VALUES (COALESCE((SELECT max(post_id) +1 FROM posts WHERE community_name = 'test_community'), 1),
-	'test_community', 'This post should be hidden for testaccount user!', 'anotheraccount', 'Text');
-INSERT INTO post_contents (unique_post_id, content)
-	VALUES ('test_community#3', 'testaccount user should not be able to view this post!');
-INSERT INTO hide_or_fav_posts (unique_post_id, user_name, hide_or_favourite)
-	VALUES ('test_community#3', 'testaccount', 'Y');
+	VALUES (3, 'test_community', 'This post should be hidden for testaccount user!', 'anotheraccount', 'Text');
+INSERT INTO post_contents (community_name, post_id, content)
+	VALUES ('test_community', 3, 'testaccount user should not be able to view this post!');
+INSERT INTO hide_or_fav_posts (community_name, post_id, user_name, hide_or_favourite)
+	VALUES ('test_community', 3, 'testaccount', 'Y');
 --
 INSERT INTO posts (post_id, community_name, title, user_name, flair)
-	VALUES (COALESCE((SELECT max(post_id) +1 FROM posts WHERE community_name = 'test_community'), 1),
-	'test_community', 'This post should be favourited for testaccount user!', 'test3', 'Text');
-INSERT INTO post_contents (unique_post_id, content)
-	VALUES ('test_community#4', 'This post should appear as favourited for testaccount user!');
-INSERT INTO hide_or_fav_posts (unique_post_id, user_name, hide_or_favourite)
-	VALUES ('test_community#4', 'testaccount', 'N');
+	VALUES (4, 'test_community', 'This post should be favourited for testaccount user!', 'test3', 'Text');
+INSERT INTO post_contents (community_name, post_id, content)
+	VALUES ('test_community', 4, 'This post should appear as favourited for testaccount user!');
+INSERT INTO hide_or_fav_posts (community_name, post_id, user_name, hide_or_favourite)
+	VALUES ('test_community', 4, 'testaccount', 'N');
 --
 INSERT INTO posts (post_id, community_name, title, user_name, flair)
-	VALUES (COALESCE((SELECT max(post_id) +1 FROM posts WHERE community_name = 'test_community'), 1),
-	'test_community', 'This post should be pinned when viewing test_community!', 'testaccount', 'Text');
-INSERT INTO post_contents (unique_post_id, content)
-	VALUES ('test_community#5', 'This post should be pinned for test_community.');
-UPDATE community SET pinned_post = 'test_community#3' WHERE community_name = 'test_community';
+	VALUES (5, 'test_community', 'This post should be pinned when viewing test_community!', 'testaccount', 'Text');
+INSERT INTO post_contents (community_name, post_id, content)
+	VALUES ('test_community', 5, 'This post should be pinned for test_community.');
+UPDATE community SET pinned_post_id = 5 WHERE community_name = 'test_community';
 --
 INSERT INTO posts (post_id, community_name, title, user_name, flair)
-	VALUES (COALESCE((SELECT max(post_id) +1 FROM posts WHERE community_name = 'test_community'), 1),
-	'test_community', 'This post should have 4 comments and 2 likes!', 'testaccount', 'Text');
-INSERT INTO favours (unique_post_id, favour_point, giver, receiver)
-	VALUES ('test_community#6', 1, 'testaccount', 'testaccount');
-INSERT INTO favours (unique_post_id, favour_point, giver, receiver)
-	VALUES ('test_community#6', 1, 'anotheraccount', 'testaccount');
-INSERT INTO favours (unique_post_id, favour_point, giver, receiver)
-	VALUES ('test_community#6', 1, 'test1', 'testaccount');
-INSERT INTO favours (unique_post_id, favour_point, giver, receiver)
-	VALUES ('test_community#6', -1, 'test2', 'testaccount');
-INSERT INTO post_contents (unique_post_id, content)
-	VALUES ('test_community#6', 'This post should be pinned for test_community.');
-INSERT INTO comments (comment_id, unique_post_id, commenter, content)
-	VALUES (COALESCE((SELECT max(comment_id) +1 FROM comments WHERE unique_post_id = 'test_community#6'), 1),
-	'test_community#6', 'testaccount', 'This should be the first comment.');
-INSERT INTO comments (comment_id, unique_post_id, replying_to, commenter, is_edited, content)
-	VALUES (COALESCE((SELECT max(comment_id) +1 FROM comments WHERE unique_post_id = 'test_community#6'), 1),
-	'test_community#6', 'test_community#6#1', 'anotheraccount', 'Y', 'The second comment should be replying the first comment and show as edited.');
-INSERT INTO comments (comment_id, unique_post_id, replying_to, commenter, is_deleted, content)
-	VALUES (COALESCE((SELECT max(comment_id) +1 FROM comments WHERE unique_post_id = 'test_community#6'), 1),
-	'test_community#6', 'test_community#6#2', 'anotheraccount', 'Y', 'The third comment should be replying the second comment and show should show as deleted.');
-INSERT INTO comments (comment_id, unique_post_id, commenter, content)
-	VALUES (COALESCE((SELECT max(comment_id) +1 FROM comments WHERE unique_post_id = 'test_community#6'), 1),
-	'test_community#6', 'test1', 'This should be a comment by itself with 3 likes.');
-INSERT INTO favours (unique_comment_id, favour_point, giver, receiver)
-	VALUES ('test_community#6#4', 1, 'testaccount', 'test1');
-INSERT INTO favours (unique_comment_id, favour_point, giver, receiver)
-	VALUES ('test_community#6#4', 1, 'test2', 'test1');
-INSERT INTO favours (unique_comment_id, favour_point, giver, receiver)
-	VALUES ('test_community#6#4', 1, 'test3', 'test1');
-INSERT INTO favours (unique_comment_id, favour_point, giver, receiver)
-	VALUES ('test_community#6#4', -1, 'anotheraccount', 'test1');
-INSERT INTO favours (unique_comment_id, favour_point, giver, receiver)
-	VALUES ('test_community#6#4', 1, 'test1', 'test1');
+	VALUES (6, 'test_community', 'This post should have 4 comments and 2 likes!', 'testaccount', 'Text');
+INSERT INTO post_favours (community_name, post_id, favour_point, giver, receiver)
+	VALUES ('test_community', 6, 1, 'testaccount', 'testaccount');
+INSERT INTO post_favours (community_name, post_id, favour_point, giver, receiver)
+	VALUES ('test_community', 6, 1, 'anotheraccount', 'testaccount');
+INSERT INTO post_favours (community_name, post_id, favour_point, giver, receiver)
+	VALUES ('test_community', 6, 1, 'test1', 'testaccount');
+INSERT INTO post_favours (community_name, post_id, favour_point, giver, receiver)
+	VALUES ('test_community', 6, -1, 'test2', 'testaccount');
+INSERT INTO post_contents (community_name, post_id, content)
+	VALUES ('test_community', 6, 'This post content should have 4 comments and 2 likes');
+INSERT INTO comments (comment_id, community_name, post_id, commenter, content)
+	VALUES (1, 'test_community', 6, 'testaccount', 'This should be the first comment.');
+INSERT INTO comments (comment_id, community_name, post_id, replying_to, commenter, is_edited, content)
+	VALUES (2, 'test_community', 6, 1, 'anotheraccount', 'Y', 'The second comment should be replying the first comment and show as edited.');
+INSERT INTO comments (comment_id, community_name, post_id, replying_to, commenter, is_deleted, content)
+	VALUES (3, 'test_community', 6, 2, 'anotheraccount', 'Y', 'The third comment should be replying the second comment and show should show as deleted.');
+INSERT INTO comments (comment_id, community_name, post_id, commenter, content)
+	VALUES (4, 'test_community', 6, 'test1', 'This should be a comment by itself with 3 likes.');
+INSERT INTO comment_favours (community_name, post_id, comment_id, favour_point, giver, receiver)
+	VALUES ('test_community', 6, 4, 1, 'testaccount', 'test1');
+INSERT INTO comment_favours (community_name, post_id, comment_id, favour_point, giver, receiver)
+	VALUES ('test_community', 6, 4, 1, 'test2', 'test1');
+INSERT INTO comment_favours (community_name, post_id, comment_id, favour_point, giver, receiver)
+	VALUES ('test_community', 6, 4, 1, 'test3', 'test1');
+INSERT INTO comment_favours (community_name, post_id, comment_id, favour_point, giver, receiver)
+	VALUES ('test_community', 6, 4, -1, 'anotheraccount', 'test1');
+INSERT INTO comment_favours (community_name, post_id, comment_id, favour_point, giver, receiver)
+	VALUES ('test_community', 6, 4, 1, 'test1', 'test1');
 --
 INSERT INTO posts (post_id, community_name, title, user_name, flair)
-	VALUES (COALESCE((SELECT max(post_id) +1 FROM posts WHERE community_name = 'another_community'), 1),
-	'another_community', 'Hello World One for another_community!', 'test1', 'Text');
-INSERT INTO post_contents (unique_post_id, content)
-	VALUES ('another_community#1', 'This is post content for hello world for another_community post.');
+	VALUES (1, 'another_community', 'Hello World One for another_community!', 'test1', 'Text');
+INSERT INTO post_contents (community_name, post_id, content)
+	VALUES ('another_community', 1, 'This is post content for hello world for another_community post.');
 --
 INSERT INTO posts (post_id, community_name, title, user_name, flair)
-	VALUES (COALESCE((SELECT max(post_id) +1 FROM posts WHERE community_name = 'banned_community'), 1),
-	'banned_community', 'testaccount should not be able to see this post as he is banned from here!', 'anotheraccount', 'Text');
-INSERT INTO post_contents (unique_post_id, content)
-	VALUES ('banned_community#1', 'testaccount should not be able to see this post... as he is banned.');
+	VALUES (1, 'banned_community', 'testaccount should not be able to see this post as he is banned from here!', 'anotheraccount', 'Text');
+INSERT INTO post_contents (community_name, post_id, content)
+	VALUES ('banned_community', 1, 'testaccount should not be able to see this post... as he is banned.');
 --
+-- Password is username in lowercase eg. user_name=Arial, password=arial
 INSERT INTO users(user_name,password, email,user_description)
-    VALUES ('Arial', 'arial', 'arial@gmail.com', 'Golden Retriever');
+    VALUES ('Arial', '9b949dd8f6ceb05388ae95aea9141f6d664a6c5f5b6af4e91f92bfee49041c4a', 'arial@gmail.com', 'Golden Retriever');
 INSERT INTO users(user_name,password, email,user_description)
-    VALUES ('Benji', 'benji', 'benji@gmail.com', 'Jack Russsel');	
+    VALUES ('Benji', '56987df6cba487ef5295f4849bee8820d3ca701aa6d897c51ee22127e05390a0', 'benji@gmail.com', 'Jack Russsel');	
 INSERT INTO users(user_name,password, email,user_description)
-    VALUES ('Carter', 'carter', 'carter@gmail.com', 'German Shepherd');
+    VALUES ('Carter', 'e1dc69f127056e7f228e562c4905c1a09e3ad6e1c31cb5638d90df49b9a0e52a', 'carter@gmail.com', 'German Shepherd');
 INSERT INTO users (user_name,password, email,user_description)
-    VALUES ('Cooper', 'cooper', 'cooper@gmail.com', 'Bulldog');
+    VALUES ('Cooper', '0522bcf1efa814a5625897750561f25fdc9153639c0c01068fa661b98bef1a92', 'cooper@gmail.com', 'Bulldog');
 INSERT INTO users (user_name,password, email,user_description)
-    VALUES ('Cody', 'cody', 'cody@gmail.com', 'Siberian Husky');	
+    VALUES ('Cody', '7f29c003dfda781898ca47b9ce9ccb16cf6b5eb9110811c2a09db8d8f8a1e04b', 'cody@gmail.com', 'Siberian Husky');	
 INSERT INTO community (community_name)
      VALUES ('Dogs');	 
 INSERT INTO community (community_name)
      VALUES ('DogOwners');
+INSERT INTO followed_communities (community_name, user_name) VALUES ('Dogs', 'testaccount');
+INSERT INTO followed_communities (community_name, user_name) VALUES ('DogOwners', 'testaccount');
 INSERT INTO moderators (community_name, user_name, is_admin)
 	VALUES ('Dogs', 'Benji', 'Y');
-INSERT INTO posts (community_name, title, user_name, date_created, flair)
-    VALUES ('Dogs', 'Missing Dog', 'Benji', '20220823', 'Text' );	
-INSERT INTO post_contents (post_id, content)
-	VALUES (9,'My dog benji is lost yesterday, it is a Jack Russel with full black hair, please contact me if anyone sees it');
-INSERT INTO comments (post_id, comment_id,commenter,datetime_created,content)
-    VALUES (9, 1, 'Arial', '20220823','I have found your dog, we are at dog park now, please come and pick up');	
-INSERT INTO favours (unique_comment_id,favour_point, giver, receiver)
-	VALUES ('9#1', 1, 'Benji', 'Arial');
-INSERT INTO favours (unique_comment_id, favour_point, giver, receiver)
-	VALUES ('9#1', 1, 'Cooper', 'Arial');
-INSERT INTO favours (unique_comment_id, favour_point, giver, receiver)
-	VALUES ('9#1', 1, 'Cody', 'Arial');
-INSERT INTO posts(community_name, title, user_name, date_created, flair)
-    VALUES ('Dogs', 'How did I find my dog', 'Benji', '20220830', 'Text');
-INSERT INTO post_contents(post_id, content)
-     VALUES (10, 'The owner of Arial have found my dog in the park');
-INSERT INTO favours (post_id, favour_point, giver, receiver)
-	VALUES (10, 1, 'Cooper', 'Benji');
-INSERT INTO favours (post_id, favour_point, giver, receiver)
-	VALUES (10, 1, 'Cody', 'Benji');
-INSERT INTO comments (post_id, comment_id,commenter,datetime_created,content)
-    VALUES (10, 2, 'Arial', '20220830','Happy to help:)');
-INSERT INTO comments (post_id, comment_id,replying_to,commenter,datetime_created,content)
-    VALUES (10, 3,'10#2','Benji', '20220830','Thank you!!');
-INSERT INTO favours (unique_comment_id, favour_point, giver, receiver)
-	VALUES ('10#3', 1, 'Arial', 'Benji');
-
+INSERT INTO posts (post_id, community_name, title, user_name, date_created, flair)
+	VALUES (1, 'Dogs', 'Missing Dog', 'Benji', '20220823', 'Text' );	
+INSERT INTO post_contents (community_name, post_id, content)
+	VALUES ('Dogs', 1, 'My dog benji is lost yesterday, it is a Jack Russel with full black hair, please contact me if anyone sees it');		
+INSERT INTO comments (comment_id, community_name, post_id, commenter,datetime_created,content)
+	VALUES (1, 'Dogs', 1, 'Arial', '20220823','I have found your dog, we are at dog park now, please come and pick up');	
+INSERT INTO comment_favours (community_name, post_id, comment_id, favour_point, giver, receiver)
+	VALUES ('Dogs', 1, 1, 1, 'Benji', 'Arial');
+INSERT INTO comment_favours (community_name, post_id, comment_id, favour_point, giver, receiver)
+	VALUES ('Dogs', 1, 1, 1, 'Cooper', 'Arial');
+INSERT INTO comment_favours (community_name, post_id, comment_id, favour_point, giver, receiver)
+	VALUES ('Dogs', 1, 1, 1, 'Cody', 'Arial');
+INSERT INTO posts (post_id, community_name, title, user_name, date_created, flair)
+	VALUES (2, 'Dogs', 'How did I find my dog', 'Benji', '20220830', 'Text');
+INSERT INTO post_contents (community_name, post_id, content)
+     VALUES ('Dogs', 2, 'The owner of Arial have found my dog in the park');
+INSERT INTO post_favours (community_name, post_id, favour_point, giver, receiver)
+	VALUES ('Dogs', 2, 1, 'Cooper', 'Benji');
+INSERT INTO post_favours (community_name, post_id, favour_point, giver, receiver)
+	VALUES ('Dogs', 2, 1, 'Cody', 'Benji');
+INSERT INTO comments (comment_id, community_name, post_id, commenter,datetime_created,content)
+	VALUES (1, 'Dogs', 2, 'Arial', '20220830','Happy to help:)');
+INSERT INTO comments (comment_id, community_name, post_id,replying_to,commenter,datetime_created,content)
+	VALUES (2, 'Dogs', 2, 2,'Benji', '20220830','Thank you!!');
+INSERT INTO comment_favours (community_name, post_id, comment_id, favour_point, giver, receiver)
+	VALUES ('Dogs', 2, 2, 1, 'Arial', 'Benji');
 INSERT INTO users(user_name,password, email,user_description)
     VALUES ('Debra', 'debra', 'debra@gmail.com', 'Golden Retriever');
 INSERT INTO users(user_name,password, email,user_description)
@@ -449,48 +445,50 @@ INSERT INTO moderators (community_name, user_name, is_admin)
 	VALUES ('GoldenRetri', 'Wiley', 'Y');
 INSERT INTO moderators (community_name, user_name, is_admin)
 	VALUES ('GoldenRetri', 'Eli', 'Y');
-INSERT INTO rules (unique_id, community_name, title, description) VALUES ('Dogs#1','Dogs','#1', 'No Swearing Words');
-INSERT INTO rules (unique_id, community_name, title, description) VALUES ('Dogs#2','Dogs', '#2', 'Let us create a peaceful community!');	
-INSERT INTO rules (unique_id, community_name, title, description) VALUES ('DogOwners#1', 'DogOwners', '#1', 'No Swearing Words');
-INSERT INTO rules (unique_id, community_name, title, description) VALUES ('GoldenRetri#1','GoldenRetri', '#1', 'No Swearing Words');	
--- INSERT INTO banlist (unique_rule_id, community_name, user_name, is_approved)
--- 	VALUES ('DogOwners#1','DogOwners', 'Tami', 'Y');
--- INSERT INTO banlist (unique_rule_id,community_name, user_name, is_approved)
--- 	VALUES ('Dogs#1','Dogs', 'Coco', 'N'); 
+INSERT INTO rules (rule_id, community_name, title, description)
+	VALUES (1, 'Dogs','#1', 'No Swearing Words');
+INSERT INTO rules (rule_id, community_name, title, description)
+	VALUES (2, 'Dogs','#2', 'Let us create a peaceful community!');
+INSERT INTO rules (rule_id, community_name, title, description)
+	VALUES (1, 'DogOwners', '#1', 'No Swearing Words');
+INSERT INTO rules (rule_id, community_name, title, description)
+	VALUES (1, 'GoldenRetri', '#1', 'No Swearing Words');
+INSERT INTO banlist (community_name, rule_id, user_name, is_approved)
+	VALUES ('DogOwners', 1, 'Tami', 'Y');
+INSERT INTO banlist (community_name, rule_id, user_name, is_approved)
+	VALUES ('Dogs', 1, 'Coco', 'N');
 INSERT INTO followed_communities (community_name, user_name) VALUES ('Dogs', 'Cody');
 INSERT INTO followed_communities (community_name, user_name) VALUES ('DogOwners', 'Cody');
 INSERT INTO followed_communities (community_name, user_name) VALUES ('GoldenRetri', 'Cody');
 INSERT INTO followed_communities (community_name, user_name) VALUES ('GoldenRetri', 'Wiley');
 -- Insert posts and comment 
-INSERT INTO posts (community_name, title, user_name, date_created, flair)
-    VALUES ('DogOwners', 'Do you allow your dog sleep on your bed', 'Cody', '20220825', 'Text' );
-INSERT INTO post_contents(post_id, content)
-    VALUES (11,'If you have a dog, will you aloow it to sleep with you on your bed?'); 
-INSERT INTO comments (post_id, comment_id,commenter,datetime_created,content)
-    VALUES (11, 4, 'Arial', '20220825','yes, definitely! they need to stay with you to feel safe');
-INSERT INTO favours (unique_comment_id, favour_point, giver, receiver)
-	VALUES ('11#4', 1, 'Cody', 'Arial');
-INSERT INTO comments (post_id, comment_id,commenter,datetime_created,content)
-    VALUES (11, 5, 'Benji', '20220826','It depends on the dog, my dog likes to sleep alone');
-INSERT INTO favours (unique_comment_id, favour_point, giver, receiver)
-	VALUES ('11#5', 1, 'Cody', 'Benji');
-INSERT INTO favours (unique_comment_id, favour_point, giver, receiver)
-	VALUES ('11#5', 1, 'Cooper', 'Benji');
-INSERT INTO comments (post_id, comment_id,commenter,datetime_created,content)
-    VALUES (11, 6, 'Kiki', '20220826','My dog needs her space to fully stretch, she hates to stay on my bed');
-INSERT INTO favours (unique_comment_id, favour_point, giver, receiver)
-	VALUES ('11#6', 1, 'Cooper', 'Kiki');
-INSERT INTO favours (unique_comment_id, favour_point, giver, receiver)
-	VALUES ('11#5', 1, 'Cody', 'Benji'); 
-INSERT INTO comments (post_id, comment_id,commenter,datetime_created,content)
-    VALUES (11, 7, 'Suki', '20220827','We had a dog for 14 years that would get in bed with us for "snuggle puppy time", about 15 minutes, then get down and get in her kennel to sleep.');
-INSERT INTO favours (unique_comment_id, favour_point, giver, receiver)
-	VALUES ('11#7', 1, 'Cody', 'Suki'); 
-INSERT INTO favours (unique_comment_id, favour_point, giver, receiver)
-	VALUES ('11#7', 1, 'Debra', 'Suki'); 
-INSERT INTO favours (unique_comment_id, favour_point, giver, receiver)
-	VALUES ('11#7', 1, 'Eli', 'Suki'); 
-INSERT INTO favours (unique_comment_id, favour_point, giver, receiver)
-	VALUES ('11#7', 1, 'Jacky', 'Suki'); 
-INSERT INTO favours (unique_comment_id, favour_point, giver, receiver)
-	VALUES ('11#7', 1, 'Lucki', 'Suki'); 
+INSERT INTO posts (post_id, community_name, title, user_name, date_created, flair)
+	VALUES (1, 'DogOwners', 'Do you allow your dog sleep on your bed', 'Cody', '20220825', 'Text' );
+INSERT INTO post_contents (community_name, post_id, content)
+    VALUES ('DogOwners', 1,'If you have a dog, will you aloow it to sleep with you on your bed?');
+INSERT INTO comments (comment_id, community_name, post_id,commenter,datetime_created,content)
+	VALUES (1, 'DogOwners', 1, 'Arial', '20220825','yes, definitely! they need to stay with you to feel safe');
+INSERT INTO comment_favours (community_name, post_id, comment_id, favour_point, giver, receiver)
+	VALUES ('DogOwners', 1, 1, 1, 'Cody', 'Arial');
+INSERT INTO comments (comment_id, community_name, post_id,commenter,datetime_created,content)
+	VALUES (2, 'DogOwners', 1, 'Benji', '20220826','It depends on the dog, my dog likes to sleep alone');
+INSERT INTO comment_favours (community_name, post_id, comment_id, favour_point, giver, receiver)
+	VALUES ('DogOwners', 1, 2, 1, 'Cody', 'Benji');
+INSERT INTO comment_favours (community_name, post_id, comment_id, favour_point, giver, receiver)
+	VALUES ('DogOwners', 1, 2, 1, 'Cooper', 'Benji');
+INSERT INTO comments (comment_id, community_name, post_id,commenter,datetime_created,content)
+	VALUES (3, 'DogOwners', 1, 'Kiki', '20220826','My dog needs her space to fully stretch, she hates to stay on my bed');
+INSERT INTO comment_favours (community_name, post_id, comment_id, favour_point, giver, receiver)
+	VALUES ('DogOwners', 1, 3, 1, 'Cooper', 'Kiki');
+INSERT INTO comments (comment_id, community_name, post_id,commenter,datetime_created,content)
+	VALUES (4, 'DogOwners', 1, 'Suki', '20220827','We had a dog for 14 years that would get in bed with us for "snuggle puppy time", about 15 minutes, then get down and get in her kennel to sleep.');
+INSERT INTO comment_favours (community_name, post_id, comment_id, favour_point, giver, receiver)
+	VALUES ('DogOwners', 1, 4, 1, 'Cody', 'Suki');
+INSERT INTO comment_favours (community_name, post_id, comment_id, favour_point, giver, receiver)
+	VALUES ('DogOwners', 1, 4, 1, 'Debra', 'Suki');
+INSERT INTO comment_favours (community_name, post_id, comment_id, favour_point, giver, receiver)
+	VALUES ('DogOwners', 1, 4, 1, 'Eli', 'Suki');
+INSERT INTO comment_favours (community_name, post_id, comment_id, favour_point, giver, receiver)
+	VALUES ('DogOwners', 1, 4, 1, 'Jacky', 'Suki');
+INSERT INTO comment_favours (community_name, post_id, comment_id, favour_point, giver, receiver)
+	VALUES ('DogOwners', 1, 4, 1, 'Lucki', 'Suki');

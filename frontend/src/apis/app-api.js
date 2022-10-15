@@ -209,11 +209,45 @@ export function retrieveAllFollowedCommunities() {
         }));
 }
 
-export function createPostApi(selectedCommunity, title, content, selectedFlair) {
+export function createTextPostApi(selectedCommunity, title, content, selectedFlair) {
     return axios
-        .post(`${HOST}/api/create_post`,
+        .post(`${HOST}/api/create_text_post`,
         {
             selectedCommunity, title, content, selectedFlair,
+            headers: {
+                Accept: CONTENT_TYPE_JSON,
+            },
+        })
+        .then((resp) => ({ data: resp.data, error: false }))
+        .catch((err) => ({
+            data: err && err.response ? err.response.data : '',
+            error: true,
+            status: err && err.response ? err.response.status : '',
+        }));
+}
+
+export function createImagePostApi(selectedCommunity, title, selectedFlair, formData) {
+    return axios
+        .post(`${HOST}/api/create_image_post`, formData,
+        {
+            selectedCommunity, title, selectedFlair,
+            headers: {
+                Accept: CONTENT_TYPE_JSON,
+            },
+        })
+        .then((resp) => ({ data: resp.data, error: false }))
+        .catch((err) => ({
+            data: err && err.response ? err.response.data : '',
+            error: true,
+            status: err && err.response ? err.response.status : '',
+        }));
+}
+
+export function createLinkPostApi(selectedCommunity, title, link, selectedFlair) {
+    return axios
+        .post(`${HOST}/api/create_link_post`,
+        {
+            selectedCommunity, title, link, selectedFlair,
             headers: {
                 Accept: CONTENT_TYPE_JSON,
             },

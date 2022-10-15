@@ -85,7 +85,7 @@ app.post('/api/register', async (req, resp) => {
     if (!credentials.password || !credentials.username || !credentials.email) {
         resp.status(401)
         resp.type('application/json')
-        resp.json({message: "Missing credentials."})
+        resp.json({message: "Missing or invalid credentials."})
         return
     }
     // hash password
@@ -213,7 +213,7 @@ app.get('/api/all_posts', async (req, resp) => {
     return
 })
 
-app.post('/api/create_post', async (req, resp) => {
+app.post('/api/create_text_post', async (req, resp) => {
     let insertedPostId = -1;
     const { selectedCommunity, title, content, selectedFlair } = req.body;
     try {

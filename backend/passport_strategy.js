@@ -54,10 +54,9 @@ const mkAuth = (passport, strategy) => {
                 if (!user) {
                     resp.status(401);
                     resp.type('application/json');
-                    resp.json({ info });
+                    resp.json({ message: info.message });
                     return;
                   }
-                // need to set req.user to user if using custom middleware
                 req.user = user
                 next()
             }

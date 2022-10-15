@@ -5,7 +5,9 @@ import { Item } from '../HomePageComponent/HomePageComponent';
 import TextSnippetIcon from '@mui/icons-material/TextSnippet';
 import ImageIcon from '@mui/icons-material/Image';
 import LinkIcon from '@mui/icons-material/Link';
-import { createPostApi, retrieveAllFollowedCommunities } from '../../apis/app-api';
+import { createTextPostApi, retrieveAllFollowedCommunities } from '../../apis/app-api';
+import { withSnackbar } from 'notistack';
+import { snackBarProps } from '../../constants/constants';
 
 
 
@@ -211,17 +213,26 @@ class CreatePostComponent extends React.Component {
                                             style={{ marginLeft: 'auto' }}
                                             variant='contained'
                                             onClick={() => {
-                                                createPostApi(
+                                                createTextPostApi(
                                                     this.state.selectedCommunity,
                                                     this.state.title,
                                                     this.state.content,
                                                     this.state.selectedFlair,
                                                 ).then(res => {
                                                     if (!res.error) {
+                                                        this.props.enqueueSnackbar(
+                                                            "Successfully created post!",
+                                                            snackBarProps('success'),
+                                                        );
                                                         this.props.navigate({
                                                             pathname: `/community/${res.data.community_name}/view/${res.data.post_id}`,
                                                             replace: true,
                                                         });
+                                                    } else {
+                                                        this.props.enqueueSnackbar(
+                                                            "Failed to create post!",
+                                                            snackBarProps('error'),
+                                                        );
                                                     }
                                                 })
                                             }}
@@ -242,4 +253,4 @@ class CreatePostComponent extends React.Component {
     }
 }
 
-export default CreatePostComponent;
+export default withSnackbar(CreatePostComponent);

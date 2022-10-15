@@ -50,9 +50,9 @@ const getHomePagePosts = (currentUser) => {
                 SUM(f.favour_point) AS fav_point, COUNT(c.comment_id) AS comment_count
             FROM followed_communities fc
             INNER JOIN posts p ON p.community_name = fc.community_name
-            LEFT JOIN favours f ON f.post_id = p.post_id
+            LEFT JOIN post_favours f ON f.post_id = p.post_id
             LEFT JOIN comments c ON c.post_id = f.post_id
-            GROUP BY fc.community_name, fc.user_name, p.post_id, c.comment_id
+            GROUP BY fc.community_name, fc.user_name, p.user_name, p.post_id, p.date_created, p.title, p.flair, c.comment_id
             HAVING fc.user_name = $1)
             SELECT DISTINCT post_id, community_name, user_name, age, title, flair, fav_point, comment_count
             FROM following_communities
@@ -88,11 +88,12 @@ const insertOneCommunityAndReturnName = (userName, communityName) => {
 const insertPost = (username, selectedCommunity, title, content, selectedFlair) => {
     return POOL.query(
         `WITH P_ROWS AS
-            (INSERT INTO posts (community_name, title, user_name, flair)
-                VALUES ($1, $2, $3, $4) RETURNING post_id),
+            (INSERT INTO posts (post_id, community_name, title, user_name, flair)
+                VALUES (COALESCE((SELECT max(post_id) +1 FROM posts WHERE community_name = $1), 1),
+                $1, $2, $3, $4) RETURNING post_id),
             PC_ROWS AS
-            (INSERT INTO post_contents (post_id, content)
-            SELECT post_id, $5
+            (INSERT INTO post_contents (community_name, post_id, content)
+            SELECT $1, post_id, $5
                 FROM P_ROWS)
         SELECT post_id
         FROM P_ROWS;`,
@@ -127,9 +128,9 @@ const retrieveCommunityPostsDB = (community) => {
            p.post_id, SUM(f.favour_point) AS fav_point, COUNT(c.comment_id) AS comment_count
                FROM community oc
                INNER JOIN posts p ON p.community_name = oc.community_name
-               LEFT JOIN favours f ON f.post_id = p.post_id
+               LEFT JOIN post_favours f ON f.post_id = p.post_id
                LEFT JOIN comments c ON c.post_id = f.post_id
-               GROUP BY oc.community_name, p.post_id, c.comment_id
+               GROUP BY oc.community_name, p.user_name, p.post_id, p.date_created, p.title, p.flair, c.comment_id
                HAVING oc.community_name = $1)
             SELECT DISTINCT post_id, community_name, user_name, age, title,
                 flair, fav_point, comment_count
