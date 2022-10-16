@@ -226,11 +226,10 @@ export function createTextPostApi(selectedCommunity, title, content, selectedFla
         }));
 }
 
-export function createImagePostApi(selectedCommunity, title, selectedFlair, formData) {
+export function createImagePostApi(formData) {
     return axios
         .post(`${HOST}/api/create_image_post`, formData,
         {
-            selectedCommunity, title, selectedFlair,
             headers: {
                 Accept: CONTENT_TYPE_JSON,
             },

@@ -46,15 +46,15 @@ const getAllFollowedCommunities = (username) => {
 const getHomePagePosts = (currentUser) => {
     return POOL.query(
         `WITH following_communities AS
-            (SELECT fc.community_name, p.user_name, AGE(CURRENT_TIMESTAMP, p.date_created), p.title, p.flair, p.post_id,
+            (SELECT fc.community_name, p.user_name, AGE(CURRENT_TIMESTAMP, p.date_created), p.title, p.flair, p.post_id, p.url,
                 SUM(f.favour_point) AS fav_point, COUNT(c.comment_id) AS comment_count
             FROM followed_communities fc
             INNER JOIN posts p ON p.community_name = fc.community_name
             LEFT JOIN post_favours f ON f.post_id = p.post_id
             LEFT JOIN comments c ON c.post_id = f.post_id
-            GROUP BY fc.community_name, fc.user_name, p.user_name, p.post_id, p.date_created, p.title, p.flair, c.comment_id
+            GROUP BY fc.community_name, fc.user_name, p.user_name, p.post_id, p.date_created, p.title, p.flair, p.url, c.comment_id
             HAVING fc.user_name = $1)
-            SELECT DISTINCT post_id, community_name, user_name, age, title, flair, fav_point, comment_count
+            SELECT DISTINCT post_id, community_name, user_name, age, title, flair, fav_point, comment_count, url
             FROM following_communities
             ORDER BY post_id DESC`,
         [
@@ -85,7 +85,7 @@ const insertOneCommunityAndReturnName = (userName, communityName) => {
     )
 }
 
-const insertPost = (username, selectedCommunity, title, content, selectedFlair) => {
+const insertTextPost = (username, selectedCommunity, title, content, selectedFlair) => {
     return POOL.query(
         `WITH P_ROWS AS
             (INSERT INTO posts (post_id, community_name, title, user_name, flair)
@@ -107,6 +107,28 @@ const insertPost = (username, selectedCommunity, title, content, selectedFlair) 
     );
 }
 
+const insertUrlPost = (username, selectedCommunity, title, url, selectedFlair) => {
+    return POOL.query(
+        `WITH P_ROWS AS
+            (INSERT INTO posts (post_id, community_name, title, user_name, flair, url)
+                VALUES (COALESCE((SELECT max(post_id) +1 FROM posts WHERE community_name = $1), 1),
+                $1, $2, $3, $4, $5) RETURNING post_id),
+            PC_ROWS AS
+            (INSERT INTO post_contents (community_name, post_id, content)
+            SELECT $1, post_id, $5
+                FROM P_ROWS)
+        SELECT post_id
+        FROM P_ROWS;`,
+        [
+            escapeQuotes(selectedCommunity),
+            escapeQuotes(title),
+            escapeQuotes(username),
+            escapeQuotes(selectedFlair),
+            escapeQuotes(url),
+        ],
+    );
+}
+
 const searchPostWithParams = (currentUser, order, user, flair, community, q) => {
     return POOL.query(
         'SELECT * FROM searchPostWithParamsFunc($1, $2, $3, $4, $5, $6);',
@@ -124,16 +146,16 @@ const searchPostWithParams = (currentUser, order, user, flair, community, q) => 
 const retrieveCommunityPostsDB = (community) => {
     return POOL.query(
            `WITH one_community AS
-           (SELECT oc.community_name, p.user_name, AGE(CURRENT_TIMESTAMP, p.date_created), p.title, p.flair,
+           (SELECT oc.community_name, p.user_name, AGE(CURRENT_TIMESTAMP, p.date_created), p.title, p.flair, p.url,
            p.post_id, SUM(f.favour_point) AS fav_point, COUNT(c.comment_id) AS comment_count
                FROM community oc
                INNER JOIN posts p ON p.community_name = oc.community_name
                LEFT JOIN post_favours f ON f.post_id = p.post_id
                LEFT JOIN comments c ON c.post_id = f.post_id
-               GROUP BY oc.community_name, p.user_name, p.post_id, p.date_created, p.title, p.flair, c.comment_id
+               GROUP BY oc.community_name, p.user_name, p.post_id, p.date_created, p.title, p.flair, p.url, c.comment_id
                HAVING oc.community_name = $1)
             SELECT DISTINCT post_id, community_name, user_name, age, title,
-                flair, fav_point, comment_count
+                flair, fav_point, comment_count, url
             FROM one_community ORDER BY age DESC;`,
             [
                 escapeQuotes(community),
@@ -156,8 +178,7 @@ const updateUserProfile = (columnName, value, userName) => {
 /* -------------------------------------------------------------------------- */
 
 // Handles the uploading to digital ocean space and returns the key as a promise
-const uploadToDigitalOcean = (buffer, req) => new Promise((resolve, reject) => {
-    const key = req.token.username;
+const uploadToDigitalOcean = (buffer, req, key) => new Promise((resolve, reject) => {
     const params = {
         Bucket: DIGITALOCEAN_BUCKET_NAME,
         Key: key,
@@ -196,5 +217,6 @@ module.exports = {
     updateUserProfile,
     retrieveCommunityPostsDB,
     getAllFollowedCommunities,
-    insertPost
+    insertTextPost,
+    insertUrlPost
 }

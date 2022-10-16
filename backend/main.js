@@ -8,6 +8,7 @@ const cors = require('cors')
 const jwt = require('jsonwebtoken')
 const sha256 = require('sha256')
 const multer = require('multer')
+const crypto = require("crypto");
 
 // Passport core
 const passport = require('passport')
@@ -28,7 +29,8 @@ const {
     updateUserProfile,
     retrieveCommunityPostsDB,
     getAllFollowedCommunities,
-    insertPost
+    insertTextPost,
+    insertUrlPost
 } = require('./db_utils.js')
 
 /* -------------------------------------------------------------------------- */
@@ -217,7 +219,51 @@ app.post('/api/create_text_post', async (req, resp) => {
     let insertedPostId = -1;
     const { selectedCommunity, title, content, selectedFlair } = req.body;
     try {
-        const results = await insertPost(req.token.username, selectedCommunity, title, content, selectedFlair)
+        const results = await insertTextPost(req.token.username, selectedCommunity, title, content, selectedFlair)
+        insertedPostId = results.rows[0].post_id
+    } catch (e) {
+        console.info(`ERROR: Insert to posts failed with following ${e}`)
+        resp.status(400)
+        resp.type('application/json')
+        resp.json({message: `An error has occurred while creating post.`})
+        return
+    }
+    resp.status(200)
+    resp.type('application/json')
+    resp.json({ community_name: selectedCommunity, post_id: insertedPostId })
+    return
+})
+
+app.post('/api/create_image_post', upload.single('file'), async (req, resp) => {
+    
+    let insertedPostId = -1;
+    const { selectedCommunity, title, selectedFlair } = req.body;
+    try {
+        console.log(req.body);
+        const buffer = await READ_FILE(req.file.path);
+        const key = await uploadToDigitalOcean(buffer, req, crypto.randomBytes(16).toString("hex"));
+        console.log(key);
+        const results = await insertUrlPost(req.token.username, selectedCommunity, title, key, selectedFlair)
+        await UNLINK_ALL_FILES(UPLOAD_PATH);
+        insertedPostId = results.rows[0].post_id
+    } catch (e) {
+        console.info(`ERROR: Insert to posts failed with following ${e}`)
+        resp.status(400)
+        resp.type('application/json')
+        resp.json({message: `An error has occurred while creating post.`})
+        return
+    }
+    resp.status(200)
+    resp.type('application/json')
+    resp.json({ community_name: selectedCommunity, post_id: insertedPostId })
+    return
+})
+
+app.post('/api/create_link_post', async (req, resp) => {
+    let insertedPostId = -1;
+    const { selectedCommunity, title, link, selectedFlair } = req.body;
+    try {
+        const results = await insertUrlPost(req.token.username, selectedCommunity, title, link, selectedFlair)
         insertedPostId = results.rows[0].post_id
     } catch (e) {
         console.info(`ERROR: Insert to posts failed with following ${e}`)
@@ -312,7 +358,7 @@ app.get('/api/users/:userName', async (req, resp) => {
 app.post('/api/upload', upload.single('file'), async (req, resp) => {
     try {
         const buffer = await READ_FILE(req.file.path);
-        const key = await uploadToDigitalOcean(buffer, req);
+        const key = await uploadToDigitalOcean(buffer, req, req.token.username);
         await updateUserProfile('profile_picture', `${key}?${Date.now()}`, req.token.username);
         await UNLINK_ALL_FILES(UPLOAD_PATH);
         resp.status(200);

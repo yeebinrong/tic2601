@@ -5,7 +5,7 @@ import { Item } from '../HomePageComponent/HomePageComponent';
 import TextSnippetIcon from '@mui/icons-material/TextSnippet';
 import ImageIcon from '@mui/icons-material/Image';
 import LinkIcon from '@mui/icons-material/Link';
-import { createTextPostApi, retrieveAllFollowedCommunities } from '../../apis/app-api';
+import { createImagePostApi, createLinkPostApi, createTextPostApi, retrieveAllFollowedCommunities } from '../../apis/app-api';
 import { withSnackbar } from 'notistack';
 import { snackBarProps } from '../../constants/constants';
 
@@ -21,6 +21,7 @@ class CreatePostComponent extends React.Component {
             content: '',
             selectedFlair: 'Text',
             followedCommunties: null,
+            currentTab: 'text',
         };
         if (props.isVerifyDone) {
             this.props.setIsLoading(true);
@@ -80,34 +81,35 @@ class CreatePostComponent extends React.Component {
         );
     };
 
-    // renderCommunityPanel = () => {
-    //     return (
-    //         <Grid xs={3} style={{ position: 'relative' }}>
-    //             <div style={{ backgroundColor: this.state.community?.colour, height: '35px', borderRadius: '5px', paddingTop: '10px', textIndent: '16px' }}>
-    //                 <b>About Community</b>
-    //             </div>
-    //             <Item>
-    //                 <div style={{ textAlign: 'left', padding: 10 }}>
-    //                     <b>Welcome to r/{this.state.community?.community_name}</b>
-    //                     <p></p>
-    //                     <Divider style={{margin:'16px 0'}}></Divider>
-    //                     <b>Creation Date: {this.state.community?.datetime_created}</b>
-    //                     <Divider style={{margin:'16px 0'}}></Divider>
-    //                     <b>Moderators:</b>
-    //                     <ul>
-    //                     {/* {this.state.admin.map((adm) => {
-    //                             return (
-    //                                 <ul>
-    //                                     <li>u/{adm.user_name} </li>
-    //                                 </ul>
-    //                             );
-    //                         })} */}
-    //                     </ul>
-    //                 </div>
-    //             </Item>
-    //         </Grid>
-    //     );
-    // };
+    onFileChange = (e) => {
+        if(e.target.files[0].size > 1000000){
+            this.props.enqueueSnackbar(
+                "Maximum file size 1mb, selected file is too big!",
+                snackBarProps('error'),
+            );
+            e.target.value = null;
+        } else {
+            this.setState({ content: e.target.files[0] });
+        }
+    }
+
+    handleCreatePostResponse = (res) => {
+        if (!res.error) {
+            this.props.enqueueSnackbar(
+                "Successfully created post!",
+                snackBarProps('success'),
+            );
+            this.props.navigate({
+                pathname: `/community/${res.data.community_name}/view/${res.data.post_id}`,
+                replace: true,
+            });
+        } else {
+            this.props.enqueueSnackbar(
+                "Failed to create post!",
+                snackBarProps('error'),
+            );
+        }
+    }
 
     render() {
         return (
@@ -144,7 +146,8 @@ class CreatePostComponent extends React.Component {
                                 </Item>
                                 <Item>
                                     <Tabs
-                                        value={'text'}
+                                        value={this.state.currentTab}
+                                        onChange={(e, v) => this.setState({ currentTab: v, content: '' })}
                                     >
                                         <Tab
                                             label="text"
@@ -173,6 +176,7 @@ class CreatePostComponent extends React.Component {
                                             label='Title'
                                             onChange={e => this.setState({ title: e.target.value })}
                                         />
+                                        {this.state.currentTab === 'text' &&
                                         <TextField
                                             style={{ marginTop: '32px' }}
                                             value={this.state.content}
@@ -182,7 +186,23 @@ class CreatePostComponent extends React.Component {
                                             multiline
                                             rows='10'
                                             label='Text'
-                                        />
+                                        />}
+                                        {this.state.currentTab === 'image' &&
+                                        <input
+                                                type="file"
+                                                style={{ marginTop: '32px' }}
+                                                onChange={this.onFileChange}
+                                                accept="image/png, image/gif, image/jpeg, image/jpg"
+                                        />}
+                                        {this.state.currentTab === 'link' &&
+                                        <TextField
+                                            style={{ marginTop: '32px' }}
+                                            value={this.state.content}
+                                            size='small'
+                                            fullWidth
+                                            label='Link'
+                                            onChange={e => this.setState({ content: e.target.value })}
+                                        />}
                                     </div>
                                     <div style={{ padding: '0 24px 24px 24px', display: 'flex' }}>
                                         <span style={{ width: '260px' }}>
@@ -201,6 +221,7 @@ class CreatePostComponent extends React.Component {
                                                     <MenuItem key={'News'} value={'News'}>{'News'}</MenuItem>
                                                     <MenuItem key={'Discussion'} value={'Discussion'}>{'Discussion'}</MenuItem>
                                                     <MenuItem key={'Photo'} value={'Photo'}>{'Photo'}</MenuItem>
+                                                    <MenuItem key={'Video'} value={'Video'}>{'Video'}</MenuItem>
                                                 </Select>
                                             </FormControl>
                                         </span>
@@ -213,28 +234,43 @@ class CreatePostComponent extends React.Component {
                                             style={{ marginLeft: 'auto' }}
                                             variant='contained'
                                             onClick={() => {
-                                                createTextPostApi(
-                                                    this.state.selectedCommunity,
-                                                    this.state.title,
-                                                    this.state.content,
-                                                    this.state.selectedFlair,
-                                                ).then(res => {
-                                                    if (!res.error) {
-                                                        this.props.enqueueSnackbar(
-                                                            "Successfully created post!",
-                                                            snackBarProps('success'),
-                                                        );
-                                                        this.props.navigate({
-                                                            pathname: `/community/${res.data.community_name}/view/${res.data.post_id}`,
-                                                            replace: true,
+                                                if (this.state.currentTab === 'text') {
+                                                    createTextPostApi(
+                                                        this.state.selectedCommunity,
+                                                        this.state.title,
+                                                        this.state.content,
+                                                        this.state.selectedFlair,
+                                                    ).then(res => {
+                                                        this.handleCreatePostResponse(res);
+                                                    });
+                                                } else if (this.state.currentTab === 'image') {
+                                                    const formData = new FormData();
+                                                    formData.set('username', this.props.userInfo.username);
+                                                    formData.set('selectedCommunity', this.state.selectedCommunity);
+                                                    formData.set('title', this.state.title);
+                                                    formData.set('selectedFlair', this.state.selectedFlair);
+                                                    formData.set('file', this.state.content)
+                                                    createImagePostApi(formData)
+                                                    .then(res => {
+                                                        this.handleCreatePostResponse(res);
+                                                    });
+                                                } else if (this.state.currentTab === 'link') {
+                                                    if (this.state.content.includes('embed')) {
+                                                        createLinkPostApi(
+                                                            this.state.selectedCommunity,
+                                                            this.state.title,
+                                                            this.state.content,
+                                                            this.state.selectedFlair,
+                                                        ).then(res => {
+                                                            this.handleCreatePostResponse(res);
                                                         });
                                                     } else {
                                                         this.props.enqueueSnackbar(
-                                                            "Failed to create post!",
+                                                            "Please enter a valid embed link!",
                                                             snackBarProps('error'),
                                                         );
                                                     }
-                                                })
+                                                }
                                             }}
                                         >
                                             Post
@@ -244,8 +280,6 @@ class CreatePostComponent extends React.Component {
                             </Stack>
                         </Box>
                     </Grid>
-                    {/* TO DO implement dynamic panel for each community */}
-                    {/* {this.state.community ? this.renderCommunityPanel() : this.renderDefaultPanel()} */}
                     {this.renderDefaultPanel()}
                 </Grid>
             </div>

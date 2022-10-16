@@ -5,11 +5,13 @@ CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
 -- TrueOrFalse enum
 DO $$
 BEGIN
+	DROP TYPE trueorfalse CASCADE;
+	DROP TYPE flairenum CASCADE;
     IF NOT EXISTS (SELECT 1 FROM pg_type WHERE typname = 'trueorfalse') THEN
         CREATE TYPE TrueOrFalse AS ENUM ('Y', 'N');
     END IF;
     IF NOT EXISTS (SELECT 1 FROM pg_type WHERE typname = 'flairenum') THEN
-        CREATE TYPE FlairEnum AS ENUM ('Text', 'News', 'Discussion', 'Photo');
+        CREATE TYPE FlairEnum AS ENUM ('Text', 'News', 'Discussion', 'Photo', 'Video');
     END IF;
 END$$;
 
@@ -17,7 +19,6 @@ END$$;
 -- Select posts with params func
 -- TODO join for comments, likes, banlist,
 -- TODO add logic for order by hot, best
-DROP FUNCTION searchPostWithParamsFunc;
 CREATE OR REPLACE FUNCTION searchPostWithParamsFunc(
 	currentUser text, orderParam text, userFilter text, flairFilter text, communityFilter text, queryFilter text)
   RETURNS TABLE(
@@ -29,7 +30,8 @@ CREATE OR REPLACE FUNCTION searchPostWithParamsFunc(
 	flair FlairEnum,
 	fav_point BIGINT,
 	comment_count BIGINT,
-	view_count INTEGER
+	view_count INTEGER,
+	url VARCHAR(2048)
   )
   LANGUAGE plpgsql AS
 $func$
@@ -58,21 +60,21 @@ DECLARE
 			WHEN 'new' THEN
 				paramQuery = paramQuery || ' ORDER BY age ASC';
 			WHEN 'hot' THEN
-				paramQuery = paramQuery || ' ORDER BY view_count DESC';
+				paramQuery = paramQuery || ' ORDER BY view_count ASC';
 			WHEN 'best' THEN
-				paramQuery = paramQuery || ' ORDER BY fav_point DESC';
+				paramQuery = paramQuery || ' ORDER BY fav_point ASC';
 			ELSE
 		END CASE;
 		RAISE NOTICE 'Value: %', 'SELECT * FROM posts' || paramQuery;
         RETURN QUERY EXECUTE 'WITH all_communities AS
-            (SELECT ac.community_name, p.user_name, AGE(CURRENT_TIMESTAMP, p.date_created), p.title, p.flair, p.post_id,
+            (SELECT ac.community_name, p.user_name, AGE(CURRENT_TIMESTAMP, p.date_created), p.title, p.flair, p.post_id, p.url,
                 SUM(f.favour_point) AS fav_point, COUNT(c.comment_id) AS comment_count, p.view_count
             FROM community ac
             INNER JOIN posts p ON p.community_name = ac.community_name
             LEFT JOIN post_favours f ON f.post_id = p.post_id
             LEFT JOIN comments c ON c.post_id = f.post_id
-			GROUP BY ac.community_name, p.user_name, p.post_id, p.date_created, p.title, p.flair, p.view_count, c.comment_id)
-            SELECT DISTINCT post_id, community_name, user_name, age, title, flair, fav_point, comment_count, view_count
+			GROUP BY ac.community_name, p.user_name, p.post_id, p.date_created, p.title, p.flair, p.view_count, p.url, c.comment_id)
+            SELECT DISTINCT post_id, community_name, user_name, age, title, flair, fav_point, comment_count, view_count, url
             FROM all_communities' || paramQuery;
 END;
 $func$;

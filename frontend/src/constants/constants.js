@@ -87,4 +87,9 @@ export const defaultFlairs = [
         inputValue: 'Photo',
         title: 'Add flairs filter: Photo',
     },
+    {
+        type: 'flair',
+        inputValue: 'Video',
+        title: 'Add flairs filter: Video',
+    },
 ];

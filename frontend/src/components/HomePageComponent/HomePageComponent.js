@@ -34,7 +34,7 @@ export const renderPostLists = (posts, params, handleChange) => {
                 <p>No posts found!</p>
             </Item>
         )}
-        {posts && posts.map((post) => {
+        {posts && posts.map((post, index) => {
             return (
                 <Item key={`${post.community_name}${post.post_id}`}>
                     <Stack
@@ -116,6 +116,28 @@ export const renderPostLists = (posts, params, handleChange) => {
                                 clickable={true}
                             />
                         </Stack>
+                        {post.url && !post.url.includes('digitaloceanspaces') &&
+                        <Stack>
+                            <iframe
+                                width="560"
+                                height="315"
+                                src={post.url}
+                                title={`embedUrl-${index}`}
+                                frameborder="0"
+                                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                                allowfullscreen
+                            />
+                        </Stack>}
+                        {post.url && post.url.includes('digitaloceanspaces') &&
+                        <Stack>
+                            <img
+                                width="560"
+                                height="315"
+                                src={post.url}
+                                title={`embedUrl-${index}`}
+                                frameborder="0"
+                            />
+                        </Stack>}
                         <Stack direction="row" spacing={1}>
                             <Box>
                                 <IconButton
