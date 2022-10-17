@@ -354,6 +354,24 @@ app.get('/api/users/:userName', async (req, resp) => {
     return;
 });
 
+// POST /api/update_description
+app.post('/api/update_description', async (req, resp) => {
+    const { description } = req.body;
+    try {
+        const results = await updateUserProfile('user_description', description, req.token.username)
+    } catch (e) {
+        console.info(`ERROR: Update user description failed with following ${e}`)
+        resp.status(400)
+        resp.type('application/json')
+        resp.json({message: `An error has occurred while updating description.`})
+        return
+    }
+    resp.status(200)
+    resp.type('application/json')
+    resp.json({ description })
+    return
+});
+
 // POST /api/upload
 app.post('/api/upload', upload.single('file'), async (req, resp) => {
     try {

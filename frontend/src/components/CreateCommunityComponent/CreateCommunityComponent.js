@@ -61,45 +61,49 @@ class CreateCommunityComponent extends React.Component {
                     helperText={
                         `${21-this.state.communityName.length} characters remaining`
                     }
-              />
-             </div>
-             <div className='margin-top dialog-flex'>
-                <Button
-                  onClick={() => {
-                    this.setState({
-                      communityName: '',
-                    });
-                    this.props.onClose();
-                  }}
-                  style={{ margin: '8px 8px 8px auto',borderRadius:'14px'}}
-                  variant="outlined"
-                >Cancel</Button>
-                <Button
-                  onClick={() => {
-                    createCommunityApi(this.state.communityName)
-                      .then(res => {
-                        if (!res.error) {
-                          this.setState({
-                            communityName: '',
-                          });
-                          this.props.onClose();
-                          this.props.enqueueSnackbar(
-                              `Successfully created a community [${res.data.communityName}]!`,
-                              snackBarProps('success'),
-                          );
-                          // TODO Add code to navigate to community page
-                        } else {
-                          this.props.enqueueSnackbar(
-                              res.data.message,
-                              snackBarProps('error'),
-                          );
-                        }
-                      })
-                  }}
-                  style={{ margin: '8px', borderRadius:'14px'}}
-                  variant="contained"
-                >Create Community</Button>
-             </div>
+                  />
+                </div>
+                <div className='margin-top dialog-flex'>
+                  <Button
+                    onClick={() => {
+                      this.setState({
+                        communityName: '',
+                      });
+                      this.props.onClose();
+                    }}
+                    style={{ margin: '8px 8px 8px auto',borderRadius:'14px'}}
+                    variant="outlined"
+                  >
+                  Cancel
+                  </Button>
+                  <Button
+                    onClick={() => {
+                      createCommunityApi(this.state.communityName)
+                        .then(res => {
+                          if (!res.error) {
+                            this.setState({
+                              communityName: '',
+                            });
+                            this.props.onClose();
+                            this.props.enqueueSnackbar(
+                                `Successfully created a community [${res.data.communityName}]!`,
+                                snackBarProps('success'),
+                            );
+                            this.props.navigate(`/community/${res.data.communityName}/posts/best`);
+                          } else {
+                            this.props.enqueueSnackbar(
+                                res.data.message,
+                                snackBarProps('error'),
+                            );
+                          }
+                        })
+                    }}
+                    style={{ margin: '8px', borderRadius:'14px'}}
+                    variant="contained"
+                  >
+                    Create Community
+                  </Button>
+                </div>
               </div>
             </Modal>
         );

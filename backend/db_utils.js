@@ -5,7 +5,7 @@
 const { POOL, DIGITAL_OCEAN_SPACE, GET_DIGITAL_IMAGE_URL, DIGITALOCEAN_BUCKET_NAME } = require('./server_config.js')
 
 const escapeQuotes = (str) => {
-    return str.replace(/'/g, "''");
+    return `${str}`.replace(/'/g, "''");
 }
 
 const CREATE_NEW_USER_SQL = `INSERT INTO users(user_name, password, email) VALUES ($1, $2, $3) RETURNING user_name;`
@@ -50,8 +50,8 @@ const getHomePagePosts = (currentUser) => {
                 SUM(f.favour_point) AS fav_point, COUNT(c.comment_id) AS comment_count
             FROM followed_communities fc
             INNER JOIN posts p ON p.community_name = fc.community_name
-            LEFT JOIN post_favours f ON f.post_id = p.post_id
-            LEFT JOIN comments c ON c.post_id = f.post_id
+            LEFT JOIN post_favours f ON f.post_id = p.post_id AND f.community_name = p.community_name
+            LEFT JOIN comments c ON c.post_id = f.post_id AND c.community_name = p.community_name
             GROUP BY fc.community_name, fc.user_name, p.user_name, p.post_id, p.date_created, p.title, p.flair, p.url, c.comment_id
             HAVING fc.user_name = $1)
             SELECT DISTINCT post_id, community_name, user_name, age, title, flair, fav_point, comment_count, url
@@ -218,5 +218,6 @@ module.exports = {
     retrieveCommunityPostsDB,
     getAllFollowedCommunities,
     insertTextPost,
-    insertUrlPost
+    insertUrlPost,
+    escapeQuotes
 }

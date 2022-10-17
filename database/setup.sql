@@ -71,8 +71,8 @@ DECLARE
                 SUM(f.favour_point) AS fav_point, COUNT(c.comment_id) AS comment_count, p.view_count
             FROM community ac
             INNER JOIN posts p ON p.community_name = ac.community_name
-            LEFT JOIN post_favours f ON f.post_id = p.post_id
-            LEFT JOIN comments c ON c.post_id = f.post_id
+            LEFT JOIN post_favours f ON f.post_id = p.post_id AND f.community_name = p.community_name
+            LEFT JOIN comments c ON c.post_id = f.post_id AND c.community_name = p.community_name
 			GROUP BY ac.community_name, p.user_name, p.post_id, p.date_created, p.title, p.flair, p.view_count, p.url, c.comment_id)
             SELECT DISTINCT post_id, community_name, user_name, age, title, flair, fav_point, comment_count, view_count, url
             FROM all_communities' || paramQuery;

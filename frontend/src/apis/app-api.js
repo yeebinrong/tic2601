@@ -179,6 +179,23 @@ export function retrievePostById(postId) {
             status: err && err.response ? err.response.status : '',
         }));
 }
+
+export function updateUserDescription(description) {
+    return axios
+        .post(`${HOST}/api/update_description`, {
+            description,
+            headers: {
+                Accept: CONTENT_TYPE_JSON,
+            },
+        })
+        .then((resp) => ({ data: resp.data, error: false }))
+        .catch((err) => ({
+            data: err && err.response ? err.response.data : '',
+            error: true,
+            status: err && err.response ? err.response.status : '',
+        }));
+}
+
 export function retrieveCommunityByName(communityName) {
     return axios
         .get(`${HOST}/api/community/${communityName}`, {

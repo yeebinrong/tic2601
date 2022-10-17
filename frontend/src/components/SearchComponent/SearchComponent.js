@@ -202,7 +202,7 @@ class SearchComponent extends React.Component {
                                                     size='small'
                                                     onClick={() => {
                                                         this.props.navigate({
-                                                            pathname: `/user/${user}/overview`,
+                                                            pathname: `/user/${user}/view`,
                                                             replace: true,
                                                         })
                                                     }}

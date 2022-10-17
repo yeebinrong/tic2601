@@ -69,7 +69,7 @@ export const renderPostLists = (posts, params, handleChange) => {
                                     paddingTop: '11px',
                                 }}
                             >
-                                <a href={`/user/${post.user_name}/overview`}>
+                                <a href={`/user/${post.user_name}/view`}>
                                     Posted by u/{post.user_name}
                                 </a>
                             </Box>
@@ -131,6 +131,7 @@ export const renderPostLists = (posts, params, handleChange) => {
                         {post.url && post.url.includes('digitaloceanspaces') &&
                         <Stack>
                             <img
+                                alt={''}
                                 width="560"
                                 height="315"
                                 src={post.url}
@@ -167,7 +168,7 @@ export const renderPostLists = (posts, params, handleChange) => {
                                 </IconButton>
                             </Box>
                             <Box>
-                                <a href={`/community/test_community/view/${post.post_id}`}>
+                                <a href={`/community/${post.community_name}/view/${post.post_id}`}>
                                     <IconButton
                                         sx={{ p: '10px' }}
                                         aria-label="comment"
@@ -322,6 +323,7 @@ class HomePageComponent extends React.Component {
                             />
                             <CreateCommunityComponent
                                 open={this.state.isCreateCommunityDialogOpen}
+                                navigate={this.props.navigate}
                                 onClose={() =>
                                     this.setIsCreateCommunityDialog(false)
                                 }

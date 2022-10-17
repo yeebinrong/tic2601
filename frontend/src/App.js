@@ -118,7 +118,7 @@ const App = (props) => {
                 element={<CreatePostPage {...mainProps} />}
             />
             <Route
-                path="/user/:userName/overview"
+                path="/user/:userName/view"
                 exact
                 element={<ProfilePage {...mainProps} />}
             />
