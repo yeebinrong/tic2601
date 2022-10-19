@@ -1,6 +1,7 @@
 import './CommunityComponent.scss';
-import { retrieveCommunityPosts, retrieveCommunityMods, retrieveCommunityInfo} from '../../apis/app-api';
+import { retrieveCommunityPosts} from '../../apis/app-api';
 import * as React from 'react';
+import { PureComponent } from 'react';
 import Box from '@mui/material/Box';
 import Paper from '@mui/material/Paper';
 import Stack from '@mui/material/Stack';
@@ -13,7 +14,11 @@ import PostModButton from './PostModButton';
 import { Checkbox, Chip } from '@mui/material';
 import {withParams } from '../../constants/constants';
 import { renderPostLists } from '../HomePageComponent/HomePageComponent';
-
+import { BarChart, Bar, Cell, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
+let comColour = ""
+let comDesc = ""
+let comDate = ""
+let comName = ""
 
 
 const Item = styled(Paper)(({ theme }) => ({
@@ -24,43 +29,51 @@ const Item = styled(Paper)(({ theme }) => ({
     color: theme.palette.text.secondary,
 }));
 
+let data = [
+    {
+        name: 'Page A',
+        uv: 4000,
+        pv: 2400,
+        amt: 2400,
+      },
+      {
+        name: 'Page B',
+        uv: 3000,
+        pv: 1398,
+        amt: 2210,
+      },
+      {
+        name: 'Page C',
+        uv: 2000,
+        pv: 9800,
+        amt: 2290,
+      },
+];
+
 class CommunityComponent extends React.Component {
     constructor(props) {
         super(props);
         this.state = {
-            comColour:"",
-            comDesc:"",
-            comDate:"",
             posts: [],
+            mode:"posts",
+            stats:[],
+            info:[],
             url:[],
             mod:[],
-            communityInfo:[],
+            bans:[],
         };
 
         if (props.isVerifyDone) {
-            this.props.setIsLoading(true);  
-            retrieveCommunityMods(this.props.params.community_name)
-            .then(res => {
-                this.props.setIsLoading(false);
-                this.setState({
-                    mods:res.data.rows
-                });
-            });
-            this.props.setIsLoading(true);
-            retrieveCommunityInfo(this.props.params.community_name)
-            .then(res => {
-                this.props.setIsLoading(false);
-                this.setState({
-                    communityInfo:res.data.rows,
-                    //url: this.props.location.pathname,
-                });
-            });
             this.props.setIsLoading(true);  
             retrieveCommunityPosts(this.props.params.community_name)
             .then(res => {
                 this.props.setIsLoading(false);
                 this.setState({
-                    posts: res.data.rows,
+                    posts: res.data.postsRows,
+                    mod: res.data.modRows,
+                    info: res.data.infoRows,
+                    stats: res.data.statsRows,
+                    bans: res.data.banRows,
                     url: this.props.location.pathname,
     
                 });
@@ -78,21 +91,19 @@ class CommunityComponent extends React.Component {
             retrieveCommunityPosts(nextProps.params.community_name).then(res => {
                 this.props.setIsLoading(false);
                 this.setState({
-                    posts: res.data.rows,
-                    url: nextProps.location.pathname,
-                });
-            });
-            this.props.setIsLoading(true);
-            retrieveCommunityInfo(nextProps.params.community_name)
-            .then(res => {
-                this.props.setIsLoading(false);
-                this.setState({
-                    communityInfo:res.data.rows,
-                    //url: this.props.location.pathname,
+                    posts: res.data.postsRows,
+                    mod: res.data.modRows,
+                    info: res.data.infoRows,
+                    stats: res.data.statsRows,
+                    bans: res.data.banRows,
+                    url: this.props.location.pathname,
                 });
             });
         }
         return true;
+    }
+    handleCheck= (e) => {
+        console.log(e.target.value)
     }
 
     handleChange= (e, newValue) => {
@@ -102,101 +113,153 @@ class CommunityComponent extends React.Component {
         });
     };
 
+    handleModeChange = (event, newValue) => {
+        this.setState({mode:newValue})
+        if(newValue === "posts"){
+            this.props.navigate({
+                pathname: `/community/${this.props.params.community_name}/${newValue}/best`,
+                replace: true,
+            });
+        }
+        else{
+            this.props.navigate({
+                pathname: `/community/${this.props.params.community_name}/${newValue}`,
+                replace: true,
+            });
+        }
+    };
 
-    renderNorm = (inf) => {
+
+    renderNorm = () => {
         return (
-            <Grid container spacing={6} style={{ margin: '0px 160px' }}>
-                <Grid xs={9}>
-                    <Box sx={{ width: '100%' }}>
-                        <Stack spacing={2}>
-                        {renderPostLists(this.state.posts, this.props.params, this.handleChange)}
-                        </Stack>
-                    </Box>
-                </Grid>
-                <Grid xs={3} style={{ position: 'relative' }}>
-                    <div style={{ backgroundColor: inf.colour, height: '35px', borderRadius: '5px', paddingTop: '10px', textIndent: '16px' }}>
-                        <b>About Community</b>
-                    </div>
-                    <Item>
-                        <div style={{ textAlign: 'left', padding: 10 }}>
-                            <b>Welcome to r/{inf.community_name}</b>
-                            <p></p>
-                            <Divider style={{margin:'16px 0'}}></Divider>
-                            <b>Creation Date:{this.state.comDate}</b>
-                            <Divider style={{margin:'16px 0'}}></Divider>
-                            <div style={{ marginTop: '16px' }}>
-                                <Chip
-                                    style={{ display: 'flex' }}
-                                    label="Create Post"
-                                    color="primary"
-                                    clickable={true}
-                                    onClick={() =>
-                                        this.props.navigate({
-                                            pathname: '/create_post',
-                                            replace: true,
-                                        })
-                                    }
-                                />
-                            </div>
-                            <Divider style={{margin:'16px 0'}}></Divider>
-                            <b>Moderators:</b>
-                            <ul>
-                                    
-                            </ul>
+            <>
+                <Grid container spacing={6} style={{ margin: '0px 160px' }}>
+                    <Grid xs={9}>
+                        <Box sx={{ width: '100%' }}>
+                            <Stack spacing={2}>
+                            {renderPostLists(this.state.posts, this.props.params, this.handleChange)}
+                            </Stack>
+                        </Box>
+                    </Grid>
+                    <Grid xs={3} style={{ position: 'relative' }}>
+                        <div style={{ backgroundColor:comColour, height: '35px', borderRadius: '5px', paddingTop: '10px', textIndent: '16px' }}>
+                            
+                            <b className={'sideBoxHeader'}>About Community</b>
                         </div>
-                    </Item>
+                        <Item>
+                            <div style={{ textAlign: 'left', padding: 10 }}>
+                                <b>Welcome to r/{comName}</b>
+                                <p>{comDesc}</p>
+                                <Divider style={{margin:'16px 0'}}></Divider>
+                                <b>Creation Date:{comDate}</b>
+                                <Divider style={{margin:'16px 0'}}></Divider>
+                                <div style={{ marginTop: '16px' }}>
+                                    <Chip
+                                        style={{ display: 'flex' }}
+                                        label="Create Post"
+                                        color="primary"
+                                        clickable={true}
+                                        onClick={() =>
+                                            this.props.navigate({
+                                                pathname: '/create_post',
+                                                replace: true,
+                                            })
+                                        }
+                                    />
+                                </div>
+                                <Divider style={{margin:'16px 0'}}></Divider>
+                                <b>Moderators:</b>
+                                <ul style={{listStylePosition: 'inside'}}>
+                                    {this.state.mod.map(mods => {
+                                        return (
+                                            <li style={{listStyleType:'circle'}}>
+                                                {mods.user_name}
+                                            </li>
+                                        )
+                                    })}
+                                </ul>
+                            </div>
+                        </Item>
 
-                </Grid>
-            </Grid>
+                    </Grid>
+                </Grid>        
+            </>
         )
     }
 
-    renderMod = (inf) => {
+    renderMod = () => {
         return (
             <>
-            <div className={'modPage'}>
-                <Box sx={{ flexGrow: 1 }}>
-                    <Grid  container spacing={10}>
-                        <Grid item xs={6}>
-                            <div>
-                                <Box sx={{ width: '100%' }}>
-                                    <Stack spacing={3}>
-                                        <div>
-                                            <Paper component="form" sx={{ p: '2px 4px', display: 'flex', justifyContent: 'center' }}>
-                                                <table>
-                                                    <tr>
-                                                        <th>User Count</th>
-                                                        <th>Post Count</th>
-                                                        <th>Total Favours</th>
-                                                     </tr>
-                                                    <tr>
-                                                        <td>112</td>
-                                                        <td>22</td>
-                                                        <td>2</td>
-                                                    </tr>
-                                                </table>
-                                            </Paper>
-                                        </div>
-                                    </Stack>
+            { this.state.stats.map(stat => {
+                        return(
+                            <div className={'modPage'}>
+                                <Box sx={{ flexGrow: 1 }}>
+                                    <Grid  container spacing={10}>
+                                        <Grid item xs={6}>
+                                            <div>
+                                                <Box sx={{ width: '100%' }}>
+                                                    <Stack spacing={3}>
+                                                        <div>
+                                                            <Paper component="form" sx={{ p: '2px 4px', display: 'flex', justifyContent: 'center' }}>
+                                                                <table>
+                                                                    <tr>
+                                                                        <th>User Count</th>
+                                                                        <th>Post Count</th>
+                                                                        <th>Total Favours</th>
+                                                                        <th>Moderator Count</th>
+                                                                    </tr>
+                                                                    <tr> {console.log(stat.follower_count)}
+                                                                        <td>{stat.follower_count ? stat.follower_count : "0"}</td>
+                                                                        <td>{stat.post_count ? stat.post_count : "0"}</td>
+                                                                        <td>{stat.fav_total ? stat.fav_total : "0"}</td>
+                                                                        <td>{stat.mod_count ? stat.mod_count : "0"}</td>
+                                                                    </tr>
+                                                                    <tr>
+                                                                    </tr>
+                                                                </table>
+                                                            </Paper>
+                                                        </div>
+                                                    </Stack>
+                                                </Box>
+                                            </div>
+                                        </Grid>
+                                        <Grid item xs={4}>
+                                            <div style={{ backgroundColor: comColour, height: '35px', borderRadius: '5px', paddingTop: '10px', textIndent: '16px' }}>
+                                                <div className={'sideBoxHeader'}>Community Banlist:</div>
+                                            </div>
+                                            <Item>
+                                                <Box>
+                                                    <Stack spacing={1} direction={'column'}>
+                                                        <div>
+                                                            <tb>
+                                                                <tr>
+                                                                    <th>Username</th>
+                                                                    <th>Approve?</th>
+                                                                </tr>
+                                                                {this.state.bans?.map(ban => {
+                                                                        return(
+                                                                            <tr>
+                                                                                <td>
+                                                                                    {ban.user_name}
+                                                                                </td>
+                                                                                <td>
+                                                                                    {ban.is_approved === true ? <Checkbox disabled checked/> : <Checkbox onChange={this.handleCheck}/>}
+                                                                                </td>
+                                                                            </tr>
+                                                                        )
+                                                                    })}
+                                                            </tb>
+                                                        </div>
+                                                        {/* <div><b>Allow Favours: </b><Checkbox></Checkbox></div> */}
+                                                    </Stack>
+                                                </Box>
+                                            </Item>
+                                        </Grid>
+                                    </Grid>
                                 </Box>
                             </div>
-                        </Grid>
-                        <Grid item xs={4}>
-                            <div style={{ backgroundColor: inf.colour, height: '35px', borderRadius: '5px', paddingTop: '10px', textIndent: '16px' }}>
-                                <div className={'sideBoxHeader'}>Community Settings:</div>
-                            </div>
-                            <Item>
-                                <Box>
-                                    <Stack spacing={1} direction={'column'}>
-                                        <div><b>Allow Comments: </b><Checkbox></Checkbox></div>
-                                        <div><b>Allow Favours: </b><Checkbox></Checkbox></div>
-                                    </Stack>
-                                </Box>
-                            </Item>
-                        </Grid>
-                    </Grid>
-                </Box>
-            </div> 
+                     );
+                })}
             </>
         )
     }
@@ -206,15 +269,14 @@ class CommunityComponent extends React.Component {
     render() {
         return (
             <div>
-                {this.state.communityInfo.map(cominf => {
-                                            this.setState({
-                                                comColour:cominf.colour,
-                                                comDesc:cominf.description,
-                                                comDate:cominf.datetime_created
-                                            });
+                {this.state.info.map(cominf => {
+                                            comColour=cominf.colour;
+                                            comDate= cominf.datetime_created;
+                                            comDesc=cominf.description;
+                                            comName=cominf.community_name;
                                             return (
                                                 <>
-                                                    <div style={{ display: 'block', backgroundColor:this.state.comColour, height: 175 }}></div>
+                                                    <div style={{ display: 'block', backgroundColor:comColour, height: 175 }}></div>
                                                         <div style={{ backgroundColor: 'white', height: 135 }}>
                                                             <div style={{ display: 'flex', marginLeft: '20%', paddingTop: '10px' }}>
                                                                 <div>
@@ -224,8 +286,7 @@ class CommunityComponent extends React.Component {
                                                                 <div style={{ marginRight: '25px' }}>
                                                                     <b style={{ fontSize: '30px', marginLeft: '10%' }}>{cominf.community_name}</b>
                                                                     <p style={{ marginLeft: '10%', marginTop: '0px' }}>r/{cominf.community_name}</p>
-                                                                    {/* { console.log(this.props.params.community_name) } */}
-                                                                    <PostModButton params={this.props.params} navigate={this.props.navigate}/>
+                                                                    <PostModButton handleChange={this.handleModeChange} value={this.state.mode} params={this.props.params} navigate={this.props.navigate}/>
                                                                 </div>
                                                                 <div style={{ margin: '15px' }}>
                                                                 <Button style={{ borderRadius: '14px' }} variant="contained">Followed</Button>
@@ -236,13 +297,8 @@ class CommunityComponent extends React.Component {
                                             )
 
                 })}
-                {this.state.posts?.map(inf => {
-                                            return (
-                                                <>
-                                                    { this.state.url.split("/").pop() === "mod" ? this.renderMod(inf) : this.renderNorm(inf) }
-                                                </>
-                                            );
-                })}
+                { this.state.mode === "mod" ? this.renderMod() : this.renderNorm() }
+            
             </div>
         );
     }

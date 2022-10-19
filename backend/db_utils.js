@@ -141,13 +141,41 @@ const retrieveCommunityPostsDB = (community) => {
     );
 };
 
+const retrieveCommunityStatsDB = (community) => {
+    return POOL.query(
+           `SELECT c.community_name, COUNT(DISTINCT fc.user_name) AS follower_count, COUNT(DISTINCT m.user_name) AS mod_count, COUNT(DISTINCT p.post_id) AS post_count, SUM(f.favour_point) AS fav_total
+           FROM community c
+           LEFT JOIN followed_communities fc ON c.community_name = fc.community_name
+           LEFT JOIN moderators m ON c.community_name = m.community_name
+           LEFT JOIN posts p ON c.community_name = p.community_name
+           LEFT JOIN favours f ON p.post_id = f.post_id
+           GROUP BY c.community_name
+           HAVING c.community_name =  $1;`,
+            [
+                escapeQuotes(community),
+            ],
+
+    );
+};
+
+const retrieveCommunityBansDB = (community) => {
+    return POOL.query(
+           `SELECT * FROM banlist
+            WHERE community_name =  $1;`,
+            [
+                escapeQuotes(community),
+            ],
+
+    );
+};
+
 const retrieveCommunityModsDB = (community) => {
     return POOL.query(
            `SELECT com.* , m.user_name, m.is_admin
            FROM community com
            LEFT JOIN moderators m ON m.community_name = com.community_name
            GROUP BY com.community_name,m.user_name,m.is_admin
-           HAVING com.community_name =  $1;*`,
+           HAVING com.community_name =  $1;`,
             [
                 escapeQuotes(community),
             ],
@@ -219,6 +247,8 @@ module.exports = {
     uploadToDigitalOcean,
     retrieveUserInfo,
     updateUserProfile,
+    retrieveCommunityStatsDB,
+    retrieveCommunityBansDB,
     retrieveCommunityModsDB,
     retrieveCommunityInfoDB,
     retrieveCommunityPostsDB,
