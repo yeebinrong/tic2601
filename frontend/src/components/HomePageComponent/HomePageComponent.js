@@ -216,6 +216,7 @@ class HomePageComponent extends React.Component {
             this.props.setIsLoading(true);
             retrieveHomePagePosts({
                 ...getQueryParameters(this.props.location.search),
+                currentTab: this.props.params.currentTab
             }).then((res) => {
                 this.props.setIsLoading(false);
                 this.setState({
@@ -228,12 +229,13 @@ class HomePageComponent extends React.Component {
     shouldComponentUpdate(nextProps) {
         if (
             (nextProps.isVerifyDone && !this.props.isVerifyDone) ||
-            nextProps.location.search !== this.props.location.search ||
-            nextProps.params.currentTab !== this.props.params.currentTab
+            (nextProps.location.search !== this.props.location.search) ||
+            (nextProps.params.currentTab !== this.props.params.currentTab)
         ) {
             this.props.setIsLoading(true);
             retrieveHomePagePosts({
-                ...getQueryParameters(nextProps.location.search),
+                ...getQueryParameters(this.props.location.search),
+                currentTab: nextProps.params.currentTab
             }).then((res) => {
                 this.props.setIsLoading(false);
                 this.setState({

@@ -247,7 +247,17 @@ app.get('/api/all_followed_communities', async (req, resp) => {
 });
 
 app.get('/api/homepage_posts', async (req, resp) => {
-    const results = await getHomePagePosts(req.token.username);
+    const currentTab = req.query.currentTab;
+    // best (most upfavour), hot (most views), new (newest)
+    let column = 'fav_point';
+    let sortBy = 'DESC';
+    if (currentTab == 'hot') {
+        column = 'view_count';
+    } else if (currentTab == 'new') {
+        column = 'age';
+        sortBy = 'ASC';
+    }
+    const results = await getHomePagePosts(req.token.username, `${column} ${sortBy}`);
     if (results.rows && results.rows.length == 0) {
         resp.status(204);
         resp.type('application/json');

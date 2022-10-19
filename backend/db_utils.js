@@ -43,22 +43,25 @@ const getAllFollowedCommunities = (username) => {
     )
 }
 
-const getHomePagePosts = (currentUser) => {
+const getHomePagePosts = (currentUser, sortBy) => {
     return POOL.query(
         `WITH following_communities AS
-            (SELECT fc.community_name, p.user_name, AGE(CURRENT_TIMESTAMP, p.date_created), p.title, p.flair, p.post_id,
-                SUM(f.favour_point) AS fav_point, COUNT(c.comment_id) AS comment_count
+            (SELECT fc.community_name, p.user_name, AGE(CURRENT_TIMESTAMP, p.date_created), p.title, p.flair, p.post_id, p.date_deleted, p.view_count,
+                SUM(f.favour_point) AS fav_point, COUNT(c.comment_id) AS comment_count, hf.hide_or_favourite AS hide_post
             FROM followed_communities fc
             INNER JOIN posts p ON p.community_name = fc.community_name
             LEFT JOIN favours f ON f.post_id = p.post_id
             LEFT JOIN comments c ON c.post_id = f.post_id
-            GROUP BY fc.community_name, fc.user_name, p.post_id, c.comment_id
+            LEFT JOIN hide_or_fav_posts hf ON hf.post_id = p.post_id AND hf.user_name = $1
+            GROUP BY fc.community_name, fc.user_name, p.post_id, c.comment_id, hf.hide_or_favourite
             HAVING fc.user_name = $1)
-            SELECT DISTINCT post_id, community_name, user_name, age, title, flair, fav_point, comment_count
-            FROM following_communities
-            ORDER BY post_id DESC`,
+        SELECT DISTINCT post_id, community_name, user_name, age, title, flair, fav_point, comment_count, date_deleted, view_count, hide_post
+        FROM following_communities
+		WHERE hide_post IS NULL OR hide_post = 'N'
+        ORDER BY $2`,
         [
-            escapeQuotes(currentUser)
+            escapeQuotes(currentUser),
+            sortBy
         ],
     )
 }
