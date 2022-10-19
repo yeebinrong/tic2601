@@ -141,6 +141,32 @@ const retrieveCommunityPostsDB = (community) => {
     );
 };
 
+const retrieveCommunityModsDB = (community) => {
+    return POOL.query(
+           `SELECT com.* , m.user_name, m.is_admin
+           FROM community com
+           LEFT JOIN moderators m ON m.community_name = com.community_name
+           GROUP BY com.community_name,m.user_name,m.is_admin
+           HAVING com.community_name =  $1;*`,
+            [
+                escapeQuotes(community),
+            ],
+
+    );
+};
+
+const retrieveCommunityInfoDB = (community) => {
+    return POOL.query(
+           `SELECT *
+           FROM community
+           WHERE community_name =  $1;`,
+            [
+                escapeQuotes(community),
+            ],
+
+    );
+};
+
 const updateUserProfile = (columnName, value, userName) => {
     return POOL.query(`UPDATE users SET ${columnName} = $1 WHERE user_name = $2`,
         [
@@ -193,6 +219,8 @@ module.exports = {
     uploadToDigitalOcean,
     retrieveUserInfo,
     updateUserProfile,
+    retrieveCommunityModsDB,
+    retrieveCommunityInfoDB,
     retrieveCommunityPostsDB,
     getAllFollowedCommunities,
     insertPost

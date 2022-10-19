@@ -26,6 +26,8 @@ const {
     uploadToDigitalOcean,
     retrieveUserInfo,
     updateUserProfile,
+    retrieveCommunityModsDB,
+    retrieveCommunityInfoDB,
     retrieveCommunityPostsDB,
     getAllFollowedCommunities,
     insertPost
@@ -275,6 +277,37 @@ app.get('/api/search', async (req, resp) => {
     resp.json({rows: results.rows });
     return;
 });
+
+app.get('/api/communityMods', async (req, resp) => {
+    const community = req.query.community_name;
+    const results = await retrieveCommunityModsDB(community);
+    if (results.rows && results.rows.length == 0) {
+        resp.status(204);
+        resp.type('application/json');
+        resp.json({rows: [], message: 'No moderator for community found!'});
+        return;
+    }
+    resp.status(200);
+    resp.type('application/json');
+    resp.json({rows: results.rows });
+    return;
+});
+
+app.get('/api/communityInfo', async (req, resp) => {
+    const community = req.query.community_name;
+    const results = await retrieveCommunityInfoDB(community);
+    if (results.rows && results.rows.length == 0) {
+        resp.status(204);
+        resp.type('application/json');
+        resp.json({rows: [], message: 'No info on community found!'});
+        return;
+    }
+    resp.status(200);
+    resp.type('application/json');
+    resp.json({rows: results.rows });
+    return;
+});
+
 
 app.get('/api/community', async (req, resp) => {
     const community = req.query.community_name;

@@ -1,12 +1,25 @@
 import React from 'react';
 import { Tabs, Tab } from '@mui/material';
 
-const PostModButton = () => {
-    const [value, setValue] = React.useState(0);
-
+const PostModButton = (props) => {
+    const [value, setValue] = React.useState('posts');
+    //console.log(props.params.community_name);
     const handleChange = (event, newValue) => {
         setValue(newValue);
+        if(newValue === "posts"){
+            props.navigate({
+                pathname: `/community/${props.params.community_name}/${newValue}/best`,
+                replace: true,
+            });
+        }
+        else{
+            props.navigate({
+                pathname: `/community/${props.params.community_name}/${newValue}`,
+                replace: true,
+            });
+        }
     };
+
 
     return (
         <Tabs
@@ -16,11 +29,11 @@ const PostModButton = () => {
         >
             <Tab
                 label="Posts"
-                value="posts"                
+                value="posts"              
             />
             <Tab
                 label="Mod Access"
-                value="Mod"
+                value="mod"
             />
         </Tabs>
     );

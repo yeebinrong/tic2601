@@ -117,6 +117,42 @@ export function searchForPostWithParams(params) {
         }));
 }
 
+export function retrieveCommunityMods(community_name) {
+    return axios
+        .get(`${HOST}/api/communityMods`, {
+            params: {
+                community_name,
+            },
+            headers: {
+                Accept: CONTENT_TYPE_JSON,
+            },
+        })
+        .then((resp) => ({ data: resp.data, error: false }))
+        .catch((err) => ({
+            data: err && err.response ? err.response.data : '',
+            error: true,
+            status: err && err.response ? err.response.status : '',
+        }));
+}
+
+export function retrieveCommunityInfo(community_name) {
+    return axios
+        .get(`${HOST}/api/communityInfo`, {
+            params: {
+                community_name,
+            },
+            headers: {
+                Accept: CONTENT_TYPE_JSON,
+            },
+        })
+        .then((resp) => ({ data: resp.data, error: false }))
+        .catch((err) => ({
+            data: err && err.response ? err.response.data : '',
+            error: true,
+            status: err && err.response ? err.response.status : '',
+        }));
+}
+
 export function retrieveCommunityPosts(community_name) {
     return axios
         .get(`${HOST}/api/community`, {

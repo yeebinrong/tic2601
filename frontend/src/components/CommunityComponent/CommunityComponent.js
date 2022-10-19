@@ -1,5 +1,5 @@
 import './CommunityComponent.scss';
-import { retrieveCommunityPosts} from '../../apis/app-api';
+import { retrieveCommunityPosts, retrieveCommunityMods, retrieveCommunityInfo} from '../../apis/app-api';
 import * as React from 'react';
 import Box from '@mui/material/Box';
 import Paper from '@mui/material/Paper';
@@ -15,6 +15,7 @@ import {withParams } from '../../constants/constants';
 import { renderPostLists } from '../HomePageComponent/HomePageComponent';
 
 
+
 const Item = styled(Paper)(({ theme }) => ({
     backgroundColor: theme.palette.mode === 'dark' ? '#1A2027' : '#fff',
     ...theme.typography.body2,
@@ -27,13 +28,34 @@ class CommunityComponent extends React.Component {
     constructor(props) {
         super(props);
         this.state = {
+            comColour:"",
+            comDesc:"",
+            comDate:"",
             posts: [],
-            mode:[],
             url:[],
+            mod:[],
+            communityInfo:[],
         };
 
         if (props.isVerifyDone) {
+            this.props.setIsLoading(true);  
+            retrieveCommunityMods(this.props.params.community_name)
+            .then(res => {
+                this.props.setIsLoading(false);
+                this.setState({
+                    mods:res.data.rows
+                });
+            });
             this.props.setIsLoading(true);
+            retrieveCommunityInfo(this.props.params.community_name)
+            .then(res => {
+                this.props.setIsLoading(false);
+                this.setState({
+                    communityInfo:res.data.rows,
+                    //url: this.props.location.pathname,
+                });
+            });
+            this.props.setIsLoading(true);  
             retrieveCommunityPosts(this.props.params.community_name)
             .then(res => {
                 this.props.setIsLoading(false);
@@ -53,23 +75,33 @@ class CommunityComponent extends React.Component {
         if ((nextProps.isVerifyDone && !this.props.isVerifyDone) ||
         (nextProps.location.community !== this.props.location.community)) {
             this.props.setIsLoading(true);
-            retrieveCommunityPosts(this.props.params.community_name).then(res => {
+            retrieveCommunityPosts(nextProps.params.community_name).then(res => {
                 this.props.setIsLoading(false);
                 this.setState({
                     posts: res.data.rows,
-                    url: this.props.location.pathname,
+                    url: nextProps.location.pathname,
+                });
+            });
+            this.props.setIsLoading(true);
+            retrieveCommunityInfo(nextProps.params.community_name)
+            .then(res => {
+                this.props.setIsLoading(false);
+                this.setState({
+                    communityInfo:res.data.rows,
+                    //url: this.props.location.pathname,
                 });
             });
         }
         return true;
     }
 
-    handleChange = (e, newValue) => {
+    handleChange= (e, newValue) => {
         this.props.navigate({
             pathname: `/community/${this.props.params.community_name}/posts/${newValue}`,
             replace: true,
         });
     };
+
 
     renderNorm = (inf) => {
         return (
@@ -86,12 +118,11 @@ class CommunityComponent extends React.Component {
                         <b>About Community</b>
                     </div>
                     <Item>
-
                         <div style={{ textAlign: 'left', padding: 10 }}>
                             <b>Welcome to r/{inf.community_name}</b>
                             <p></p>
                             <Divider style={{margin:'16px 0'}}></Divider>
-                            <b>Creation Date: {inf.datetime_created}</b>
+                            <b>Creation Date:{this.state.comDate}</b>
                             <Divider style={{margin:'16px 0'}}></Divider>
                             <div style={{ marginTop: '16px' }}>
                                 <Chip
@@ -110,13 +141,7 @@ class CommunityComponent extends React.Component {
                             <Divider style={{margin:'16px 0'}}></Divider>
                             <b>Moderators:</b>
                             <ul>
-                            {/* {this.state.admin.map((adm) => {
-                                    return (
-                                        <ul>
-                                            <li>u/{adm.user_name} </li>
-                                        </ul>
-                                    );
-                                })} */}
+                                    
                             </ul>
                         </div>
                     </Item>
@@ -181,26 +206,40 @@ class CommunityComponent extends React.Component {
     render() {
         return (
             <div>
+                {this.state.communityInfo.map(cominf => {
+                                            this.setState({
+                                                comColour:cominf.colour,
+                                                comDesc:cominf.description,
+                                                comDate:cominf.datetime_created
+                                            });
+                                            return (
+                                                <>
+                                                    <div style={{ display: 'block', backgroundColor:this.state.comColour, height: 175 }}></div>
+                                                        <div style={{ backgroundColor: 'white', height: 135 }}>
+                                                            <div style={{ display: 'flex', marginLeft: '20%', paddingTop: '10px' }}>
+                                                                <div>
+                                                                    <Avatar alt="Community Logo" sx={{ width: 55, height: 55 }} src={cominf.profile_picture ?
+                                                                     cominf.profile_picture: `/static/readit_logo.png`} />
+                                                                </div>
+                                                                <div style={{ marginRight: '25px' }}>
+                                                                    <b style={{ fontSize: '30px', marginLeft: '10%' }}>{cominf.community_name}</b>
+                                                                    <p style={{ marginLeft: '10%', marginTop: '0px' }}>r/{cominf.community_name}</p>
+                                                                    {/* { console.log(this.props.params.community_name) } */}
+                                                                    <PostModButton params={this.props.params} navigate={this.props.navigate}/>
+                                                                </div>
+                                                                <div style={{ margin: '15px' }}>
+                                                                <Button style={{ borderRadius: '14px' }} variant="contained">Followed</Button>
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                </>
+                                            )
+
+                })}
                 {this.state.posts?.map(inf => {
                                             return (
                                                 <>
-                                                <div style={{ display: 'block', backgroundColor: inf.colour, height: 175 }}></div>
-                                                 <div style={{ backgroundColor: 'white', height: 135 }}>
-                                                    <div style={{ display: 'flex', marginLeft: '20%', paddingTop: '10px' }}>
-                                                        <div>
-                                                            <Avatar alt="Community Logo" sx={{ width: 55, height: 55 }} src='logo192.png' />
-                                                        </div>
-                                                        <div style={{ marginRight: '25px' }}>
-                                                            <b style={{ fontSize: '30px', marginLeft: '10%' }}>{inf.community_name}</b>
-                                                            <p style={{ marginLeft: '10%', marginTop: '0px' }}>r/{inf.community_name}</p>
-                                                            <PostModButton />
-                                                        </div>
-                                                        <div style={{ margin: '15px' }}>
-                                                            <Button style={{ borderRadius: '14px' }} variant="contained">Followed</Button>
-                                                        </div>
-                                                    </div>
-                                                </div>
-                                                    {this.state.url.split("/").pop() === 'mod' ? this.renderMod(inf) : this.renderNorm(inf) }
+                                                    { this.state.url.split("/").pop() === "mod" ? this.renderMod(inf) : this.renderNorm(inf) }
                                                 </>
                                             );
                 })}
