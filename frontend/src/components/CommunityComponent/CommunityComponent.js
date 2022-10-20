@@ -1,7 +1,6 @@
 import './CommunityComponent.scss';
 import { retrieveCommunityPosts} from '../../apis/app-api';
 import * as React from 'react';
-import { PureComponent } from 'react';
 import Box from '@mui/material/Box';
 import Paper from '@mui/material/Paper';
 import Stack from '@mui/material/Stack';
@@ -15,6 +14,7 @@ import { Checkbox, Chip } from '@mui/material';
 import {withParams } from '../../constants/constants';
 import { renderPostLists } from '../HomePageComponent/HomePageComponent';
 import { BarChart, Bar, Cell, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
+
 let comColour = ""
 let comDesc = ""
 let comDate = ""
@@ -29,26 +29,51 @@ const Item = styled(Paper)(({ theme }) => ({
     color: theme.palette.text.secondary,
 }));
 
-let data = [
+const data = [
     {
-        name: 'Page A',
-        uv: 4000,
-        pv: 2400,
-        amt: 2400,
-      },
-      {
-        name: 'Page B',
-        uv: 3000,
-        pv: 1398,
-        amt: 2210,
-      },
-      {
-        name: 'Page C',
-        uv: 2000,
-        pv: 9800,
-        amt: 2290,
-      },
-];
+      name: 'User Count',
+      Value: 4000,
+    },
+    {
+      name: 'Post Count',
+      Value: 3000,
+    },
+    {
+      name: 'Total Favours',
+      Value: 2000,
+    },
+    {
+      name: 'Moderator Count',
+      Value: 2780,
+    },
+  ];
+
+export const Recharts = () => {
+            {console.log("this is recharts")}   
+            return (
+              <ResponsiveContainer width="100%" aspect={3}>
+                <BarChart
+                  width={500}
+                  height={1000}
+                  data={data}
+                  margin={{
+                    top: 5,
+                    right: 30,
+                    left: 20,
+                    bottom: 5,
+                  }}
+                >
+                  <CartesianGrid strokeDasharray="3 3" />
+                  <XAxis dataKey="name" />
+                  <YAxis />
+                  <Tooltip />
+                  <Legend />
+                  <Bar dataKey="Value" fill="#8884d8" />
+                </BarChart>
+              </ResponsiveContainer>
+            );
+    }
+
 
 class CommunityComponent extends React.Component {
     constructor(props) {
@@ -61,6 +86,8 @@ class CommunityComponent extends React.Component {
             url:[],
             mod:[],
             bans:[],
+            following: true,
+            followStatus: "Follow",
         };
 
         if (props.isVerifyDone) {
@@ -75,7 +102,6 @@ class CommunityComponent extends React.Component {
                     stats: res.data.statsRows,
                     bans: res.data.banRows,
                     url: this.props.location.pathname,
-    
                 });
             });
 
@@ -86,7 +112,8 @@ class CommunityComponent extends React.Component {
 
     shouldComponentUpdate (nextProps) {
         if ((nextProps.isVerifyDone && !this.props.isVerifyDone) ||
-        (nextProps.location.community !== this.props.location.community)) {
+        (nextProps.location.community !== this.props.location.community)||
+        (nextProps.following !== this.props.following)) {
             this.props.setIsLoading(true);
             retrieveCommunityPosts(nextProps.params.community_name).then(res => {
                 this.props.setIsLoading(false);
@@ -128,6 +155,18 @@ class CommunityComponent extends React.Component {
             });
         }
     };
+
+    handleDelete = (banusername) => {
+        console.log("deleting")
+        console.log(banusername)
+    }
+
+    changeColor = () => {
+        this.setState({following:!this.state.following})
+        this.setState({followStatus: this.state.following ? "Following" : "Follow"});
+        console.log("change colour")
+        console.log(this.state.following)
+    }
 
 
     renderNorm = () => {
@@ -191,6 +230,10 @@ class CommunityComponent extends React.Component {
         return (
             <>
             { this.state.stats.map(stat => {
+                        {data[0].Value=stat.follower_count ? stat.follower_count : "0"}
+                        {data[1].Value=stat.post_count ? stat.post_count : "0"}
+                        {data[2].Value=stat.fav_total ? stat.fav_total : "0"}
+                        {data[3].Value=stat.mod_count ? stat.mod_count : "0"}
                         return(
                             <div className={'modPage'}>
                                 <Box sx={{ flexGrow: 1 }}>
@@ -209,14 +252,17 @@ class CommunityComponent extends React.Component {
                                                                         <th>Moderator Count</th>
                                                                     </tr>
                                                                     <tr> {console.log(stat.follower_count)}
-                                                                        <td>{stat.follower_count ? stat.follower_count : "0"}</td>
-                                                                        <td>{stat.post_count ? stat.post_count : "0"}</td>
-                                                                        <td>{stat.fav_total ? stat.fav_total : "0"}</td>
-                                                                        <td>{stat.mod_count ? stat.mod_count : "0"}</td>
-                                                                    </tr>
-                                                                    <tr>
+                                                                        <td>{data[0].Value}</td>
+                                                                        <td>{data[1].Value}</td>
+                                                                        <td>{data[2].Value}</td>
+                                                                        <td>{data[3].Value}</td>
                                                                     </tr>
                                                                 </table>
+                                                            </Paper>
+                                                        </div>
+                                                        <div>
+                                                            <Paper component="form" sx={{p: '5px 5px', display: 'flex', justifyContent: 'center' }}>
+                                                                <Recharts/>
                                                             </Paper>
                                                         </div>
                                                     </Stack>
@@ -231,10 +277,11 @@ class CommunityComponent extends React.Component {
                                                 <Box>
                                                     <Stack spacing={1} direction={'column'}>
                                                         <div>
-                                                            <tb>
+                                                            <table>
                                                                 <tr>
                                                                     <th>Username</th>
                                                                     <th>Approve?</th>
+                                                                    <th>Delete</th>
                                                                 </tr>
                                                                 {this.state.bans?.map(ban => {
                                                                         return(
@@ -245,10 +292,13 @@ class CommunityComponent extends React.Component {
                                                                                 <td>
                                                                                     {ban.is_approved === true ? <Checkbox disabled checked/> : <Checkbox onChange={this.handleCheck}/>}
                                                                                 </td>
+                                                                                <td>
+                                                                                    <Button style={{ borderRadius: '14px' }} variant="contained" color="secondary" onClick={() => this.handleDelete(ban.user_name)}>Delete</Button>
+                                                                                </td>
                                                                             </tr>
                                                                         )
                                                                     })}
-                                                            </tb>
+                                                            </table>
                                                         </div>
                                                         {/* <div><b>Allow Favours: </b><Checkbox></Checkbox></div> */}
                                                     </Stack>
@@ -289,7 +339,7 @@ class CommunityComponent extends React.Component {
                                                                     <PostModButton handleChange={this.handleModeChange} value={this.state.mode} params={this.props.params} navigate={this.props.navigate}/>
                                                                 </div>
                                                                 <div style={{ margin: '15px' }}>
-                                                                <Button style={{ borderRadius: '14px' }} variant="contained">Followed</Button>
+                                                                <Button style={{ borderRadius: '14px' }} variant="contained" onClick={this.changeColor} color={this.state.following ? "primary":"secondary"}>{this.state.followStatus}</Button>
                                                                 </div>
                                                             </div>
                                                         </div>
