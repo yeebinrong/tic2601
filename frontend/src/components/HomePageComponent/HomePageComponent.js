@@ -1,6 +1,6 @@
 import React from 'react';
 import './HomePageComponent.scss';
-import { retrieveHomePagePosts } from '../../apis/app-api';
+import { retrieveHomePagePosts, modifyFavour } from '../../apis/app-api';
 import { getQueryParameters, withParams } from '../../constants/constants';
 import TabButton from '../TabButton';
 import MenuButton from '../MenuButton';
@@ -21,6 +21,21 @@ import ForwardIcon from '@mui/icons-material/Forward';
 import CreateCommunityComponent from '../CreateCommunityComponent/CreateCommunityComponent';
 
 export const renderPostLists = (posts, params, handleChange) => {
+    const onFavourChange = (postId, favour, value, receiver) => {
+        modifyFavour({
+            postId: postId,
+            favour: favour ? favour : 0,
+            value: value,
+            receiver: receiver
+        }).then(res => {
+            if (!res.error) {
+                this.setState({
+                    // update row state
+                })
+            }
+        })
+    };
+    
     return (
     <>
         <Item>
@@ -120,28 +135,24 @@ export const renderPostLists = (posts, params, handleChange) => {
                             <Box>
                                 <IconButton
                                     sx={{ p: '10px' }}
-                                    aria-label="upvote"
+                                    aria-label="upfavour"
                                 >
-                                    <ForwardIcon
-                                        style={{
-                                            transform:
-                                                'rotate(270deg)',
-                                        }}
-                                    />
+                                    {(post.is_favour === null || post.is_favour === -1) &&
+                                    <ForwardIcon className='upFavourStyle' onClick={() => onFavourChange(post.post_id, post.is_favour, 1, post.user_name)} />}
+                                    {post.is_favour === 1 &&
+                                        <ForwardIcon className='upFavourColorStyle' onClick={() => onFavourChange(post.post_id, post.is_favour, 0, post.user_name)} />}
                                 </IconButton>
                                 {post.fav_point
                                     ? post.fav_point
                                     : 0}
                                 <IconButton
                                     sx={{ p: '10px' }}
-                                    aria-label="downvote"
+                                    aria-label="downfavour"
                                 >
-                                    <ForwardIcon
-                                        style={{
-                                            transform:
-                                                'rotate(90deg)',
-                                        }}
-                                    />
+                                    {(post.is_favour === null || post.is_favour === 1) &&
+                                    <ForwardIcon className='downFavourStyle' onClick={() => onFavourChange(post.post_id, post.is_favour, -1, post.user_name)} />}
+                                    {post.is_favour === -1 &&
+                                    <ForwardIcon className='downFavourColorStyle' onClick={() => onFavourChange(post.post_id, post.is_favour, 0, post.user_name)} />}
                                 </IconButton>
                             </Box>
                             <Box>
@@ -161,7 +172,8 @@ export const renderPostLists = (posts, params, handleChange) => {
                                     sx={{ p: '10px' }}
                                     aria-label="favourite"
                                 >
-                                    <BookmarkIcon />
+                                    {(post.is_hidden === 'N') ?
+                                    <BookmarkIcon className='favouriteStyle' /> : <BookmarkIcon />}
                                 </IconButton>
                                 Favourite
                             </Box>
