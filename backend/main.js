@@ -21,6 +21,7 @@ const {
     insertToUser,
     getAllPosts,
     getHomePagePosts,
+    updateFavour,
     insertOneCommunityAndReturnName,
     searchPostWithParams,
     uploadToDigitalOcean,
@@ -248,16 +249,13 @@ app.get('/api/all_followed_communities', async (req, resp) => {
 
 app.get('/api/homepage_posts', async (req, resp) => {
     const currentTab = req.query.currentTab;
-    // best (most upfavour), hot (most views), new (newest)
-    let column = 'fav_point';
-    let sortBy = 'DESC';
+    let sortBy = 'fav_point ASC';
     if (currentTab == 'hot') {
-        column = 'view_count';
+        sortBy = 'view_count DESC';
     } else if (currentTab == 'new') {
-        column = 'age';
-        sortBy = 'ASC';
+        sortBy = 'age ASC';
     }
-    const results = await getHomePagePosts(req.token.username, `${column} ${sortBy}`);
+    const results = await getHomePagePosts(req.token.username, sortBy);
     if (results.rows && results.rows.length == 0) {
         resp.status(204);
         resp.type('application/json');
@@ -268,6 +266,20 @@ app.get('/api/homepage_posts', async (req, resp) => {
     resp.type('application/json');
     resp.json({rows: results.rows });
     return;
+});
+
+app.post('/api/update_favour', async (req, resp) => {
+    try {
+        await updateFavour(req.body.params.postId, req.body.params.favour, req.body.params.value, req.token.username, req.body.params.receiver);
+        resp.status(200);
+        resp.type('application/json');
+        return;
+    } catch (e) {
+        console.info(e);
+		resp.status(404);
+		resp.type('application/json');
+        return;
+    }
 });
 
 // TODO catch / handle errors

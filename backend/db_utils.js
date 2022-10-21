@@ -47,23 +47,50 @@ const getHomePagePosts = (currentUser, sortBy) => {
     return POOL.query(
         `WITH following_communities AS
             (SELECT fc.community_name, p.user_name, AGE(CURRENT_TIMESTAMP, p.date_created), p.title, p.flair, p.post_id, p.date_deleted, p.view_count,
-                SUM(f.favour_point) AS fav_point, COUNT(c.comment_id) AS comment_count, hf.hide_or_favourite AS hide_post
+                SUM(f.favour_point) AS fav_point, fp.favour_point AS is_favour, COUNT(c.comment_id) AS comment_count, hf.hide_or_favourite AS is_hidden
             FROM followed_communities fc
             INNER JOIN posts p ON p.community_name = fc.community_name
             LEFT JOIN favours f ON f.post_id = p.post_id
+			LEFT JOIN favours fp ON fp.post_id = p.post_id AND fp.giver = $1
             LEFT JOIN comments c ON c.post_id = f.post_id
             LEFT JOIN hide_or_fav_posts hf ON hf.post_id = p.post_id AND hf.user_name = $1
-            GROUP BY fc.community_name, fc.user_name, p.post_id, c.comment_id, hf.hide_or_favourite
+            GROUP BY fc.community_name, fc.user_name, p.post_id, fp.favour_point, c.comment_id, hf.hide_or_favourite
             HAVING fc.user_name = $1)
-        SELECT DISTINCT post_id, community_name, user_name, age, title, flair, fav_point, comment_count, date_deleted, view_count, hide_post
+        SELECT DISTINCT post_id, community_name, user_name, age, title, flair, fav_point, is_favour, comment_count, date_deleted, view_count, is_hidden
         FROM following_communities
-		WHERE hide_post IS NULL OR hide_post = 'N'
-        ORDER BY $2`,
+		WHERE is_hidden IS NULL OR is_hidden = 'N'
+        ORDER BY ` + sortBy,
         [
-            escapeQuotes(currentUser),
-            sortBy
+            escapeQuotes(currentUser)
         ],
     )
+}
+
+const updateFavour = (postId, favour, value, currentUser, receiver) => {
+    if (value == 0) {
+        return POOL.query(`DELETE FROM favours WHERE post_id = ` + postId + ` AND giver = $1 AND receiver = $2`,
+            [
+                escapeQuotes(currentUser),
+                escapeQuotes(receiver)
+            ]
+        )
+    } else if (favour == 0) {
+        return POOL.query(`INSERT INTO favours (post_id, favour_point, giver, receiver)
+                            VALUES(` + postId + `, ` + value + `, $1, $2)`,
+            [
+                escapeQuotes(currentUser),
+                escapeQuotes(receiver)
+            ]
+        )
+    } else if (favour != 0) {
+        return POOL.query(`UPDATE favours SET favour_point = ` + value + `
+                            WHERE post_id = ` + postId + ` AND giver = $1 AND receiver = $2`,
+            [
+                escapeQuotes(currentUser),
+                escapeQuotes(receiver)
+            ]
+        )
+    }
 }
 
 // This sql inserts a row into community table with the specified communityName,
@@ -191,6 +218,7 @@ module.exports = {
     insertToUser,
     getAllPosts,
     getHomePagePosts,
+    updateFavour,
     insertOneCommunityAndReturnName,
     searchPostWithParams,
     uploadToDigitalOcean,
