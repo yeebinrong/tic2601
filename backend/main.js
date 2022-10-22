@@ -16,6 +16,7 @@ const { localStrategy, mkAuth, verifyToken } = require('./passport_strategy.js')
 const { getCommunity } = require('./apis/community');
 const { getPost } = require('./apis/post');
 const { SIGN_SECRET, CHECK_DIGITAL_OCEAN_KEYS, CHECK_POSTGRES_CONN, READ_FILE, UNLINK_ALL_FILES } = require('./server_config.js')
+const { createComment, updateComment } = require('./apis/comment');
 const {
     checkUserNameAlreadyExists,
     insertToUser,
@@ -345,6 +346,11 @@ app.get('/api/getbackendvalue', (req, resp) => {
     resp.json({ value: Math.floor(Math.random() * 100) })
     return
 })
+
+app.get('/api/community/:communityName', getCommunity)
+app.get('/api/posts/:postId', getPost)
+app.post('/api/posts/:postId/comments', createComment)
+app.put('/api/comments/:commentId', updateComment)
 
 Promise.all([CHECK_POSTGRES_CONN(), CHECK_DIGITAL_OCEAN_KEYS()])
 .then(() => {

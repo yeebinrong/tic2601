@@ -11,7 +11,7 @@ import ArrowDownwardIcon from '@mui/icons-material/ArrowDownward';
 import MoveToInboxOutlinedIcon from '@mui/icons-material/MoveToInboxOutlined';
 import { timeSince } from '../../utils/time';
 import './Post.scss';
-import { retrieveCommunityByName, retrievePostById } from '../../apis/app-api';
+import { createComment, retrieveCommunityByName, retrievePostById, updateComment } from '../../apis/app-api';
 import { useParams } from 'react-router-dom';
 
 
@@ -51,11 +51,29 @@ const User = (props) => {
 const CommentBox = (props) => {
     let [commentText, setCommentText] = useState('');
 
-    let callCommentApi = () => {
+    let callCreateCommentApi = () => {
         if (!commentText) {
             return;
         }
+        createComment(props.postId, commentText, props.replyTo)
+            .then(r => {
+                console.log(r);
+                window.location.reload();
+            });
         console.log(`new comment ${commentText} replyTo ${props.replyTo}`);
+
+    };
+
+    let callUpdateCommentApi = () => {
+        if (!commentText) {
+            return;
+        }
+        updateComment(props.commentId, commentText)
+            .then(r => {
+                console.log(r);
+                window.location.reload();
+            });
+        console.log(`updated comment ${props.commentId} content to ${commentText} `);
 
     };
     return (
@@ -65,14 +83,16 @@ const CommentBox = (props) => {
                 maxRows={4}
                 aria-label='maximum height'
                 placeholder='Add your comment here'
-                defaultValue={commentText}
+                defaultValue={props.commentText || ''}
                 style={{ width: '100%', height: 70 }}
                 onChange={(e) => {
                     setCommentText(e.target.value);
                 }}
             />
             <br />
-            <Button variant='outlined' size='small' onClick={callCommentApi}>Comment</Button>
+            {!props.commentId &&
+                <Button variant='outlined' size='small' onClick={callCreateCommentApi}>Comment</Button>}
+            {props.commentId && <Button variant='outlined' size='small' onClick={callUpdateCommentApi}>Save</Button>}
         </div>
     );
 };
@@ -85,7 +105,7 @@ const Comment = (props) => {
         </li>,
     );
     let [showReplyBox, setShowReplyBox] = useState(false);
-    let parentCommentId = props.parentComment?.comment_id || '';
+    let [showEditBox, setShowEditBox] = useState(false);
     return (
 
         <div>
@@ -103,9 +123,20 @@ const Comment = (props) => {
             <DownVote type={'comment'} commentId={props.comment.comment_id}></DownVote>
             <Button size='small' onClick={() => {
                 setShowReplyBox(!showReplyBox);
+                setShowEditBox(false);
             }}>Reply</Button>
-            {showReplyBox && <CommentBox replyTo={parentCommentId}></CommentBox>}
+            {props.comment.is_commenter && < Button size='small' onClick={() => {
+                setShowEditBox(!showEditBox);
+                setShowReplyBox(false);
+            }}>Edit</Button>}
 
+            {showReplyBox && <CommentBox postId={props.comment.post_id} replyTo={props.comment.unique_id}></CommentBox>}
+            {showEditBox &&
+                <CommentBox
+                    postId={props.comment.post_id}
+                    commentId={props.comment.comment_id}
+                    commentText={props.comment.content}
+                />}
             <ul>
                 {subComments}
             </ul>
@@ -161,7 +192,7 @@ const Post = (props) => {
                 return resp.data;
             });
         }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [props.isVerifyDone]);
 
 
@@ -192,7 +223,7 @@ const Post = (props) => {
                         <h2>{post.title}</h2>
                         <div>{post.content}</div>
                         <div id={'post-statusline'}>
-                            <Button disabled>{post.comments?.length} comments</Button>
+                            <Button disabled>{post['comment_count']} comments</Button>
                             <UpVote type={'post'} postId={post.post_id}></UpVote>
                             <DownVote type={'post'} postId={post.post_id}></DownVote>
                             {/*<IconButton color='primary' component='label' id='iconbutton'>*/}
@@ -210,7 +241,7 @@ const Post = (props) => {
 
                     <hr />
                     <div>
-                        <CommentBox post={post}></CommentBox>
+                        <CommentBox post={post} postId={post.post_id}></CommentBox>
                     </div>
 
                     <hr />

@@ -165,34 +165,6 @@ export function uploadProfilePicture(formData) {
         }));
 }
 
-export function retrievePostById(postId) {
-    return axios
-        .get(`${HOST}/api/posts/${postId}`, {
-            headers: {
-                Accept: CONTENT_TYPE_JSON,
-            },
-        })
-        .then((resp) => ({ data: resp.data, error: false }))
-        .catch((err) => ({
-            data: err && err.response ? err.response.data : '',
-            error: true,
-            status: err && err.response ? err.response.status : '',
-        }));
-}
-export function retrieveCommunityByName(communityName) {
-    return axios
-        .get(`${HOST}/api/community/${communityName}`, {
-            headers: {
-                Accept: CONTENT_TYPE_JSON,
-            },
-        })
-        .then((resp) => ({ data: resp.data, error: false }))
-        .catch((err) => ({
-            data: err && err.response ? err.response.data : '',
-            error: true,
-            status: err && err.response ? err.response.status : '',
-        }));
-}
 
 export function retrieveAllFollowedCommunities() {
     return axios
@@ -247,6 +219,77 @@ export function sendMessageApi(value) {
 export function getBackEndValueApi() {
     return axios
         .get(`${HOST}/api/getbackendvalue`, {
+            headers: {
+                Accept: CONTENT_TYPE_JSON,
+            },
+        })
+        .then((resp) => ({ data: resp.data, error: false }))
+        .catch((err) => ({
+            data: err && err.response ? err.response.data : '',
+            error: true,
+            status: err && err.response ? err.response.status : '',
+        }));
+}
+
+export function retrievePostById(postId) {
+    return axios
+        .get(`${HOST}/api/posts/${postId}`, {
+            headers: {
+                Accept: CONTENT_TYPE_JSON,
+            },
+        })
+        .then((resp) => ({ data: resp.data, error: false }))
+        .catch((err) => ({
+            data: err && err.response ? err.response.data : '',
+            error: true,
+            status: err && err.response ? err.response.status : '',
+        }));
+}
+
+export function createComment(postId, content, replyTo) {
+    return axios
+        .post(
+            `${HOST}/api/posts/${postId}/comments`,
+            {
+                content,
+                replyTo,
+            },
+            {
+                headers: {
+                    Accept: CONTENT_TYPE_JSON,
+                },
+            })
+        .then((resp) => ({ data: resp.data, error: false }))
+        .catch((err) => ({
+            data: err && err.response ? err.response.data : '',
+            error: true,
+            status: err && err.response ? err.response.status : '',
+        }));
+}
+
+export function updateComment(commentId, content) {
+    return axios
+        .put(
+            `${HOST}/api/comments/${commentId}`,
+            {
+                content,
+            },
+            {
+                headers: {
+                    Accept: CONTENT_TYPE_JSON,
+                },
+            })
+        .then((resp) => ({ data: resp.data, error: false }))
+        .catch((err) => ({
+            data: err && err.response ? err.response.data : '',
+            error: true,
+            status: err && err.response ? err.response.status : '',
+        }));
+}
+
+export function retrieveCommunityByName(communityName) {
+    return axios
+        .get(`${HOST}/api/community/${communityName}`, {
             headers: {
                 Accept: CONTENT_TYPE_JSON,
             },

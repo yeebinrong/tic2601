@@ -21,22 +21,25 @@ exports.getPost = async (req, resp) => {
         return;
     }
     const post = results.rows[0];
+    const currentUser = req.token.username;
 
-    console.log(post);
     const commentsResult = await getCommentsByPostId(post.post_id);
-    const comments = commentsResult.rows;
-    console.log(comments);
+    let comments = commentsResult.rows;
 
     for (const cmt of comments) {
         await queryReplyComments(cmt);
     }
+    comments = addIsCommenter(comments, currentUser);
 
+    const commentCount = getCommentCount(comments);
     resp.status(200);
     resp.type('application/json');
     resp.json(
         {
             ...post,
             comments,
+            comment_count: commentCount,
+
         },
     );
 };
@@ -53,4 +56,25 @@ async function queryReplyComments(comment) {
     }
 
     comment['reply_comments'] = replyComments;
+}
+
+function addIsCommenter(comments, currentUser) {
+    if (!comments) return [];
+
+
+    return comments.map((cmt) => {
+        cmt['is_commenter'] = (cmt['commenter'] === currentUser);
+        cmt['reply_comments'] = addIsCommenter(cmt['reply_comments'], currentUser);
+        return cmt;
+    });
+}
+
+function getCommentCount(comments) {
+    let count = 0;
+    if (!comments) return count;
+    count += comments.length;
+    for (const cmt of comments) {
+        count += getCommentCount(cmt['reply_comments']);
+    }
+    return count;
 }

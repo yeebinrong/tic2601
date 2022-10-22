@@ -1,4 +1,4 @@
-const { getCommunityByName, getCommunityMemberCount } = require('../db/community');
+const { getCommunityByName, getCommunityMemberCount, getFollowedCommunities } = require('../db/community');
 
 
 // return community info
@@ -11,11 +11,17 @@ const { getCommunityByName, getCommunityMemberCount } = require('../db/community
 //   "profile_picture": null,
 //   "backdrop_picture": null,
 //   "colour": "#E30D00",
-//   "member_count": "1"
+//   "member_count": "1",
+//   "joined": true
 // }
 exports.getCommunity = async (req, resp) => {
     const results = await getCommunityByName(req.params.communityName);
     const memberCount = await getCommunityMemberCount(req.params.communityName);
+    const followedCommunities = await getFollowedCommunities(req.token.username);
+
+
+    const joined = followedCommunities.rows.map(e => e.community_name).includes(req.params.communityName);
+
     if (results.rows.length === 0) {
         resp.status(404);
         resp.type('application/json');
@@ -28,6 +34,7 @@ exports.getCommunity = async (req, resp) => {
         {
             ...results.rows[0],
             member_count: memberCount.rows[0].count,
+            joined: joined
         },
     );
 };
