@@ -1,5 +1,5 @@
 import './CommunityComponent.scss';
-import { retrieveCommunityPosts} from '../../apis/app-api';
+import { retrieveCommunityPosts, updateFollow, deleteFromBanlist, retireveModPageStats} from '../../apis/app-api';
 import * as React from 'react';
 import Box from '@mui/material/Box';
 import Paper from '@mui/material/Paper';
@@ -13,7 +13,7 @@ import PostModButton from './PostModButton';
 import { Checkbox, Chip } from '@mui/material';
 import {withParams } from '../../constants/constants';
 import { renderPostLists } from '../HomePageComponent/HomePageComponent';
-import { BarChart, Bar, Cell, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
+import { LineChart,Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend } from 'recharts';
 
 let comColour = ""
 let comDesc = ""
@@ -29,50 +29,148 @@ const Item = styled(Paper)(({ theme }) => ({
     color: theme.palette.text.secondary,
 }));
 
+const followerData = [
+    {
+      name: '21 Days ago',
+      Value: 0,
+    },
+    {
+      name: '14 Days ago',
+      Value: 0,
+    },
+    {
+      name: '7 Days ago',
+      Value: 0,
+    },
+    {
+      name: 'Now',
+      Value: 0,
+    },
+];
+
+const postData = [
+{
+    name: '21 Days ago',
+    Value: 0,
+},
+{
+    name: '14 Days ago',
+    Value: 0,
+},
+{
+    name: '7 Days ago',
+    Value: 0,
+},
+{
+    name: 'Now',
+    Value: 0,
+},
+];
+
+const favData = [
+    {
+        name: '21 Days ago',
+        Value: 0,
+    },
+    {
+        name: '14 Days ago',
+        Value: 0,
+    },
+    {
+        name: '7 Days ago',
+        Value: 0,
+    },
+    {
+        name: 'Now',
+        Value: 0,
+    },
+];
+
+const modStats = [
+    {
+        name: '21 Days ago',
+        Value: 0,
+    },
+    {
+        name: '14 Days ago',
+        Value: 0,
+    },
+    {
+        name: '7 Days ago',
+        Value: 0,
+    },
+    {
+        name: 'Now',
+        Value: 0,
+    },
+];
+
 const data = [
     {
-      name: 'User Count',
-      Value: 4000,
+        name: '21 Days ago',
+        Value: 0,
     },
     {
-      name: 'Post Count',
-      Value: 3000,
+        name: '14 Days ago',
+        Value: 0,
     },
     {
-      name: 'Total Favours',
-      Value: 2000,
+        name: '7 Days ago',
+        Value: 0,
     },
     {
-      name: 'Moderator Count',
-      Value: 2780,
+        name: 'Now',
+        Value: 0,
     },
-  ];
+];
 
-export const Recharts = () => {
-            {console.log("this is recharts")}   
+export const FollowerChart = () => {
             return (
-              <ResponsiveContainer width="100%" aspect={3}>
-                <BarChart
-                  width={500}
-                  height={1000}
-                  data={data}
-                  margin={{
-                    top: 5,
-                    right: 30,
-                    left: 20,
-                    bottom: 5,
-                  }}
-                >
-                  <CartesianGrid strokeDasharray="3 3" />
-                  <XAxis dataKey="name" />
-                  <YAxis />
-                  <Tooltip />
-                  <Legend />
-                  <Bar dataKey="Value" fill="#8884d8" />
-                </BarChart>
-              </ResponsiveContainer>
+                <>
+                    <LineChart width={600} height={250} data={followerData}
+                    margin={{ top: 5, right: 30, left: 20, bottom: 5 }}>
+                    <CartesianGrid strokeDasharray="3 3" />
+                    <XAxis dataKey="name" />
+                    <YAxis />
+                    <Tooltip />
+                    <Legend />
+                    <Line type="monotone" dataKey="Value" stroke="#8884d8" />
+                    </LineChart>
+                </>        
             );
-    }
+}
+
+export const PostChart = () => {
+    return (
+        <>
+            <LineChart width={600} height={250} data={postData}
+            margin={{ top: 5, right: 30, left: 20, bottom: 5 }}>
+            <CartesianGrid strokeDasharray="3 3" />
+            <XAxis dataKey="name" />
+            <YAxis />
+            <Tooltip />
+            <Legend />
+            <Line type="monotone" dataKey="Value" stroke="#8884d8" />
+            </LineChart>
+        </>        
+    );
+}
+
+export const FavChart = () => {
+    return (
+        <>
+            <LineChart width={600} height={250} data={favData}
+            margin={{ top: 5, right: 30, left: 20, bottom: 5 }}>
+            <CartesianGrid strokeDasharray="3 3" />
+            <XAxis dataKey="name" />
+            <YAxis />
+            <Tooltip />
+            <Legend />
+            <Line type="monotone" dataKey="Value" stroke="#8884d8" />
+            </LineChart>
+        </>        
+    );
+}
 
 
 class CommunityComponent extends React.Component {
@@ -86,8 +184,8 @@ class CommunityComponent extends React.Component {
             url:[],
             mod:[],
             bans:[],
-            following: true,
-            followStatus: "Follow",
+            following:"",
+            followStatus: "",
         };
 
         if (props.isVerifyDone) {
@@ -102,8 +200,19 @@ class CommunityComponent extends React.Component {
                     stats: res.data.statsRows,
                     bans: res.data.banRows,
                     url: this.props.location.pathname,
+                   following: res.data.isFollowing,
+                   followStatus: res.data.isFollowing === '0' ? 'follow' : 'following',
                 });
             });
+            retireveModPageStats(this.props.params.community_name).then(res => {
+                this.props.setIsLoading(false);
+                this.setState({
+                    followerStats:res.data.folRows,
+                    postStats:res.data.posRows,
+                    favourStats:res.data.favRows,
+                    overallStats:res.data.infoRows,
+                });
+            })
 
             
         }
@@ -112,8 +221,8 @@ class CommunityComponent extends React.Component {
 
     shouldComponentUpdate (nextProps) {
         if ((nextProps.isVerifyDone && !this.props.isVerifyDone) ||
-        (nextProps.location.community !== this.props.location.community)||
-        (nextProps.following !== this.props.following)) {
+        (nextProps.location.community !== this.props.location.community)
+        ) {
             this.props.setIsLoading(true);
             retrieveCommunityPosts(nextProps.params.community_name).then(res => {
                 this.props.setIsLoading(false);
@@ -123,12 +232,35 @@ class CommunityComponent extends React.Component {
                     info: res.data.infoRows,
                     stats: res.data.statsRows,
                     bans: res.data.banRows,
+                    following: res.data.isFollowing,
                     url: this.props.location.pathname,
+                    followStatus: res.data.isFollowing === '0' ? 'follow' : 'following',
+                });
+            });
+            retireveModPageStats(nextProps.params.community_name).then(res => {
+                this.props.setIsLoading(false);
+                this.setState({
+                    followerStats:res.data.folRows,
+                    postStats:res.data.posRows,
+                    favourStats:res.data.favRows,
+                    overallStats:res.data.infoRows,
                 });
             });
         }
         return true;
     }
+    initModPage = () => {
+        this.state.followerStats.map((fol,index) => {
+            followerData[index].Value = fol.follow_total ? fol.follow_total : 0
+        })
+        this.state.postStats.map((pos,index) => {
+            postData[index].Value = pos.post_total ? pos.post_total : 0
+        })
+        this.state.favStats.map((fav,index) => {
+            favData[index].Value = fav.fav_total ? fav.fav_total : 0
+        })
+    }
+
     handleCheck= (e) => {
         console.log(e.target.value)
     }
@@ -159,14 +291,24 @@ class CommunityComponent extends React.Component {
     handleDelete = (banusername) => {
         console.log("deleting")
         console.log(banusername)
+        deleteFromBanlist({communityName:this.props.params.community_name,username:banusername})
+        
+
     }
 
-    changeColor = () => {
-        this.setState({following:!this.state.following})
-        this.setState({followStatus: this.state.following ? "Following" : "Follow"});
-        console.log("change colour")
-        console.log(this.state.following)
-    }
+    changeFollow = () => {
+      // console.log(this.state.following[0].count);
+        updateFollow({communityName:this.props.params.community_name,isFollowing:this.state.following})
+            .then(res => {
+            this.setState({
+                following: res.data.isFollowing,
+            });
+            console.log(this.state.following)
+            this.setState({ followStatus: this.state.following === '0' ? 'follow' : 'following',});
+            console.log("change colour")
+            console.log(this.state.followStatus)
+           })
+    }       
 
 
     renderNorm = () => {
@@ -230,10 +372,10 @@ class CommunityComponent extends React.Component {
         return (
             <>
             { this.state.stats.map(stat => {
-                        {data[0].Value=stat.follower_count ? stat.follower_count : "0"}
-                        {data[1].Value=stat.post_count ? stat.post_count : "0"}
-                        {data[2].Value=stat.fav_total ? stat.fav_total : "0"}
-                        {data[3].Value=stat.mod_count ? stat.mod_count : "0"}
+                        {followerData[3].Value=stat.follower_count ? stat.follower_count : "0"}
+                        {postData[3].Value=stat.post_count ? stat.post_count : "0"}
+                        {favData[3].Value=stat.fav_total ? stat.fav_total : "0"}
+                        {modStats[3].Value=stat.mod_count ? stat.mod_count : "0"}
                         return(
                             <div className={'modPage'}>
                                 <Box sx={{ flexGrow: 1 }}>
@@ -246,23 +388,36 @@ class CommunityComponent extends React.Component {
                                                             <Paper component="form" sx={{ p: '2px 4px', display: 'flex', justifyContent: 'center' }}>
                                                                 <table>
                                                                     <tr>
-                                                                        <th>User Count</th>
+                                                                        <th>Follower Count</th>
                                                                         <th>Post Count</th>
                                                                         <th>Total Favours</th>
                                                                         <th>Moderator Count</th>
                                                                     </tr>
                                                                     <tr> {console.log(stat.follower_count)}
-                                                                        <td>{data[0].Value}</td>
-                                                                        <td>{data[1].Value}</td>
-                                                                        <td>{data[2].Value}</td>
-                                                                        <td>{data[3].Value}</td>
+                                                                        <td>{followerData[3].Value}</td>
+                                                                        <td>{postData[3].Value}</td>
+                                                                        <td>{favData[3].Value}</td>
+                                                                        <td>{modStats[3].Value}</td>
                                                                     </tr>
                                                                 </table>
                                                             </Paper>
                                                         </div>
                                                         <div>
-                                                            <Paper component="form" sx={{p: '5px 5px', display: 'flex', justifyContent: 'center' }}>
-                                                                <Recharts/>
+                                                        <b>Followers</b>
+                                                            <Paper component="form" sx={{ p: '2px 4px', display: 'flex', justifyContent: 'center' }}>
+                                                                <FollowerChart/>
+                                                            </Paper>
+                                                        </div>
+                                                        <div>
+                                                        <b>Posts</b>
+                                                            <Paper component="form" sx={{ p: '2px 4px', display: 'flex', justifyContent: 'center' }}>
+                                                                <PostChart/>
+                                                            </Paper>
+                                                        </div>
+                                                        <div>
+                                                        <b>Favours</b>
+                                                            <Paper component="form" sx={{ p: '2px 4px', display: 'flex', justifyContent: 'center' }}>
+                                                                <FavChart/>
                                                             </Paper>
                                                         </div>
                                                     </Stack>
@@ -339,7 +494,10 @@ class CommunityComponent extends React.Component {
                                                                     <PostModButton handleChange={this.handleModeChange} value={this.state.mode} params={this.props.params} navigate={this.props.navigate}/>
                                                                 </div>
                                                                 <div style={{ margin: '15px' }}>
-                                                                <Button style={{ borderRadius: '14px' }} variant="contained" onClick={this.changeColor} color={this.state.following ? "primary":"secondary"}>{this.state.followStatus}</Button>
+                                                                    {console.log("here")}
+                                                                {console.log(this.state.following)}
+                                                                {console.log(this.state.followStatus)}
+                                                                <Button style={{ borderRadius: '14px' }} variant="contained" onClick={this.changeFollow} color={this.state.following !== '0' ? "primary":"secondary"}>{this.state.followStatus}</Button>
                                                                 </div>
                                                             </div>
                                                         </div>

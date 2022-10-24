@@ -136,24 +136,55 @@ export function searchForPostWithParams(params) {
 //         }));
 // }
 
-//obsolete
-// export function retrieveCommunityInfo(community_name) {
-//     return axios
-//         .get(`${HOST}/api/communityInfo`, {
-//             params: {
-//                 community_name,
-//             },
-//             headers: {
-//                 Accept: CONTENT_TYPE_JSON,
-//             },
-//         })
-//         .then((resp) => ({ data: resp.data, error: false }))
-//         .catch((err) => ({
-//             data: err && err.response ? err.response.data : '',
-//             error: true,
-//             status: err && err.response ? err.response.status : '',
-//         }));
-// }
+export function deleteFromBanlist(params) {
+    return axios
+        .post(`${HOST}/api/deleteFromBanlist`, {
+            params,
+            headers: {
+                Accept: CONTENT_TYPE_JSON,
+            },
+        })
+        .then((resp) => ({ data: resp.data, error: false }))
+        .catch((err) => ({
+            data: err && err.response ? err.response.data : '',
+            error: true,
+            status: err && err.response ? err.response.status : '',
+        }));
+}
+
+export function updateFollow(params) {
+    return axios
+        .post(`${HOST}/api/updateFollow`, {
+            params,
+            headers: {
+                Accept: CONTENT_TYPE_JSON,
+            },
+        })
+        .then((resp) => ({ data: resp.data, error: false }))
+        .catch((err) => ({
+            data: err && err.response ? err.response.data : '',
+            error: true,
+            status: err && err.response ? err.response.status : '',
+        }));
+}
+
+export function retireveModPageStats(community_name) {
+    return axios
+        .get(`${HOST}/api/moderator`, {
+            params: {
+                community_name,
+            },
+            headers: {
+                Accept: CONTENT_TYPE_JSON,
+            },
+        })
+        .then((resp) => ({ data: resp.data, error: false }))
+        .catch((err) => ({
+            data: err && err.response ? err.response.data : '',
+            error: true,
+            status: err && err.response ? err.response.status : '',
+        }));
+}
 
 export function retrieveCommunityPosts(community_name) {
     return axios

@@ -140,6 +140,59 @@ const retrieveCommunityPostsDB = (community) => {
 
     );
 };
+const retrieveFollowerStatsDB = (community) => {
+    return POOL.query(
+        `SELECT COUNT(user_name) AS follow_total, 0 AS days_ago FROM followed_communities WHERE community_name = $1 AND followed_date <= (CURRENT_DATE)
+        UNION
+        SELECT COUNT(user_name) AS follow_total, 7 AS days_ago FROM followed_communities WHERE community_name = $1 AND followed_date <= (CURRENT_DATE-7)
+        UNION
+        SELECT COUNT(user_name) AS follow_total, 14 AS days_ago FROM followed_communities WHERE community_name = $1 AND followed_date <= (CURRENT_DATE-14)
+        UNION
+        SELECT COUNT(user_name) AS follow_total, 21 AS days_ago FROM followed_communities WHERE community_name = $1 AND followed_date <= (CURRENT_DATE-28)
+        ORDER BY days_ago desc;`,
+         [
+             escapeQuotes(community),
+         ],
+     );
+};
+
+
+const retrievePostStatsDB = (community) => {
+    return POOL.query(
+        `SELECT COUNT(post_id) AS post_total, 0 AS days_ago FROM posts WHERE community_name = $1 AND date_created <= (CURRENT_DATE)
+        UNION
+        SELECT COUNT(post_id) AS post_total, 7 AS days_ago FROM posts WHERE community_name = $1 AND date_created <= (CURRENT_DATE-7)
+        UNION
+        SELECT COUNT(post_id) AS post_total, 14 AS days_ago FROM posts WHERE community_name = $1 AND date_created <= (CURRENT_DATE-14)
+        UNION
+        SELECT COUNT(post_id) AS post_total, 21 AS days_ago FROM posts WHERE community_name = $1 AND date_created <= (CURRENT_DATE-28)
+        ORDER BY days_ago desc;`,
+         [
+             escapeQuotes(community),
+         ],
+     );
+};
+
+const retrieveFavStatsDB = (community) => {
+    return POOL.query(
+        `SELECT SUM(f.favour_point) AS favour_total, 0 AS days_ago
+            FROM favours f WHERE f.post_id IN (SELECT p.post_id FROM posts p WHERE community_name = $1)
+        UNION
+        SELECT SUM(f.favour_point) AS favour_total, 7 AS days_ago
+            FROM favours f WHERE f.post_id IN (SELECT p.post_id FROM posts p WHERE community_name = $1 AND date_created <= (CURRENT_DATE-7))
+        UNION
+        SELECT SUM(f.favour_point) AS favour_total, 14 AS days_ago
+            FROM favours f WHERE f.post_id IN (SELECT p.post_id FROM posts p WHERE community_name = $1 AND date_created <= (CURRENT_DATE-14))
+        UNION
+        SELECT SUM(f.favour_point) AS favour_total, 21 AS days_ago
+            FROM favours f WHERE f.post_id IN (SELECT p.post_id FROM posts p WHERE community_name = $1 AND date_created <= (CURRENT_DATE-21))
+        ORDER BY days_ago desc;`,
+         [
+             escapeQuotes(community),
+         ],
+     );
+};
+
 
 const retrieveCommunityStatsDB = (community) => {
     return POOL.query(
@@ -165,7 +218,6 @@ const retrieveCommunityBansDB = (community) => {
             [
                 escapeQuotes(community),
             ],
-
     );
 };
 
@@ -182,6 +234,20 @@ const retrieveCommunityModsDB = (community) => {
 
     );
 };
+const isFollowingCommunityDB = (community,username) => {
+    return POOL.query(
+           `SELECT COUNT(*)
+           FROM followed_communities
+           WHERE community_name = $1 AND user_name = $2`,
+           //WHERE community_name = 'test_community' AND user_name = 'testaccount';`,
+           //WHERE community_name = $1 AND user_name = $2`,
+            [
+                escapeQuotes(community),
+                escapeQuotes(username)
+            ],
+    );
+};
+
 
 const retrieveCommunityInfoDB = (community) => {
     return POOL.query(
@@ -193,6 +259,39 @@ const retrieveCommunityInfoDB = (community) => {
             ],
 
     );
+};
+
+const deleteFromBanlistDB = (community,username) => {
+        return POOL.query(`DELETE FROM banlist WHERE community_name = $1 AND user_name = $2 ;`,
+            [
+                escapeQuotes(community),
+                escapeQuotes(username),
+            ]
+        );
+};
+
+
+const updateFollowDB = (community,isFollowing,username) => {
+
+    if(isFollowing !== '0'){
+        console.log("deleting");
+        return POOL.query(`DELETE FROM followed_communities WHERE community_name = $1 AND user_name = $2 ;`,
+            [
+                escapeQuotes(community),
+                escapeQuotes(username),
+            ]
+        );
+    }
+    else {
+        console.log("adding");
+        return POOL.query(`INSERT INTO followed_communities(community_name,user_name) VALUES($1,$2);`,
+            [
+                escapeQuotes(community),
+                escapeQuotes(username),
+            ]
+        );
+    }
+
 };
 
 const updateUserProfile = (columnName, value, userName) => {
@@ -247,11 +346,18 @@ module.exports = {
     uploadToDigitalOcean,
     retrieveUserInfo,
     updateUserProfile,
+    retrieveFollowerStatsDB,
+    retrievePostStatsDB,
+    retrieveFavStatsDB,
     retrieveCommunityStatsDB,
     retrieveCommunityBansDB,
     retrieveCommunityModsDB,
+    isFollowingCommunityDB,
     retrieveCommunityInfoDB,
     retrieveCommunityPostsDB,
+    deleteFromBanlistDB,
+    updateFollowDB,
+
     getAllFollowedCommunities,
     insertPost
 }

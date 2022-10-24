@@ -26,10 +26,16 @@ const {
     uploadToDigitalOcean,
     retrieveUserInfo,
     updateUserProfile,
+    deleteFromBanlistDB,
+    updateFollowDB,
+    retrieveFollowerStatsDB,
+    retrievePostStatsDB,
+    retrieveFavStatsDB,
     retrieveCommunityStatsDB,
     retrieveCommunityBansDB,
     retrieveCommunityModsDB,
     retrieveCommunityInfoDB,
+    isFollowingCommunityDB,
     retrieveCommunityPostsDB,
     getAllFollowedCommunities,
     insertPost,
@@ -280,59 +286,84 @@ app.get('/api/search', async (req, resp) => {
     return;
 });
 
-// app.get('/api/communityMods', async (req, resp) => {
-//     const community = req.query.community_name;
-//     const results = await retrieveCommunityModsDB(community);
-//     if (results.rows && results.rows.length == 0) {
-//         resp.status(204);
-//         resp.type('application/json');
-//         resp.json({rows: [], message: 'No moderator for community found!'});
-//         return;
-//     }
-//     resp.status(200);
-//     resp.type('application/json');
-//     resp.json({rows: results.rows });
-//     return;
-// });
+app.post('/api/deleteFromBanlist', async (req, resp) => {
+    try {
+        console.log(req.body.params.username + "this")
+        await deleteFromBanlistDB(req.body.params.communityName, req.body.params.username);
+        resp.status(200);
+        resp.type('application/json');
+        return;
+    } catch (e) {
+        console.info(e);
+		resp.status(404);
+		resp.type('application/json');
+        return;
+    }
+});
 
-// app.get('/api/communityInfo', async (req, resp) => {
-//     const community = req.query.community_name;
-//     const results = await retrieveCommunityInfoDB(community);
-//     //results2 = ...
-//     if (results.rows && results.rows.length == 0) {
-//         resp.status(204);
-//         resp.type('application/json');
-//         resp.json({rows: [], message: 'No info on community found!'});
-//         return;
-//     }
-//     resp.status(200);
-//     resp.type('application/json');
-//     resp.json({rows: results.rows, }); //rows2: results2.rows 
-//     return;
-// });
+app.post('/api/updateFollow', async (req, resp) => {
+    try {
+        await updateFollowDB(req.body.params.communityName, req.body.params.isFollowing, req.token.username);
+        resp.status(200);
+        resp.type('application/json');
+        return;
+    } catch (e) {
+        console.info(e);
+		resp.status(404);
+		resp.type('application/json');
+        return;
+    }
+});
+
+app.get('/api/moderator', async (req, resp) => {
+    const community = req.query.community_name;
+    const username = req.token.username
+    const results1 = await retrieveFollowerStatsDB(community);
+    const results2 = await retrievePostStatsDB(community);
+    const results3 = await retrieveFavStatsDB(community);
+    const results4 = await retrieveCommunityStatsDB(community)
+    if ((results1.rows && results1.rows.length == 0) &&
+        (results2.rows && results2.rows.length == 0) &&
+        (results3.rows && results3.rows.length == 0) &&
+        (results4.rows && results4.rows.length == 0) 
+    ) {
+        resp.status(204);
+        resp.type('application/json');
+        resp.json({rows: [], message: 'No content for mods found!'});
+        return;
+    }
+    resp.status(200);
+    resp.type('application/json');
+    resp.json({folRows: results1.rows, posRows: results2.rows, favRows: results3.rows, statsRows: results4.rows }); 
+    return;
+});
 
 
 app.get('/api/community', async (req, resp) => {
     const community = req.query.community_name;
+    const username = req.token.username
     const results1 = await retrieveCommunityPostsDB(community);
     const results2 = await retrieveCommunityInfoDB(community);
     const results3 = await retrieveCommunityModsDB(community);
     const results4 = await retrieveCommunityStatsDB(community);
     const results5 = await retrieveCommunityBansDB(community);
+    const results6 = await isFollowingCommunityDB(community,username);
     if ((results1.rows && results1.rows.length == 0) &&
         (results2.rows && results2.rows.length == 0) &&
         (results3.rows && results3.rows.length == 0) &&
         (results4.rows && results4.rows.length == 0) &&
-        (results5.rows && results5.rows.length == 0)) {
+        (results5.rows && results5.rows.length == 0)
+        && (results6.rows && results6.rows.length == 0)
+    ) {
         resp.status(204);
         resp.type('application/json');
-        resp.json({rows: [], message: 'No posts for community found!'});
+        resp.json({rows: [], message: 'No content for community found!'});
         return;
     }
     resp.status(200);
     resp.type('application/json');
     resp.json({postsRows: results1.rows, infoRows: results2.rows, modRows: results3.rows, statsRows: results4.rows,
-    banRows: results5.rows});
+    banRows: results5.rows,isFollowing: results6.rows[0].count }); 
     return;
 });
 
