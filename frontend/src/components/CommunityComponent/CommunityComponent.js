@@ -12,15 +12,10 @@ import Avatar from '@mui/material/Avatar';
 import Button from '@mui/material/Button';
 import PostModButton from './PostModButton';
 import { Checkbox, Chip } from '@mui/material';
-import {withParams } from '../../constants/constants';
+import {snackBarProps, withParams } from '../../constants/constants';
 import { renderPostLists } from '../HomePageComponent/HomePageComponent';
 import { LineChart,Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend } from 'recharts';
-
-let comColour = ""
-let comDesc = ""
-let comDate = ""
-let comName = ""
-
+import { withSnackbar } from 'notistack';
 
 const Item = styled(Paper)(({ theme }) => ({
     backgroundColor: theme.palette.mode === 'dark' ? '#1A2027' : '#fff',
@@ -181,7 +176,7 @@ class CommunityComponent extends React.Component {
             posts: [],
             mode:"posts",
             stats:[],
-            info:[],
+            info:{},
             url:[],
             mod:[],
             bans:[],
@@ -264,9 +259,27 @@ class CommunityComponent extends React.Component {
     }
 
     //Mod page Banlist Approve Checkbox onChcek
-    handleCheck= (banusername) => {
+    handleCheck= (banusername, index) => {
         console.log(banusername)
         approveBan({communityName:this.props.params.community_name,username:banusername})
+            .then(res => {
+                if (!res.error) {
+                    const tempBans = this.state.bans;
+                    tempBans[index].is_approved = 'Y';
+                    this.setState({
+                        bans: tempBans,
+                    });
+                    this.props.enqueueSnackbar(
+                        `User [${banusername}] banned successfully.`,
+                        snackBarProps('success'),
+                    );
+                } else {
+                    this.props.enqueueSnackbar(
+                        `An error has occurred`,
+                        snackBarProps('error'),
+                    );
+                }
+            });
     }
 
     //postrenderlist onChange
@@ -295,22 +308,52 @@ class CommunityComponent extends React.Component {
     };
 
     //Delete Button onClick
-    handleDelete = (banusername) => {
-        console.log("deleting")
-        console.log(banusername)
+    handleDelete = (banusername, index) => {
         deleteFromBanlist({communityName:this.props.params.community_name,username:banusername})
-        
-
+            .then(res => {
+                if (!res.error) {
+                    const tempBans = this.state.bans.filter(b => b.user_name !== banusername);
+                    this.setState({
+                        bans: tempBans,
+                    });
+                    this.props.enqueueSnackbar(
+                        `User [${banusername}] unbanned successfully.`,
+                        snackBarProps('success'),
+                    );
+                } else {
+                    this.props.enqueueSnackbar(
+                        `An error has occurred`,
+                        snackBarProps('error'),
+                    );
+                }
+            });
     };
 
     //Community Colour onChange
     handleComColourChange = (colour) => {
-         // comColour=colour.hex;
           updateColour({communityName:this.props.params.community_name,newColour:colour.hex})
             .then(res => {
-                comColour = colour.hex;
-            })
-          console.log(comColour);
+                if (!res.error) {
+                    this.setState(prevState => {
+                        return {
+                            ...prevState,
+                            info: {
+                                ...prevState.info,
+                                colour: colour.hex,
+                            },
+                        };
+                    });
+                    this.props.enqueueSnackbar(
+                        `Community colour changed successfully.`,
+                        snackBarProps('success'),
+                    );
+                } else {
+                    this.props.enqueueSnackbar(
+                        `An error has occurred`,
+                        snackBarProps('error'),
+                    );
+                }
+            });
     };
 
     //Follow Button onClick
@@ -318,13 +361,21 @@ class CommunityComponent extends React.Component {
       // console.log(this.state.following[0].count);
         updateFollow({communityName:this.props.params.community_name,isFollowing:this.state.following})
             .then(res => {
-            this.setState({
-                following: res.data.isFollowing,
-            });
-            console.log(this.state.following)
-            this.setState({ followStatus: this.state.following === '0' ? 'follow' : 'following',});
-            console.log("change colour")
-            console.log(this.state.followStatus)
+                if (!res.error) {
+                    this.setState({
+                        following: res.data.isFollowing,
+                        followStatus: res.data.isFollowing === '0' ? 'follow' : 'following',
+                    });
+                    this.props.enqueueSnackbar(
+                        `Community ${res.data.isFollowing === '0' ? 'unfollowed' : 'followed'} successfully.`,
+                        snackBarProps('success'),
+                    );
+                } else {
+                    this.props.enqueueSnackbar(
+                        `An error has occurred`,
+                        snackBarProps('error'),
+                    );
+                }
            })
     }       
 
@@ -341,16 +392,16 @@ class CommunityComponent extends React.Component {
                         </Box>
                     </Grid>
                     <Grid xs={3} style={{ position: 'relative' }}>
-                        <div style={{ backgroundColor:comColour, height: '35px', borderRadius: '5px', paddingTop: '10px', textIndent: '16px' }}>
+                        <div style={{ backgroundColor:this.state.info.colour, height: '35px', borderRadius: '5px', paddingTop: '10px', textIndent: '16px' }}>
                             
                             <b className={'sideBoxHeader'}>About Community</b>
                         </div>
                         <Item>
                             <div style={{ textAlign: 'left', padding: 10 }}>
-                                <b>Welcome to r/{comName}</b>
-                                <p>{comDesc}</p>
+                                <b>Welcome to r/{this.state.info.community_name}</b>
+                                <p>{this.state.info.description}</p>
                                 <Divider style={{margin:'16px 0'}}></Divider>
-                                <b>Creation Date:{comDate}</b>
+                                <b>Creation Date:{this.state.info.datetime_created}</b>
                                 <Divider style={{margin:'16px 0'}}></Divider>
                                 <div style={{ marginTop: '16px' }}>
                                     <Chip
@@ -444,7 +495,7 @@ class CommunityComponent extends React.Component {
                                             </div>
                                         </Grid>
                                         <Grid item xs={4}>
-                                            <div style={{ backgroundColor: comColour, height: '35px', borderRadius: '5px', paddingTop: '10px', textIndent: '16px' }}>
+                                            <div style={{ backgroundColor: this.state.info.colour, height: '35px', borderRadius: '5px', paddingTop: '10px', textIndent: '16px' }}>
                                                 <div className={'sideBoxHeader'}>Community Banlist:</div>
                                             </div>
                                             <Item>
@@ -457,17 +508,17 @@ class CommunityComponent extends React.Component {
                                                                     <th>Approve?</th>
                                                                     <th>Delete</th>
                                                                 </tr>
-                                                                {this.state.bans?.map(ban => {
+                                                                {this.state.bans?.map((ban, index) => {
                                                                         return(
                                                                             <tr>
                                                                                 <td>
                                                                                     {ban.user_name}
                                                                                 </td>
                                                                                 <td>
-                                                                                    {ban.is_approved === 'Y' ? <Checkbox disabled checked/> : <Checkbox onChange={() => this.handleCheck(ban.user_name)}/>}
+                                                                                    {ban.is_approved === 'Y' ? <Checkbox disabled checked/> : <Checkbox onChange={() => this.handleCheck(ban.user_name, index)}/>}
                                                                                 </td>
                                                                                 <td>
-                                                                                    <Button style={{ borderRadius: '14px' }} variant="contained" color="secondary" onClick={() => this.handleDelete(ban.user_name)}>Delete</Button>
+                                                                                    <Button style={{ borderRadius: '14px' }} variant="contained" color="secondary" onClick={() => this.handleDelete(ban.user_name, index)}>Delete</Button>
                                                                                 </td>
                                                                             </tr>
                                                                         )
@@ -478,12 +529,13 @@ class CommunityComponent extends React.Component {
                                                     </Stack>
                                                 </Box>
                                             </Item>
-                                            <div style={{ backgroundColor: comColour, height: '35px', borderRadius: '5px', paddingTop: '10px', textIndent: '16px' }}>
+                                            <div style={{ backgroundColor: this.state.info.colour, height: '35px', borderRadius: '5px', paddingTop: '10px', textIndent: '16px' }}>
                                                 <div className={'sideBoxHeader'}>Community Colour:</div>
                                             </div>
                                             <Item>
                                                 <SketchPicker
-                                                color = {comColour}
+                                                // color = {comColour}
+                                                color = {this.state.info.colour}
                                                 onChangeComplete={this.handleComColourChange}
                                                 />
                                             </Item>
@@ -500,39 +552,29 @@ class CommunityComponent extends React.Component {
 
 
     render() {
+        console.log(this.state.bans);
         return (
             <div>
-                {this.state.info.map(cominf => {
-                                            comColour=cominf.colour;
-                                            comDate= cominf.datetime_created;
-                                            comDesc=cominf.description;
-                                            comName=cominf.community_name;
-                                            return (
-                                                <>
-                                                    <div style={{ display: 'block', backgroundColor:comColour, height: 175 }}></div>
-                                                        <div style={{ backgroundColor: 'white', height: 135 }}>
-                                                            <div style={{ display: 'flex', marginLeft: '20%', paddingTop: '10px' }}>
-                                                                <div>
-                                                                    <Avatar alt="Community Logo" sx={{ width: 55, height: 55 }} src={cominf.profile_picture ?
-                                                                     cominf.profile_picture: `/static/readit_logo.png`} />
-                                                                </div>
-                                                                <div style={{ marginRight: '25px' }}>
-                                                                    <b style={{ fontSize: '30px', marginLeft: '10%' }}>{cominf.community_name}</b>
-                                                                    <p style={{ marginLeft: '10%', marginTop: '0px' }}>r/{cominf.community_name}</p>
-                                                                    <PostModButton handleChange={this.handleModeChange} value={this.state.mode} params={this.props.params} navigate={this.props.navigate}/>
-                                                                </div>
-                                                                <div style={{ margin: '15px' }}>
-                                                                    {console.log("here")}
-                                                                {console.log(this.state.following)}
-                                                                {console.log(this.state.followStatus)}
-                                                                <Button style={{ borderRadius: '14px' }} variant="contained" onClick={this.changeFollow} color={this.state.following !== '0' ? "primary":"secondary"}>{this.state.followStatus}</Button>
-                                                                </div>
-                                                            </div>
-                                                        </div>
-                                                </>
-                                            )
-
-                })}
+                <div style={{ display: 'block', backgroundColor:this.state.info.colour, height: 175 }}></div>
+                    <div style={{ backgroundColor: 'white', height: 135 }}>
+                        <div style={{ display: 'flex', marginLeft: '20%', paddingTop: '10px' }}>
+                            <div>
+                                <Avatar alt="Community Logo" sx={{ width: 55, height: 55 }} src={this.state.info.profile_picture ?
+                                    this.state.info.profile_picture: `/static/readit_logo.png`} />
+                            </div>
+                            <div style={{ marginRight: '25px' }}>
+                                <b style={{ fontSize: '30px', marginLeft: '10%' }}>{this.state.info.community_name}</b>
+                                <p style={{ marginLeft: '10%', marginTop: '0px' }}>r/{this.state.info.community_name}</p>
+                                <PostModButton handleChange={this.handleModeChange} value={this.state.mode} params={this.props.params} navigate={this.props.navigate}/>
+                            </div>
+                            <div style={{ margin: '15px' }}>
+                                {console.log("here")}
+                            {console.log(this.state.following)}
+                            {console.log(this.state.followStatus)}
+                            <Button style={{ borderRadius: '14px' }} variant="contained" onClick={this.changeFollow} color={this.state.following !== '0' ? "primary":"secondary"}>{this.state.followStatus}</Button>
+                        </div>
+                    </div>
+                </div>
                 { this.state.mode === "mod" ? this.renderMod() : this.renderNorm() }
             
             </div>
@@ -540,4 +582,4 @@ class CommunityComponent extends React.Component {
     }
 }
 
-export default  withParams(CommunityComponent);
+export default withSnackbar(withParams(CommunityComponent));

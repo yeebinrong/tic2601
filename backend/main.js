@@ -294,11 +294,13 @@ app.post('/api/deleteFromBanlist', async (req, resp) => {
         await deleteFromBanlistDB(req.body.params.communityName, req.body.params.username);
         resp.status(200);
         resp.type('application/json');
+        resp.json({ message: 'delete ok' });
         return;
     } catch (e) {
         console.info(e);
 		resp.status(404);
 		resp.type('application/json');
+        resp.json({ message: 'An error has occured.'});
         return;
     }
 });
@@ -308,11 +310,13 @@ app.post('/api/approveBan', async (req, resp) => {
         await approveBanDB(req.body.params.communityName, req.body.params.username);
         resp.status(200);
         resp.type('application/json');
+        resp.json({ message: 'approve ok' });
         return;
     } catch (e) {
         console.info(e);
 		resp.status(404);
 		resp.type('application/json');
+        resp.json({ message: 'An error has occured.'});
         return;
     }
 });
@@ -322,11 +326,13 @@ app.post('/api/updateColour', async (req, resp) => {
         await updateCommunityColourDB(req.body.params.communityName, req.body.params.newColour);
         resp.status(200);
         resp.type('application/json');
+        resp.json({ message: 'update ok' });
         return;
     } catch (e) {
         console.info(e);
 		resp.status(404);
 		resp.type('application/json');
+        resp.json({ message: 'An error has occured.'});
         return;
     }
 });
@@ -336,11 +342,13 @@ app.post('/api/updateFollow', async (req, resp) => {
         await updateFollowDB(req.body.params.communityName, req.body.params.isFollowing, req.token.username);
         resp.status(200);
         resp.type('application/json');
+        resp.json({ isFollowing: req.body.params.isFollowing === '0' ? '1' : '0' });
         return;
     } catch (e) {
         console.info(e);
 		resp.status(404);
 		resp.type('application/json');
+        resp.json({ message: 'An error has occured.'});
         return;
     }
 });
@@ -392,7 +400,7 @@ app.get('/api/community', async (req, resp) => {
     }
     resp.status(200);
     resp.type('application/json');
-    resp.json({postsRows: results1.rows, infoRows: results2.rows, modRows: results3.rows, statsRows: results4.rows,
+    resp.json({postsRows: results1.rows, infoRows: { ...results2.rows[0] }, modRows: results3.rows, statsRows: results4.rows,
     banRows: results5.rows,isFollowing: results6.rows[0].count }); 
     return;
 });
