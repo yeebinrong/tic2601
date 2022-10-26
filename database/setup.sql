@@ -59,9 +59,9 @@ DECLARE
 			WHEN 'new' THEN
 				paramQuery = paramQuery || ' ORDER BY age ASC';
 			WHEN 'hot' THEN
-				paramQuery = paramQuery || ' ORDER BY view_count ASC';
+				paramQuery = paramQuery || ' ORDER BY view_count DESC';
 			WHEN 'best' THEN
-				paramQuery = paramQuery || ' ORDER BY fav_point ASC';
+				paramQuery = paramQuery || ' ORDER BY fav_point DESC';
 			ELSE
 		END CASE;
 		RAISE NOTICE 'Value: %', 'SELECT * FROM posts' || paramQuery;

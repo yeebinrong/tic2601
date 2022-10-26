@@ -377,9 +377,9 @@ export function getBackEndValueApi() {
         }));
 }
 
-export function retrievePostById(postId) {
+export function retrievePostByIdAndCommunityName(postId, communityName) {
     return axios
-        .get(`${HOST}/api/posts/${postId}`, {
+        .get(`${HOST}/api/community/${communityName}/posts/${postId}`, {
             headers: {
                 Accept: CONTENT_TYPE_JSON,
             },
@@ -392,10 +392,10 @@ export function retrievePostById(postId) {
         }));
 }
 
-export function createComment(postId, content, replyTo) {
+export function createComment(communityName, postId, content, replyTo) {
     return axios
         .post(
-            `${HOST}/api/posts/${postId}/comments`,
+            `${HOST}/api/community/${communityName}/posts/${postId}/comments`,
             {
                 content,
                 replyTo,
@@ -413,10 +413,10 @@ export function createComment(postId, content, replyTo) {
         }));
 }
 
-export function updateComment(commentId, content) {
+export function updateComment(communityName, postId, commentId, content) {
     return axios
         .put(
-            `${HOST}/api/comments/${commentId}`,
+            `${HOST}/api/community/${communityName}/posts/${postId}/comments/${commentId}`,
             {
                 content,
             },

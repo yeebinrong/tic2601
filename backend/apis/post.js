@@ -1,4 +1,4 @@
-const { getPostById } = require('../db/post');
+const { getPostByIdAndCommunityName } = require('../db/post');
 const { getReplyComments, getCommentsByPostId } = require('../db/comment');
 // return post info
 // example:
@@ -13,7 +13,7 @@ const { getReplyComments, getCommentsByPostId } = require('../db/comment');
 //   "date_deleted": null
 // }
 exports.getPost = async (req, resp) => {
-    const results = await getPostById(req.params.postId);
+    const results = await getPostByIdAndCommunityName(req.params.postId, req.params.communityName);
     if (results.rows.length === 0) {
         resp.status(404);
         resp.type('application/json');
@@ -23,7 +23,7 @@ exports.getPost = async (req, resp) => {
     const post = results.rows[0];
     const currentUser = req.token.username;
 
-    const commentsResult = await getCommentsByPostId(post.post_id);
+    const commentsResult = await getCommentsByPostId(post.post_id, post.community_name);
     let comments = commentsResult.rows;
 
     for (const cmt of comments) {
@@ -45,7 +45,7 @@ exports.getPost = async (req, resp) => {
 };
 
 async function queryReplyComments(comment) {
-    let rs = await getReplyComments(comment.unique_id);
+    let rs = await getReplyComments(comment.comment_id, comment.community_name, comment.post_id);
     let replyComments = rs.rows;
     if (replyComments.length === 0) {
         return;

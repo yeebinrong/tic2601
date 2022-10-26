@@ -23,7 +23,7 @@ const {
     insertToUser,
     getAllPosts,
     getHomePagePosts,
-    updateFavour,
+    updatePostFavour,
     insertOneCommunityAndReturnName,
     searchPostWithParams,
     uploadToDigitalOcean,
@@ -329,7 +329,7 @@ app.get('/api/homepage_posts', async (req, resp) => {
 
 app.post('/api/update_favour', async (req, resp) => {
     try {
-        await updateFavour(req.body.params.postId, req.body.params.favour, req.body.params.value, req.token.username, req.body.params.receiver);
+        await updatePostFavour(req.body.params.postId, req.body.params.favour, req.body.params.value, req.token.username, req.body.params.receiver, req.body.params.communityName);
         resp.status(200);
         resp.type('application/json');
         resp.json({ message: 'favour ok' });
@@ -540,7 +540,7 @@ app.post('/api/upload', upload.single('file'), async (req, resp) => {
 })
 
 app.get('/api/community/:communityName', getCommunity)
-app.get('/api/posts/:postId', getPost)
+app.get('/api/community/:communityName/posts/:postId', getPost)
 
 app.get('/api/receive', (req, resp) => {
     const value = req.query.value
@@ -558,9 +558,9 @@ app.get('/api/getbackendvalue', (req, resp) => {
 })
 
 app.get('/api/community/:communityName', getCommunity)
-app.get('/api/posts/:postId', getPost)
-app.post('/api/posts/:postId/comments', createComment)
-app.put('/api/comments/:commentId', updateComment)
+app.get('/api/community/:communityName/posts/:postId', getPost)
+app.post('/api/community/:communityName/posts/:postId/comments', createComment)
+app.put('/api/community/:communityName/posts/:postId/comments/:commentId', updateComment)
 
 Promise.all([CHECK_POSTGRES_CONN(), CHECK_DIGITAL_OCEAN_KEYS()])
 .then(() => {

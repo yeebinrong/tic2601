@@ -137,12 +137,13 @@ class SearchComponent extends React.Component {
         }));
     }
 
-    onFavourChange = (postId, favour, value, receiver, index) => {
+    onFavourChange = (postId, favour, value, receiver, index, communityName) => {
         modifyFavour({
             postId: postId,
             favour: favour ? favour : 0,
             value: value,
-            receiver: receiver
+            receiver: receiver,
+            communityName,
         }).then(res => {
             if (!res.error) {
                 const tempPosts = this.state.posts;

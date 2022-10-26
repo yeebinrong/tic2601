@@ -54,9 +54,9 @@ const getHomePagePosts = (currentUser, sortBy) => {
 			LEFT JOIN post_favours fp ON fp.post_id = p.post_id AND fp.community_name = p.community_name AND fp.giver = $1
             LEFT JOIN comments c ON c.post_id = f.post_id AND c.community_name = p.community_name
             LEFT JOIN hide_or_fav_posts hf ON hf.post_id = p.post_id AND hf.community_name = p.community_name AND hf.user_name = $1
-            GROUP BY fc.community_name, fc.user_name, p.user_name, p.post_id, p.date_created, p.title, p.flair, p.url, fp.favour_point, c.comment_id, hf.hide_or_favourite
+            GROUP BY fc.community_name, fc.user_name, p.user_name, p.post_id, p.date_created, p.date_deleted, p.title, p.flair, p.url, p.view_count, fp.favour_point, c.comment_id, hf.hide_or_favourite
             HAVING fc.user_name = $1)
-        SELECT DISTINCT post_id, community_name, user_name, age, title, flair, fav_point, is_favour, comment_count, date_deleted, view_count, is_hidden, p.url
+        SELECT DISTINCT post_id, community_name, user_name, age, title, flair, fav_point, is_favour, comment_count, date_deleted, view_count, is_hidden, url
         FROM following_communities
 		WHERE is_hidden IS NULL OR is_hidden = 'N'
         ORDER BY ` + sortBy,
@@ -66,26 +66,29 @@ const getHomePagePosts = (currentUser, sortBy) => {
     )
 }
 
-const updateFavour = (postId, favour, value, currentUser, receiver) => {
+const updatePostFavour = (postId, favour, value, currentUser, receiver, communityName) => {
     if (value == 0) {
-        return POOL.query(`DELETE FROM favours WHERE post_id = ` + postId + ` AND giver = $1 AND receiver = $2`,
+        return POOL.query(`DELETE FROM post_favours WHERE community_name = $1 AND post_id = ` + postId + ` AND giver = $2 AND receiver = $3`,
             [
+                escapeQuotes(communityName),
                 escapeQuotes(currentUser),
                 escapeQuotes(receiver)
             ]
         )
     } else if (favour == 0) {
-        return POOL.query(`INSERT INTO favours (post_id, favour_point, giver, receiver)
-                            VALUES(` + postId + `, ` + value + `, $1, $2)`,
+        return POOL.query(`INSERT INTO post_favours (community_name, post_id, favour_point, giver, receiver)
+                            VALUES($1, ` + postId + `, ` + value + `, $2, $3)`,
             [
+                escapeQuotes(communityName),
                 escapeQuotes(currentUser),
                 escapeQuotes(receiver)
             ]
         )
     } else if (favour != 0) {
-        return POOL.query(`UPDATE favours SET favour_point = ` + value + `
-                            WHERE post_id = ` + postId + ` AND giver = $1 AND receiver = $2`,
+        return POOL.query(`UPDATE post_favours SET favour_point = ` + value + `
+                            WHERE community_name = $1 AND post_id = ` + postId + ` AND giver = $2 AND receiver = $3`,
             [
+                escapeQuotes(communityName),
                 escapeQuotes(currentUser),
                 escapeQuotes(receiver)
             ]
@@ -184,7 +187,7 @@ const retrieveCommunityPostsDB = (community, currentUser) => {
                LEFT JOIN post_favours fp ON fp.post_id = p.post_id AND fp.community_name = p.community_name AND fp.giver = $2
                LEFT JOIN comments c ON c.post_id = f.post_id AND c.community_name = p.community_name
                LEFT JOIN hide_or_fav_posts hf ON hf.post_id = p.post_id AND hf.community_name = p.community_name AND hf.user_name = $2
-               GROUP BY oc.community_name, p.user_name, p.post_id, p.date_created, p.title, p.flair, p.url, fp.favour_point, c.comment_id, hf.hide_or_favourite
+               GROUP BY oc.community_name, p.user_name, p.post_id, p.date_created, p.date_deleted, p.title, p.flair, p.url, p.view_count, fp.favour_point, c.comment_id, hf.hide_or_favourite
                HAVING oc.community_name = $1)
             SELECT DISTINCT post_id, community_name, user_name, age, title, flair, fav_point, is_favour, comment_count, date_deleted, view_count, is_hidden, url
             FROM one_community ORDER BY age DESC;`,
@@ -415,7 +418,7 @@ module.exports = {
     insertToUser,
     getAllPosts,
     getHomePagePosts,
-    updateFavour,
+    updatePostFavour,
     insertOneCommunityAndReturnName,
     searchPostWithParams,
     uploadToDigitalOcean,
@@ -434,7 +437,6 @@ module.exports = {
     retrieveCommunityPostsDB,
     deleteFromBanlistDB,
     updateFollowDB,
-
     getAllFollowedCommunities,
     insertTextPost,
     insertUrlPost,

@@ -11,7 +11,7 @@ import ArrowDownwardIcon from '@mui/icons-material/ArrowDownward';
 import MoveToInboxOutlinedIcon from '@mui/icons-material/MoveToInboxOutlined';
 import { timeSince } from '../../utils/time';
 import './Post.scss';
-import { createComment, retrieveCommunityByName, retrievePostById, updateComment } from '../../apis/app-api';
+import { createComment, retrieveCommunityByName, retrievePostByIdAndCommunityName, updateComment } from '../../apis/app-api';
 import { useParams } from 'react-router-dom';
 
 
@@ -50,12 +50,12 @@ const User = (props) => {
 };
 const CommentBox = (props) => {
     let [commentText, setCommentText] = useState('');
-
+    console.log(props);
     let callCreateCommentApi = () => {
         if (!commentText) {
             return;
         }
-        createComment(props.postId, commentText, props.replyTo)
+        createComment(props.communityName, props.postId, commentText, props.replyTo)
             .then(r => {
                 console.log(r);
                 window.location.reload();
@@ -68,7 +68,7 @@ const CommentBox = (props) => {
         if (!commentText) {
             return;
         }
-        updateComment(props.commentId, commentText)
+        updateComment(props.communityName, props.postId, props.commentId, commentText)
             .then(r => {
                 console.log(r);
                 window.location.reload();
@@ -130,9 +130,10 @@ const Comment = (props) => {
                 setShowReplyBox(false);
             }}>Edit</Button>}
 
-            {showReplyBox && <CommentBox postId={props.comment.post_id} replyTo={props.comment.unique_id}></CommentBox>}
+            {showReplyBox && <CommentBox communityName={props.comment.community_name} postId={props.comment.post_id} replyTo={props.comment.comment_id}></CommentBox>}
             {showEditBox &&
                 <CommentBox
+                    communityName={props.comment.community_name}
                     postId={props.comment.post_id}
                     commentId={props.comment.comment_id}
                     commentText={props.comment.content}
@@ -176,11 +177,11 @@ const Community = (props) => {
 const Post = (props) => {
     const [post, setPost] = useState(null);
     const [community, setCommunity] = useState(null);
-    const { postId } = useParams();
+    const { community_name, postId } = useParams();
 
     useEffect(() => {
         if (props.isVerifyDone && !post) {
-            retrievePostById(postId).then((resp) => {
+            retrievePostByIdAndCommunityName(postId, community_name).then((resp) => {
                 setPost(resp.data);
                 console.log(resp.data);
                 retrieveCommunityByName(resp.data.community_name).then((resp) => {
@@ -221,7 +222,31 @@ const Post = (props) => {
                             </Typography>
                         </Box>
                         <h2>{post.title}</h2>
-                        <div>{post.content}</div>
+                        {post.url && !post.url.includes('digitaloceanspaces') &&
+                        <div>
+                            <iframe
+                                width="560"
+                                height="315"
+                                src={post.url}
+                                title={`embedUrl`}
+                                frameborder="0"
+                                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                                allowfullscreen
+                            />
+                        </div>}
+                        {post.url && post.url.includes('digitaloceanspaces') &&
+                        <div>
+                            <img
+                                alt={''}
+                                width="560"
+                                height="315"
+                                src={post.url}
+                                title={`embedUrl`}
+                                frameborder="0"
+                            />
+                        </div>}
+                        {!post.url &&
+                        <div>{post.content}</div>}
                         <div id={'post-statusline'}>
                             <Button disabled>{post['comment_count']} comments</Button>
                             <UpVote type={'post'} postId={post.post_id}></UpVote>
@@ -241,7 +266,7 @@ const Post = (props) => {
 
                     <hr />
                     <div>
-                        <CommentBox post={post} postId={post.post_id}></CommentBox>
+                        <CommentBox communityName={post.community_name} post={post} postId={post.post_id}></CommentBox>
                     </div>
 
                     <hr />
