@@ -47,7 +47,7 @@ const getHomePagePosts = (currentUser, sortBy) => {
     return POOL.query(
         `WITH following_communities AS
             (SELECT fc.community_name, p.user_name, AGE(CURRENT_TIMESTAMP, p.date_created), p.title, p.flair, p.post_id, p.date_deleted, p.view_count,
-                SUM(f.favour_point) AS fav_point, fp.favour_point AS is_favour, COUNT(c.comment_id) AS comment_count, hf.hide_or_favourite AS is_hidden
+            COALESCE(SUM(f.favour_point), 0) AS fav_point, fp.favour_point AS is_favour, COUNT(c.comment_id) AS comment_count, hf.hide_or_favourite AS is_hidden
             FROM followed_communities fc
             INNER JOIN posts p ON p.community_name = fc.community_name
             LEFT JOIN favours f ON f.post_id = p.post_id
@@ -150,24 +150,25 @@ const searchPostWithParams = (currentUser, order, user, flair, community, q) => 
     );
 };
 
-const retrieveCommunityPostsDB = (community) => {
+const retrieveCommunityPostsDB = (community, currentUser) => {
     return POOL.query(
            `WITH one_community AS
-           (SELECT oc.community_name, p.user_name, AGE(CURRENT_TIMESTAMP, p.date_created), p.title, p.flair,
-           p.post_id, SUM(f.favour_point) AS fav_point, COUNT(c.comment_id) AS comment_count
+           (SELECT oc.community_name, p.user_name, AGE(CURRENT_TIMESTAMP, p.date_created), p.title, p.flair, p.post_id, p.date_deleted, p.view_count,
+           COALESCE(SUM(f.favour_point), 0) AS fav_point, fp.favour_point AS is_favour, COUNT(c.comment_id) AS comment_count, hf.hide_or_favourite AS is_hidden
                FROM community oc
                INNER JOIN posts p ON p.community_name = oc.community_name
                LEFT JOIN favours f ON f.post_id = p.post_id
+               LEFT JOIN favours fp ON fp.post_id = p.post_id AND fp.giver = $2
                LEFT JOIN comments c ON c.post_id = f.post_id
-               GROUP BY oc.community_name, p.post_id, c.comment_id
+               LEFT JOIN hide_or_fav_posts hf ON hf.post_id = p.post_id AND hf.user_name = $2
+               GROUP BY oc.community_name, p.post_id, fp.favour_point, c.comment_id, hf.hide_or_favourite
                HAVING oc.community_name = $1)
-            SELECT DISTINCT post_id, community_name, user_name, age, title,
-                flair, fav_point, comment_count
+            SELECT DISTINCT post_id, community_name, user_name, age, title, flair, fav_point, is_favour, comment_count, date_deleted, view_count, is_hidden
             FROM one_community ORDER BY age DESC;`,
             [
                 escapeQuotes(community),
+                escapeQuotes(currentUser),
             ],
-
     );
 };
 
