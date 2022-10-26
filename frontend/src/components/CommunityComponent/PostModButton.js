@@ -1,26 +1,21 @@
 import React from 'react';
 import { Tabs, Tab } from '@mui/material';
 
-const PostModButton = () => {
-    const [value, setValue] = React.useState(0);
-
-    const handleChange = (event, newValue) => {
-        setValue(newValue);
-    };
+const PostModButton = (props) => {
 
     return (
         <Tabs
-            value={value ? value : 'posts'}
-            onChange={handleChange}
+            value={props.value}
+            onChange={props.handleChange}
             aria-label="Mode Change"
         >
             <Tab
                 label="Posts"
-                value="posts"                
+                value="posts"              
             />
             <Tab
                 label="Mod Access"
-                value="Mod"
+                value="mod"
             />
         </Tabs>
     );
