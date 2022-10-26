@@ -232,6 +232,22 @@ export function retrieveCommunityPosts(community_name) {
         }));
 }
 
+export function updateUserDescription(description) {
+    return axios
+        .post(`${HOST}/api/update_description`, {
+            description,
+            headers: {
+                Accept: CONTENT_TYPE_JSON,
+            },
+        })
+        .then((resp) => ({ data: resp.data, error: false }))
+        .catch((err) => ({
+            data: err && err.response ? err.response.data : '',
+            error: true,
+            status: err && err.response ? err.response.status : '',
+        }));
+}
+
 export function getUserProfile(userName) {
     return axios
         .get(`${HOST}/api/users/${userName}`, {
@@ -278,11 +294,44 @@ export function retrieveAllFollowedCommunities() {
         }));
 }
 
-export function createPostApi(selectedCommunity, title, content, selectedFlair) {
+export function createTextPostApi(selectedCommunity, title, content, selectedFlair) {
     return axios
-        .post(`${HOST}/api/create_post`,
+        .post(`${HOST}/api/create_text_post`,
         {
             selectedCommunity, title, content, selectedFlair,
+            headers: {
+                Accept: CONTENT_TYPE_JSON,
+            },
+        })
+        .then((resp) => ({ data: resp.data, error: false }))
+        .catch((err) => ({
+            data: err && err.response ? err.response.data : '',
+            error: true,
+            status: err && err.response ? err.response.status : '',
+        }));
+}
+
+export function createImagePostApi(formData) {
+    return axios
+        .post(`${HOST}/api/create_image_post`, formData,
+        {
+            headers: {
+                Accept: CONTENT_TYPE_JSON,
+            },
+        })
+        .then((resp) => ({ data: resp.data, error: false }))
+        .catch((err) => ({
+            data: err && err.response ? err.response.data : '',
+            error: true,
+            status: err && err.response ? err.response.status : '',
+        }));
+}
+
+export function createLinkPostApi(selectedCommunity, title, link, selectedFlair) {
+    return axios
+        .post(`${HOST}/api/create_link_post`,
+        {
+            selectedCommunity, title, link, selectedFlair,
             headers: {
                 Accept: CONTENT_TYPE_JSON,
             },
@@ -328,9 +377,9 @@ export function getBackEndValueApi() {
         }));
 }
 
-export function retrievePostById(postId) {
+export function retrievePostByIdAndCommunityName(postId, communityName) {
     return axios
-        .get(`${HOST}/api/posts/${postId}`, {
+        .get(`${HOST}/api/community/${communityName}/posts/${postId}`, {
             headers: {
                 Accept: CONTENT_TYPE_JSON,
             },
@@ -343,10 +392,10 @@ export function retrievePostById(postId) {
         }));
 }
 
-export function createComment(postId, content, replyTo) {
+export function createComment(communityName, postId, content, replyTo) {
     return axios
         .post(
-            `${HOST}/api/posts/${postId}/comments`,
+            `${HOST}/api/community/${communityName}/posts/${postId}/comments`,
             {
                 content,
                 replyTo,
@@ -364,10 +413,10 @@ export function createComment(postId, content, replyTo) {
         }));
 }
 
-export function updateComment(commentId, content) {
+export function updateComment(communityName, postId, commentId, content) {
     return axios
         .put(
-            `${HOST}/api/comments/${commentId}`,
+            `${HOST}/api/community/${communityName}/posts/${postId}/comments/${commentId}`,
             {
                 content,
             },

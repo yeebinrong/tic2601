@@ -8,6 +8,7 @@ const cors = require('cors')
 const jwt = require('jsonwebtoken')
 const sha256 = require('sha256')
 const multer = require('multer')
+const crypto = require("crypto");
 
 // Passport core
 const passport = require('passport')
@@ -22,7 +23,7 @@ const {
     insertToUser,
     getAllPosts,
     getHomePagePosts,
-    updateFavour,
+    updatePostFavour,
     insertOneCommunityAndReturnName,
     searchPostWithParams,
     uploadToDigitalOcean,
@@ -42,7 +43,8 @@ const {
     isFollowingCommunityDB,
     retrieveCommunityPostsDB,
     getAllFollowedCommunities,
-    insertPost,
+    insertTextPost,
+    insertUrlPost
 } = require('./db_utils.js')
 
 /* -------------------------------------------------------------------------- */
@@ -99,7 +101,7 @@ app.post('/api/register', async (req, resp) => {
     if (!credentials.password || !credentials.username || !credentials.email) {
         resp.status(401)
         resp.type('application/json')
-        resp.json({message: "Missing credentials."})
+        resp.json({message: "Missing or invalid credentials."})
         return
     }
     // hash password
@@ -227,11 +229,55 @@ app.get('/api/all_posts', async (req, resp) => {
     return
 })
 
-app.post('/api/create_post', async (req, resp) => {
+app.post('/api/create_text_post', async (req, resp) => {
     let insertedPostId = -1;
     const { selectedCommunity, title, content, selectedFlair } = req.body;
     try {
-        const results = await insertPost(req.token.username, selectedCommunity, title, content, selectedFlair)
+        const results = await insertTextPost(req.token.username, selectedCommunity, title, content, selectedFlair)
+        insertedPostId = results.rows[0].post_id
+    } catch (e) {
+        console.info(`ERROR: Insert to posts failed with following ${e}`)
+        resp.status(400)
+        resp.type('application/json')
+        resp.json({message: `An error has occurred while creating post.`})
+        return
+    }
+    resp.status(200)
+    resp.type('application/json')
+    resp.json({ community_name: selectedCommunity, post_id: insertedPostId })
+    return
+})
+
+app.post('/api/create_image_post', upload.single('file'), async (req, resp) => {
+    
+    let insertedPostId = -1;
+    const { selectedCommunity, title, selectedFlair } = req.body;
+    try {
+        console.log(req.body);
+        const buffer = await READ_FILE(req.file.path);
+        const key = await uploadToDigitalOcean(buffer, req, crypto.randomBytes(16).toString("hex"));
+        console.log(key);
+        const results = await insertUrlPost(req.token.username, selectedCommunity, title, key, selectedFlair)
+        await UNLINK_ALL_FILES(UPLOAD_PATH);
+        insertedPostId = results.rows[0].post_id
+    } catch (e) {
+        console.info(`ERROR: Insert to posts failed with following ${e}`)
+        resp.status(400)
+        resp.type('application/json')
+        resp.json({message: `An error has occurred while creating post.`})
+        return
+    }
+    resp.status(200)
+    resp.type('application/json')
+    resp.json({ community_name: selectedCommunity, post_id: insertedPostId })
+    return
+})
+
+app.post('/api/create_link_post', async (req, resp) => {
+    let insertedPostId = -1;
+    const { selectedCommunity, title, link, selectedFlair } = req.body;
+    try {
+        const results = await insertUrlPost(req.token.username, selectedCommunity, title, link, selectedFlair)
         insertedPostId = results.rows[0].post_id
     } catch (e) {
         console.info(`ERROR: Insert to posts failed with following ${e}`)
@@ -283,7 +329,7 @@ app.get('/api/homepage_posts', async (req, resp) => {
 
 app.post('/api/update_favour', async (req, resp) => {
     try {
-        await updateFavour(req.body.params.postId, req.body.params.favour, req.body.params.value, req.token.username, req.body.params.receiver);
+        await updatePostFavour(req.body.params.postId, req.body.params.favour, req.body.params.value, req.token.username, req.body.params.receiver, req.body.params.communityName);
         resp.status(200);
         resp.type('application/json');
         resp.json({ message: 'favour ok' });
@@ -455,11 +501,29 @@ app.get('/api/users/:userName', async (req, resp) => {
     return;
 });
 
+// POST /api/update_description
+app.post('/api/update_description', async (req, resp) => {
+    const { description } = req.body;
+    try {
+        const results = await updateUserProfile('user_description', description, req.token.username)
+    } catch (e) {
+        console.info(`ERROR: Update user description failed with following ${e}`)
+        resp.status(400)
+        resp.type('application/json')
+        resp.json({message: `An error has occurred while updating description.`})
+        return
+    }
+    resp.status(200)
+    resp.type('application/json')
+    resp.json({ description })
+    return
+});
+
 // POST /api/upload
 app.post('/api/upload', upload.single('file'), async (req, resp) => {
     try {
         const buffer = await READ_FILE(req.file.path);
-        const key = await uploadToDigitalOcean(buffer, req);
+        const key = await uploadToDigitalOcean(buffer, req, req.token.username);
         await updateUserProfile('profile_picture', `${key}?${Date.now()}`, req.token.username);
         await UNLINK_ALL_FILES(UPLOAD_PATH);
         resp.status(200);
@@ -476,7 +540,7 @@ app.post('/api/upload', upload.single('file'), async (req, resp) => {
 })
 
 app.get('/api/community/:communityName', getCommunity)
-app.get('/api/posts/:postId', getPost)
+app.get('/api/community/:communityName/posts/:postId', getPost)
 
 app.get('/api/receive', (req, resp) => {
     const value = req.query.value
@@ -494,9 +558,9 @@ app.get('/api/getbackendvalue', (req, resp) => {
 })
 
 app.get('/api/community/:communityName', getCommunity)
-app.get('/api/posts/:postId', getPost)
-app.post('/api/posts/:postId/comments', createComment)
-app.put('/api/comments/:commentId', updateComment)
+app.get('/api/community/:communityName/posts/:postId', getPost)
+app.post('/api/community/:communityName/posts/:postId/comments', createComment)
+app.put('/api/community/:communityName/posts/:postId/comments/:commentId', updateComment)
 
 Promise.all([CHECK_POSTGRES_CONN(), CHECK_DIGITAL_OCEAN_KEYS()])
 .then(() => {

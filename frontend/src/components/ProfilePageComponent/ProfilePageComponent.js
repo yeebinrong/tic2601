@@ -1,8 +1,8 @@
-import { Box, Button, Divider, Stack, Tab, Tabs } from '@mui/material';
+import { Box, Button, Divider, Stack, Tab, Tabs, TextField } from '@mui/material';
 import Grid from '@mui/material/Unstable_Grid2';
 import { withSnackbar } from 'notistack';
 import React from 'react';
-import { getUserProfile, uploadProfilePicture } from '../../apis/app-api';
+import { getUserProfile, updateUserDescription, uploadProfilePicture } from '../../apis/app-api';
 import { snackBarProps, withParams } from '../../constants/constants';
 import { Item } from '../HomePageComponent/HomePageComponent';
 
@@ -202,15 +202,52 @@ class ProfilePageComponent extends React.Component {
                                         Description:
                                     </div>
                                     <div style={{ marginLeft: '32px' }}>
+                                        {this.props.userInfo.username !== '' &&
+                                        this.state.user_name !== this.props.userInfo.username &&
                                         <div>
                                             {this.state.user_description &&
                                             this.state.user_description !== '' ?
                                             this.state.user_description : 'User has not entered a description!'}
-                                        </div>
+                                        </div>}
+                                        {this.props.userInfo.username !== '' &&
+                                        this.state.user_name === this.props.userInfo.username &&
+                                        <TextField
+                                            fullWidth
+                                            multiline
+                                            rows='5'
+                                            size="small"
+                                            onChange={(e) =>  {
+                                                this.setState({ user_description: e.target.value })
+                                            }}
+                                            value={this.state.user_description}
+                                        />}
                                         {this.props.userInfo.username !== '' &&
                                         this.state.user_name === this.props.userInfo.username &&
                                         <Button
+                                            disabled={!this.state.user_description || this.state.user_description === ''}
                                             style={{ marginTop: 'auto' }}
+                                            onClick={() => {
+                                                this.props.setIsLoading(true);
+                                                updateUserDescription(this.state.user_description)
+                                                    .then(res => {
+                                                        if (!res.error) {
+                                                            this.props.setUserInfo({
+                                                                ...this.props.userInfo,
+                                                                user_description: res.data.description,
+                                                            });
+                                                            this.props.enqueueSnackbar(
+                                                                "User description updated successfully!",
+                                                                snackBarProps('success'),
+                                                            );
+                                                        } else {
+                                                            this.props.enqueueSnackbar(
+                                                                "Failed to update user description!",
+                                                                snackBarProps('error'),
+                                                            );
+                                                        }
+                                                        this.props.setIsLoading(false);
+                                                    })
+                                            }}
                                         >
                                             Change description
                                         </Button>}

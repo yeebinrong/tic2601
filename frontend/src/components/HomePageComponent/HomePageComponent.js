@@ -36,7 +36,7 @@ export const renderPostLists = (posts, params, handleChange, onFavourChange) => 
         )}
         {posts && posts.map((post, index) => {
             return (
-                <Item key={post.post_id}>
+                <Item key={`${post.community_name}${post.post_id}`}>
                     <Stack
                         spacing={1}
                         direction="column"
@@ -69,7 +69,7 @@ export const renderPostLists = (posts, params, handleChange, onFavourChange) => 
                                     paddingTop: '11px',
                                 }}
                             >
-                                <a href={`/user/${post.user_name}/overview`}>
+                                <a href={`/user/${post.user_name}/view`}>
                                     Posted by u/{post.user_name}
                                 </a>
                             </Box>
@@ -116,6 +116,29 @@ export const renderPostLists = (posts, params, handleChange, onFavourChange) => 
                                 clickable={true}
                             />
                         </Stack>
+                        {post.url && !post.url.includes('digitaloceanspaces') &&
+                        <Stack>
+                            <iframe
+                                width="560"
+                                height="315"
+                                src={post.url}
+                                title={`embedUrl-${index}`}
+                                frameborder="0"
+                                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                                allowfullscreen
+                            />
+                        </Stack>}
+                        {post.url && post.url.includes('digitaloceanspaces') &&
+                        <Stack>
+                            <img
+                                alt={''}
+                                width="560"
+                                height="315"
+                                src={post.url}
+                                title={`embedUrl-${index}`}
+                                frameborder="0"
+                            />
+                        </Stack>}
                         <Stack direction="row" spacing={1}>
                             <Box>
                                 <IconButton
@@ -123,9 +146,9 @@ export const renderPostLists = (posts, params, handleChange, onFavourChange) => 
                                     aria-label="upfavour"
                                 >
                                     {(post.is_favour === null || post.is_favour === -1) &&
-                                    <ForwardIcon className='upFavourStyle' onClick={() => onFavourChange(post.post_id, post.is_favour, 1, post.user_name, index)} />}
+                                    <ForwardIcon className='upFavourStyle' onClick={() => onFavourChange(post.post_id, post.is_favour, 1, post.user_name, index, post.community_name)} />}
                                     {post.is_favour === 1 &&
-                                        <ForwardIcon className='upFavourColorStyle' onClick={() => onFavourChange(post.post_id, post.is_favour, 0, post.user_name, index)} />}
+                                        <ForwardIcon className='upFavourColorStyle' onClick={() => onFavourChange(post.post_id, post.is_favour, 0, post.user_name, index, post.community_name)} />}
                                 </IconButton>
                                 {post.fav_point
                                     ? post.fav_point
@@ -135,13 +158,13 @@ export const renderPostLists = (posts, params, handleChange, onFavourChange) => 
                                     aria-label="downfavour"
                                 >
                                     {(post.is_favour === null || post.is_favour === 1) &&
-                                    <ForwardIcon className='downFavourStyle' onClick={() => onFavourChange(post.post_id, post.is_favour, -1, post.user_name, index)} />}
+                                    <ForwardIcon className='downFavourStyle' onClick={() => onFavourChange(post.post_id, post.is_favour, -1, post.user_name, index, post.community_name)} />}
                                     {post.is_favour === -1 &&
-                                    <ForwardIcon className='downFavourColorStyle' onClick={() => onFavourChange(post.post_id, post.is_favour, 0, post.user_name, index)} />}
+                                    <ForwardIcon className='downFavourColorStyle' onClick={() => onFavourChange(post.post_id, post.is_favour, 0, post.user_name, index, post.community_name)} />}
                                 </IconButton>
                             </Box>
                             <Box>
-                                <a href={`/community/test_community/view/${post.post_id}`}>
+                                <a href={`/community/${post.community_name}/view/${post.post_id}`}>
                                     <IconButton
                                         sx={{ p: '10px' }}
                                         aria-label="comment"
@@ -256,12 +279,13 @@ class HomePageComponent extends React.Component {
         });
     };
 
-    onFavourChange = (postId, favour, value, receiver, index) => {
+    onFavourChange = (postId, favour, value, receiver, index, communityName) => {
         modifyFavour({
             postId: postId,
             favour: favour ? favour : 0,
             value: value,
-            receiver: receiver
+            receiver: receiver,
+            communityName,
         }).then(res => {
             if (!res.error) {
                 const tempPosts = this.state.posts;
@@ -342,6 +366,7 @@ class HomePageComponent extends React.Component {
                             />
                             <CreateCommunityComponent
                                 open={this.state.isCreateCommunityDialogOpen}
+                                navigate={this.props.navigate}
                                 onClose={() =>
                                     this.setIsCreateCommunityDialog(false)
                                 }

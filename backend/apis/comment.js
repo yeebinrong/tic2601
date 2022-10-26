@@ -4,10 +4,10 @@ exports.createComment = async (req, resp) => {
     let username = req.token.username;
     let content = req.body.content;
     let postId = req.params.postId;
+    let communityName = req.params.communityName;
     let replyTo = req.body.replyTo;
 
-
-    let newComment = await createComment(postId, username, content, replyTo);
+    let newComment = await createComment(communityName, postId, username, content, replyTo);
 
     console.log(newComment);
     resp.status(200);
@@ -29,7 +29,7 @@ exports.updateComment = async (req, resp) => {
         return;
     }
 
-    let commentFromDB = await getCommentsById(req.params.commentId);
+    let commentFromDB = await getCommentsById(req.params.commentId, req.params.communityName, req.params.postId);
 
     if (commentFromDB.rows.length === 0) {
         resp.status(404);
@@ -50,7 +50,7 @@ exports.updateComment = async (req, resp) => {
     }
 
 
-    const updatedComment = await updateComment(comment['comment_id'], newContent);
+    const updatedComment = await updateComment(comment['comment_id'], newContent, req.params.communityName, req.params.postId);
 
     resp.status(204);
     resp.type('application/json');
