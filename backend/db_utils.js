@@ -43,24 +43,54 @@ const getAllFollowedCommunities = (username) => {
     )
 }
 
-const getHomePagePosts = (currentUser) => {
+const getHomePagePosts = (currentUser, sortBy) => {
     return POOL.query(
         `WITH following_communities AS
-            (SELECT fc.community_name, p.user_name, AGE(CURRENT_TIMESTAMP, p.date_created), p.title, p.flair, p.post_id, p.url,
-                SUM(f.favour_point) AS fav_point, COUNT(c.comment_id) AS comment_count
+            (SELECT fc.community_name, p.user_name, AGE(CURRENT_TIMESTAMP, p.date_created), p.title, p.flair, p.post_id, p.date_deleted, p.view_count,
+            COALESCE(SUM(f.favour_point), 0) AS fav_point, fp.favour_point AS is_favour, COUNT(c.comment_id) AS comment_count, hf.hide_or_favourite AS is_hidden, p.url
             FROM followed_communities fc
             INNER JOIN posts p ON p.community_name = fc.community_name
             LEFT JOIN post_favours f ON f.post_id = p.post_id AND f.community_name = p.community_name
+			LEFT JOIN post_favours fp ON fp.post_id = p.post_id AND fp.community_name = p.community_name AND fp.giver = $1
             LEFT JOIN comments c ON c.post_id = f.post_id AND c.community_name = p.community_name
-            GROUP BY fc.community_name, fc.user_name, p.user_name, p.post_id, p.date_created, p.title, p.flair, p.url, c.comment_id
+            LEFT JOIN hide_or_fav_posts hf ON hf.post_id = p.post_id AND hf.community_name = p.community_name AND hf.user_name = $1
+            GROUP BY fc.community_name, fc.user_name, p.user_name, p.post_id, p.date_created, p.title, p.flair, p.url, fp.favour_point, c.comment_id, hf.hide_or_favourite
             HAVING fc.user_name = $1)
-            SELECT DISTINCT post_id, community_name, user_name, age, title, flair, fav_point, comment_count, url
-            FROM following_communities
-            ORDER BY post_id DESC`,
+        SELECT DISTINCT post_id, community_name, user_name, age, title, flair, fav_point, is_favour, comment_count, date_deleted, view_count, is_hidden, p.url
+        FROM following_communities
+		WHERE is_hidden IS NULL OR is_hidden = 'N'
+        ORDER BY ` + sortBy,
         [
             escapeQuotes(currentUser)
         ],
     )
+}
+
+const updateFavour = (postId, favour, value, currentUser, receiver) => {
+    if (value == 0) {
+        return POOL.query(`DELETE FROM favours WHERE post_id = ` + postId + ` AND giver = $1 AND receiver = $2`,
+            [
+                escapeQuotes(currentUser),
+                escapeQuotes(receiver)
+            ]
+        )
+    } else if (favour == 0) {
+        return POOL.query(`INSERT INTO favours (post_id, favour_point, giver, receiver)
+                            VALUES(` + postId + `, ` + value + `, $1, $2)`,
+            [
+                escapeQuotes(currentUser),
+                escapeQuotes(receiver)
+            ]
+        )
+    } else if (favour != 0) {
+        return POOL.query(`UPDATE favours SET favour_point = ` + value + `
+                            WHERE post_id = ` + postId + ` AND giver = $1 AND receiver = $2`,
+            [
+                escapeQuotes(currentUser),
+                escapeQuotes(receiver)
+            ]
+        )
+    }
 }
 
 // This sql inserts a row into community table with the specified communityName,
@@ -143,25 +173,200 @@ const searchPostWithParams = (currentUser, order, user, flair, community, q) => 
     );
 };
 
-const retrieveCommunityPostsDB = (community) => {
+const retrieveCommunityPostsDB = (community, currentUser) => {
     return POOL.query(
            `WITH one_community AS
-           (SELECT oc.community_name, p.user_name, AGE(CURRENT_TIMESTAMP, p.date_created), p.title, p.flair, p.url,
-           p.post_id, SUM(f.favour_point) AS fav_point, COUNT(c.comment_id) AS comment_count
+           (SELECT oc.community_name, p.user_name, AGE(CURRENT_TIMESTAMP, p.date_created), p.title, p.flair, p.post_id, p.date_deleted, p.view_count,
+           COALESCE(SUM(f.favour_point), 0) AS fav_point, fp.favour_point AS is_favour, COUNT(c.comment_id) AS comment_count, hf.hide_or_favourite AS is_hidden, p.url
                FROM community oc
                INNER JOIN posts p ON p.community_name = oc.community_name
-               LEFT JOIN post_favours f ON f.post_id = p.post_id
-               LEFT JOIN comments c ON c.post_id = f.post_id
-               GROUP BY oc.community_name, p.user_name, p.post_id, p.date_created, p.title, p.flair, p.url, c.comment_id
+               LEFT JOIN post_favours f ON f.post_id = p.post_id AND f.community_name = p.community_name
+               LEFT JOIN post_favours fp ON fp.post_id = p.post_id AND fp.community_name = p.community_name AND fp.giver = $2
+               LEFT JOIN comments c ON c.post_id = f.post_id AND c.community_name = p.community_name
+               LEFT JOIN hide_or_fav_posts hf ON hf.post_id = p.post_id AND hf.community_name = p.community_name AND hf.user_name = $2
+               GROUP BY oc.community_name, p.user_name, p.post_id, p.date_created, p.title, p.flair, p.url, fp.favour_point, c.comment_id, hf.hide_or_favourite
                HAVING oc.community_name = $1)
-            SELECT DISTINCT post_id, community_name, user_name, age, title,
-                flair, fav_point, comment_count, url
+            SELECT DISTINCT post_id, community_name, user_name, age, title, flair, fav_point, is_favour, comment_count, date_deleted, view_count, is_hidden, url
             FROM one_community ORDER BY age DESC;`,
+            [
+                escapeQuotes(community),
+                escapeQuotes(currentUser),
+            ],
+    );
+};
+const approveBanDB = (community,username) => {
+    return POOL.query(
+        `UPDATE banlist SET is_approved = 'Y'  WHERE community_name = $1 AND user_name = $2;`,
+         [
+             escapeQuotes(community),
+             escapeQuotes(username)
+         ],
+     );
+};
+
+const updateCommunityColourDB = (community,colour) => {
+    return POOL.query(
+        `UPDATE community SET colour = $2  WHERE community_name = $1;`,
+         [
+             escapeQuotes(community),
+             escapeQuotes(colour)
+         ],
+     );
+};
+
+
+const retrieveFollowerStatsDB = (community) => {
+    return POOL.query(
+        `SELECT COUNT(user_name) AS follow_total, 0 AS days_ago FROM followed_communities WHERE community_name = $1 AND followed_date <= (CURRENT_DATE)
+        UNION
+        SELECT COUNT(user_name) AS follow_total, 7 AS days_ago FROM followed_communities WHERE community_name = $1 AND followed_date <= (CURRENT_DATE-7)
+        UNION
+        SELECT COUNT(user_name) AS follow_total, 14 AS days_ago FROM followed_communities WHERE community_name = $1 AND followed_date <= (CURRENT_DATE-14)
+        UNION
+        SELECT COUNT(user_name) AS follow_total, 21 AS days_ago FROM followed_communities WHERE community_name = $1 AND followed_date <= (CURRENT_DATE-28)
+        ORDER BY days_ago desc;`,
+         [
+             escapeQuotes(community),
+         ],
+     );
+};
+
+
+const retrievePostStatsDB = (community) => {
+    return POOL.query(
+        `SELECT COUNT(post_id) AS post_total, 0 AS days_ago FROM posts WHERE community_name = $1 AND date_created <= (CURRENT_DATE)
+        UNION
+        SELECT COUNT(post_id) AS post_total, 7 AS days_ago FROM posts WHERE community_name = $1 AND date_created <= (CURRENT_DATE-7)
+        UNION
+        SELECT COUNT(post_id) AS post_total, 14 AS days_ago FROM posts WHERE community_name = $1 AND date_created <= (CURRENT_DATE-14)
+        UNION
+        SELECT COUNT(post_id) AS post_total, 21 AS days_ago FROM posts WHERE community_name = $1 AND date_created <= (CURRENT_DATE-28)
+        ORDER BY days_ago desc;`,
+         [
+             escapeQuotes(community),
+         ],
+     );
+};
+
+const retrieveFavStatsDB = (community) => {
+    return POOL.query(
+        `SELECT SUM(f.favour_point) AS favour_total, 0 AS days_ago
+            FROM favours f WHERE f.post_id IN (SELECT p.post_id FROM posts p WHERE community_name = $1)
+        UNION
+        SELECT SUM(f.favour_point) AS favour_total, 7 AS days_ago
+            FROM favours f WHERE f.post_id IN (SELECT p.post_id FROM posts p WHERE community_name = $1 AND date_created <= (CURRENT_DATE-7))
+        UNION
+        SELECT SUM(f.favour_point) AS favour_total, 14 AS days_ago
+            FROM favours f WHERE f.post_id IN (SELECT p.post_id FROM posts p WHERE community_name = $1 AND date_created <= (CURRENT_DATE-14))
+        UNION
+        SELECT SUM(f.favour_point) AS favour_total, 21 AS days_ago
+            FROM favours f WHERE f.post_id IN (SELECT p.post_id FROM posts p WHERE community_name = $1 AND date_created <= (CURRENT_DATE-21))
+        ORDER BY days_ago desc;`,
+         [
+             escapeQuotes(community),
+         ],
+     );
+};
+
+
+const retrieveCommunityStatsDB = (community) => {
+    return POOL.query(
+           `SELECT c.community_name, COUNT(DISTINCT fc.user_name) AS follower_count, COUNT(DISTINCT m.user_name) AS mod_count, COUNT(DISTINCT p.post_id) AS post_count, SUM(f.favour_point) AS fav_total
+           FROM community c
+           LEFT JOIN followed_communities fc ON c.community_name = fc.community_name
+           LEFT JOIN moderators m ON c.community_name = m.community_name
+           LEFT JOIN posts p ON c.community_name = p.community_name
+           LEFT JOIN favours f ON p.post_id = f.post_id
+           GROUP BY c.community_name
+           HAVING c.community_name =  $1;`,
             [
                 escapeQuotes(community),
             ],
 
     );
+};
+
+const retrieveCommunityBansDB = (community) => {
+    return POOL.query(
+           `SELECT * FROM banlist
+            WHERE community_name =  $1;`,
+            [
+                escapeQuotes(community),
+            ],
+    );
+};
+
+const retrieveCommunityModsDB = (community) => {
+    return POOL.query(
+           `SELECT com.* , m.user_name, m.is_admin
+           FROM community com
+           LEFT JOIN moderators m ON m.community_name = com.community_name
+           GROUP BY com.community_name,m.user_name,m.is_admin
+           HAVING com.community_name =  $1;`,
+            [
+                escapeQuotes(community),
+            ],
+
+    );
+};
+const isFollowingCommunityDB = (community,username) => {
+    return POOL.query(
+           `SELECT COUNT(*)
+           FROM followed_communities
+           WHERE community_name = $1 AND user_name = $2`,
+           //WHERE community_name = 'test_community' AND user_name = 'testaccount';`,
+           //WHERE community_name = $1 AND user_name = $2`,
+            [
+                escapeQuotes(community),
+                escapeQuotes(username)
+            ],
+    );
+};
+
+
+const retrieveCommunityInfoDB = (community) => {
+    return POOL.query(
+           `SELECT *
+           FROM community
+           WHERE community_name =  $1;`,
+            [
+                escapeQuotes(community),
+            ],
+
+    );
+};
+
+const deleteFromBanlistDB = (community,username) => {
+        return POOL.query(`DELETE FROM banlist WHERE community_name = $1 AND user_name = $2 ;`,
+            [
+                escapeQuotes(community),
+                escapeQuotes(username),
+            ]
+        );
+};
+
+
+const updateFollowDB = (community,isFollowing,username) => {
+
+    if(isFollowing !== '0'){
+        console.log("deleting");
+        return POOL.query(`DELETE FROM followed_communities WHERE community_name = $1 AND user_name = $2 ;`,
+            [
+                escapeQuotes(community),
+                escapeQuotes(username),
+            ]
+        );
+    }
+    else {
+        console.log("adding");
+        return POOL.query(`INSERT INTO followed_communities(community_name,user_name) VALUES($1,$2);`,
+            [
+                escapeQuotes(community),
+                escapeQuotes(username),
+            ]
+        );
+    }
+
 };
 
 const updateUserProfile = (columnName, value, userName) => {
@@ -210,12 +415,26 @@ module.exports = {
     insertToUser,
     getAllPosts,
     getHomePagePosts,
+    updateFavour,
     insertOneCommunityAndReturnName,
     searchPostWithParams,
     uploadToDigitalOcean,
     retrieveUserInfo,
+    approveBanDB,
+    updateCommunityColourDB,
     updateUserProfile,
+    retrieveFollowerStatsDB,
+    retrievePostStatsDB,
+    retrieveFavStatsDB,
+    retrieveCommunityStatsDB,
+    retrieveCommunityBansDB,
+    retrieveCommunityModsDB,
+    isFollowingCommunityDB,
+    retrieveCommunityInfoDB,
     retrieveCommunityPostsDB,
+    deleteFromBanlistDB,
+    updateFollowDB,
+
     getAllFollowedCommunities,
     insertTextPost,
     insertUrlPost,

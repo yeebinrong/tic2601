@@ -1,7 +1,7 @@
 import { Box, Stack, Chip, Button } from '@mui/material';
 import Grid from '@mui/material/Unstable_Grid2';
 import React from 'react';
-import { searchForPostWithParams } from '../../apis/app-api';
+import { modifyFavour, searchForPostWithParams } from '../../apis/app-api';
 import { getQueryParameters, withParams } from '../../constants/constants';
 import { Item, renderBackToTopChip, renderPostLists } from '../HomePageComponent/HomePageComponent';
 
@@ -137,6 +137,49 @@ class SearchComponent extends React.Component {
         }));
     }
 
+    onFavourChange = (postId, favour, value, receiver, index) => {
+        modifyFavour({
+            postId: postId,
+            favour: favour ? favour : 0,
+            value: value,
+            receiver: receiver
+        }).then(res => {
+            if (!res.error) {
+                const tempPosts = this.state.posts;
+                if (favour) {
+                    if (favour === -1) {
+                        if (value === 1) {
+                            tempPosts[index].fav_point = tempPosts[index].fav_point || tempPosts[index].fav_point === 0 ? parseInt(tempPosts[index].fav_point) + 2 : 1;
+                            tempPosts[index].is_favour = 1;
+                        } else if (value === 0) {
+                            tempPosts[index].fav_point = tempPosts[index].fav_point || tempPosts[index].fav_point === 0 ? parseInt(tempPosts[index].fav_point) + 1 : 0;
+                            tempPosts[index].is_favour = null;
+                        }
+                    } else if (favour === 1) {
+                        if (value === -1) {
+                            tempPosts[index].fav_point = tempPosts[index].fav_point || tempPosts[index].fav_point === 0 ? parseInt(tempPosts[index].fav_point) - 2 : -1;
+                            tempPosts[index].is_favour = -1;
+                        } else if (value === 0) {
+                            tempPosts[index].fav_point = tempPosts[index].fav_point || tempPosts[index].fav_point === 0 ? parseInt(tempPosts[index].fav_point) - 1 : 0;
+                            tempPosts[index].is_favour = null;
+                        }
+                    }
+                } else {
+                    if (value === 1) {
+                        tempPosts[index].fav_point = tempPosts[index].fav_point || tempPosts[index].fav_point === 0 ? parseInt(tempPosts[index].fav_point) + 1 : 1;
+                        tempPosts[index].is_favour = 1;
+                    } else if (value === -1) {
+                        tempPosts[index].fav_point = tempPosts[index].fav_point || tempPosts[index].fav_point === 0 ? parseInt(tempPosts[index].fav_point) - 1 : -1;
+                        tempPosts[index].is_favour = -1;
+                    }
+                }
+                this.setState({
+                    posts: tempPosts,
+                });
+            }
+        })
+    };
+
     render() {
         return (
             <>
@@ -150,7 +193,7 @@ class SearchComponent extends React.Component {
                     <Grid xs={9}>
                         <Box sx={{ width: '100%' }}>
                             <Stack spacing={2}>
-                                {renderPostLists(this.state.posts, this.props.params, this.handleChange)}
+                                {renderPostLists(this.state.posts, this.props.params, this.handleChange, this.onFavourChange)}
                             </Stack>
                         </Box>
                     </Grid>

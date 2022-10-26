@@ -101,10 +101,107 @@ export function retrieveHomePagePosts(params) {
         }));
 }
 
+export function modifyFavour(params) {
+    return axios
+        .post(`${HOST}/api/update_favour`, {
+            params,
+            headers: {
+                Accept: CONTENT_TYPE_JSON,
+            },
+        })
+        .then((resp) => ({ data: resp.data, error: false }))
+        .catch((err) => ({
+            data: err && err.response ? err.response.data : '',
+            error: true,
+            status: err && err.response ? err.response.status : '',
+        }));
+}
+
 export function searchForPostWithParams(params) {
     return axios
         .get(`${HOST}/api/search`, {
             params,
+            headers: {
+                Accept: CONTENT_TYPE_JSON,
+            },
+        })
+        .then((resp) => ({ data: resp.data, error: false }))
+        .catch((err) => ({
+            data: err && err.response ? err.response.data : '',
+            error: true,
+            status: err && err.response ? err.response.status : '',
+        }));
+}
+
+export function approveBan(params) {
+    return axios
+        .post(`${HOST}/api/approveBan`, {
+            params,
+            headers: {
+                Accept: CONTENT_TYPE_JSON,
+            },
+        })
+        .then((resp) => ({ data: resp.data, error: false }))
+        .catch((err) => ({
+            data: err && err.response ? err.response.data : '',
+            error: true,
+            status: err && err.response ? err.response.status : '',
+        }));
+}
+
+export function deleteFromBanlist(params) {
+    return axios
+        .post(`${HOST}/api/deleteFromBanlist`, {
+            params,
+            headers: {
+                Accept: CONTENT_TYPE_JSON,
+            },
+        })
+        .then((resp) => ({ data: resp.data, error: false }))
+        .catch((err) => ({
+            data: err && err.response ? err.response.data : '',
+            error: true,
+            status: err && err.response ? err.response.status : '',
+        }));
+}
+export function updateColour(params) {
+    return axios
+    .post(`${HOST}/api/updateColour`, {
+        params,
+        headers: {
+            Accept: CONTENT_TYPE_JSON,
+        },
+    })
+    .then((resp) => ({ data: resp.data, error: false }))
+    .catch((err) => ({
+        data: err && err.response ? err.response.data : '',
+        error: true,
+        status: err && err.response ? err.response.status : '',
+    }));
+}
+
+export function updateFollow(params) {
+    return axios
+        .post(`${HOST}/api/updateFollow`, {
+            params,
+            headers: {
+                Accept: CONTENT_TYPE_JSON,
+            },
+        })
+        .then((resp) => ({ data: resp.data, error: false }))
+        .catch((err) => ({
+            data: err && err.response ? err.response.data : '',
+            error: true,
+            status: err && err.response ? err.response.status : '',
+        }));
+}
+
+export function retrieveModPageStats(community_name) {
+    return axios
+        .get(`${HOST}/api/moderator`, {
+            params: {
+                community_name,
+            },
             headers: {
                 Accept: CONTENT_TYPE_JSON,
             },
@@ -123,6 +220,22 @@ export function retrieveCommunityPosts(community_name) {
             params: {
                 community_name,
             },
+            headers: {
+                Accept: CONTENT_TYPE_JSON,
+            },
+        })
+        .then((resp) => ({ data: resp.data, error: false }))
+        .catch((err) => ({
+            data: err && err.response ? err.response.data : '',
+            error: true,
+            status: err && err.response ? err.response.status : '',
+        }));
+}
+
+export function updateUserDescription(description) {
+    return axios
+        .post(`${HOST}/api/update_description`, {
+            description,
             headers: {
                 Accept: CONTENT_TYPE_JSON,
             },
@@ -165,51 +278,6 @@ export function uploadProfilePicture(formData) {
         }));
 }
 
-export function retrievePostById(postId) {
-    return axios
-        .get(`${HOST}/api/posts/${postId}`, {
-            headers: {
-                Accept: CONTENT_TYPE_JSON,
-            },
-        })
-        .then((resp) => ({ data: resp.data, error: false }))
-        .catch((err) => ({
-            data: err && err.response ? err.response.data : '',
-            error: true,
-            status: err && err.response ? err.response.status : '',
-        }));
-}
-
-export function updateUserDescription(description) {
-    return axios
-        .post(`${HOST}/api/update_description`, {
-            description,
-            headers: {
-                Accept: CONTENT_TYPE_JSON,
-            },
-        })
-        .then((resp) => ({ data: resp.data, error: false }))
-        .catch((err) => ({
-            data: err && err.response ? err.response.data : '',
-            error: true,
-            status: err && err.response ? err.response.status : '',
-        }));
-}
-
-export function retrieveCommunityByName(communityName) {
-    return axios
-        .get(`${HOST}/api/community/${communityName}`, {
-            headers: {
-                Accept: CONTENT_TYPE_JSON,
-            },
-        })
-        .then((resp) => ({ data: resp.data, error: false }))
-        .catch((err) => ({
-            data: err && err.response ? err.response.data : '',
-            error: true,
-            status: err && err.response ? err.response.status : '',
-        }));
-}
 
 export function retrieveAllFollowedCommunities() {
     return axios
@@ -297,6 +365,77 @@ export function sendMessageApi(value) {
 export function getBackEndValueApi() {
     return axios
         .get(`${HOST}/api/getbackendvalue`, {
+            headers: {
+                Accept: CONTENT_TYPE_JSON,
+            },
+        })
+        .then((resp) => ({ data: resp.data, error: false }))
+        .catch((err) => ({
+            data: err && err.response ? err.response.data : '',
+            error: true,
+            status: err && err.response ? err.response.status : '',
+        }));
+}
+
+export function retrievePostById(postId) {
+    return axios
+        .get(`${HOST}/api/posts/${postId}`, {
+            headers: {
+                Accept: CONTENT_TYPE_JSON,
+            },
+        })
+        .then((resp) => ({ data: resp.data, error: false }))
+        .catch((err) => ({
+            data: err && err.response ? err.response.data : '',
+            error: true,
+            status: err && err.response ? err.response.status : '',
+        }));
+}
+
+export function createComment(postId, content, replyTo) {
+    return axios
+        .post(
+            `${HOST}/api/posts/${postId}/comments`,
+            {
+                content,
+                replyTo,
+            },
+            {
+                headers: {
+                    Accept: CONTENT_TYPE_JSON,
+                },
+            })
+        .then((resp) => ({ data: resp.data, error: false }))
+        .catch((err) => ({
+            data: err && err.response ? err.response.data : '',
+            error: true,
+            status: err && err.response ? err.response.status : '',
+        }));
+}
+
+export function updateComment(commentId, content) {
+    return axios
+        .put(
+            `${HOST}/api/comments/${commentId}`,
+            {
+                content,
+            },
+            {
+                headers: {
+                    Accept: CONTENT_TYPE_JSON,
+                },
+            })
+        .then((resp) => ({ data: resp.data, error: false }))
+        .catch((err) => ({
+            data: err && err.response ? err.response.data : '',
+            error: true,
+            status: err && err.response ? err.response.status : '',
+        }));
+}
+
+export function retrieveCommunityByName(communityName) {
+    return axios
+        .get(`${HOST}/api/community/${communityName}`, {
             headers: {
                 Accept: CONTENT_TYPE_JSON,
             },
