@@ -1,6 +1,7 @@
 import './CommunityComponent.scss';
-import { retrieveCommunityPosts, updateFollow, deleteFromBanlist, retireveModPageStats} from '../../apis/app-api';
+import { retrieveCommunityPosts, updateFollow, deleteFromBanlist, retrieveModPageStats, updateColour, approveBan} from '../../apis/app-api';
 import * as React from 'react';
+import {SketchPicker} from 'react-color';
 import Box from '@mui/material/Box';
 import Paper from '@mui/material/Paper';
 import Stack from '@mui/material/Stack';
@@ -204,7 +205,7 @@ class CommunityComponent extends React.Component {
                    followStatus: res.data.isFollowing === '0' ? 'follow' : 'following',
                 });
             });
-            retireveModPageStats(this.props.params.community_name).then(res => {
+            retrieveModPageStats(this.props.params.community_name).then(res => {
                 this.props.setIsLoading(false);
                 this.setState({
                     followerStats:res.data.folRows,
@@ -237,7 +238,7 @@ class CommunityComponent extends React.Component {
                     followStatus: res.data.isFollowing === '0' ? 'follow' : 'following',
                 });
             });
-            retireveModPageStats(nextProps.params.community_name).then(res => {
+            retrieveModPageStats(nextProps.params.community_name).then(res => {
                 this.props.setIsLoading(false);
                 this.setState({
                     followerStats:res.data.folRows,
@@ -249,6 +250,7 @@ class CommunityComponent extends React.Component {
         }
         return true;
     }
+    //Mod page analytics Init
     initModPage = () => {
         this.state.followerStats.map((fol,index) => {
             followerData[index].Value = fol.follow_total ? fol.follow_total : 0
@@ -261,10 +263,13 @@ class CommunityComponent extends React.Component {
         })
     }
 
-    handleCheck= (e) => {
-        console.log(e.target.value)
+    //Mod page Banlist Approve Checkbox onChcek
+    handleCheck= (banusername) => {
+        console.log(banusername)
+        approveBan({communityName:this.props.params.community_name,username:banusername})
     }
 
+    //postrenderlist onChange
     handleChange= (e, newValue) => {
         this.props.navigate({
             pathname: `/community/${this.props.params.community_name}/posts/${newValue}`,
@@ -272,6 +277,7 @@ class CommunityComponent extends React.Component {
         });
     };
 
+    //postmodButton onChange
     handleModeChange = (event, newValue) => {
         this.setState({mode:newValue})
         if(newValue === "posts"){
@@ -288,14 +294,26 @@ class CommunityComponent extends React.Component {
         }
     };
 
+    //Delete Button onClick
     handleDelete = (banusername) => {
         console.log("deleting")
         console.log(banusername)
         deleteFromBanlist({communityName:this.props.params.community_name,username:banusername})
         
 
-    }
+    };
 
+    //Community Colour onChange
+    handleComColourChange = (colour) => {
+         // comColour=colour.hex;
+          updateColour({communityName:this.props.params.community_name,newColour:colour.hex})
+            .then(res => {
+                comColour = colour.hex;
+            })
+          console.log(comColour);
+    };
+
+    //Follow Button onClick
     changeFollow = () => {
       // console.log(this.state.following[0].count);
         updateFollow({communityName:this.props.params.community_name,isFollowing:this.state.following})
@@ -310,7 +328,7 @@ class CommunityComponent extends React.Component {
            })
     }       
 
-
+    //Posts UI
     renderNorm = () => {
         return (
             <>
@@ -368,6 +386,7 @@ class CommunityComponent extends React.Component {
         )
     }
 
+    //Mod Setting UI
     renderMod = () => {
         return (
             <>
@@ -445,7 +464,7 @@ class CommunityComponent extends React.Component {
                                                                                     {ban.user_name}
                                                                                 </td>
                                                                                 <td>
-                                                                                    {ban.is_approved === true ? <Checkbox disabled checked/> : <Checkbox onChange={this.handleCheck}/>}
+                                                                                    {ban.is_approved === 'Y' ? <Checkbox disabled checked/> : <Checkbox onChange={() => this.handleCheck(ban.user_name)}/>}
                                                                                 </td>
                                                                                 <td>
                                                                                     <Button style={{ borderRadius: '14px' }} variant="contained" color="secondary" onClick={() => this.handleDelete(ban.user_name)}>Delete</Button>
@@ -458,6 +477,15 @@ class CommunityComponent extends React.Component {
                                                         {/* <div><b>Allow Favours: </b><Checkbox></Checkbox></div> */}
                                                     </Stack>
                                                 </Box>
+                                            </Item>
+                                            <div style={{ backgroundColor: comColour, height: '35px', borderRadius: '5px', paddingTop: '10px', textIndent: '16px' }}>
+                                                <div className={'sideBoxHeader'}>Community Colour:</div>
+                                            </div>
+                                            <Item>
+                                                <SketchPicker
+                                                color = {comColour}
+                                                onChangeComplete={this.handleComColourChange}
+                                                />
                                             </Item>
                                         </Grid>
                                     </Grid>

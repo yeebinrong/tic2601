@@ -117,24 +117,21 @@ export function searchForPostWithParams(params) {
         }));
 }
 
-//obsolete
-// export function retrieveCommunityMods(community_name) {
-//     return axios
-//         .get(`${HOST}/api/communityMods`, {
-//             params: {
-//                 community_name,
-//             },
-//             headers: {
-//                 Accept: CONTENT_TYPE_JSON,
-//             },
-//         })
-//         .then((resp) => ({ data: resp.data, error: false }))
-//         .catch((err) => ({
-//             data: err && err.response ? err.response.data : '',
-//             error: true,
-//             status: err && err.response ? err.response.status : '',
-//         }));
-// }
+export function approveBan(params) {
+    return axios
+        .post(`${HOST}/api/approveBan`, {
+            params,
+            headers: {
+                Accept: CONTENT_TYPE_JSON,
+            },
+        })
+        .then((resp) => ({ data: resp.data, error: false }))
+        .catch((err) => ({
+            data: err && err.response ? err.response.data : '',
+            error: true,
+            status: err && err.response ? err.response.status : '',
+        }));
+}
 
 export function deleteFromBanlist(params) {
     return axios
@@ -150,6 +147,21 @@ export function deleteFromBanlist(params) {
             error: true,
             status: err && err.response ? err.response.status : '',
         }));
+}
+export function updateColour(params) {
+    return axios
+    .post(`${HOST}/api/updateColour`, {
+        params,
+        headers: {
+            Accept: CONTENT_TYPE_JSON,
+        },
+    })
+    .then((resp) => ({ data: resp.data, error: false }))
+    .catch((err) => ({
+        data: err && err.response ? err.response.data : '',
+        error: true,
+        status: err && err.response ? err.response.status : '',
+    }));
 }
 
 export function updateFollow(params) {
@@ -168,7 +180,7 @@ export function updateFollow(params) {
         }));
 }
 
-export function retireveModPageStats(community_name) {
+export function retrieveModPageStats(community_name) {
     return axios
         .get(`${HOST}/api/moderator`, {
             params: {

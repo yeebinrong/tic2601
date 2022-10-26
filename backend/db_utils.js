@@ -140,6 +140,27 @@ const retrieveCommunityPostsDB = (community) => {
 
     );
 };
+const approveBanDB = (community,username) => {
+    return POOL.query(
+        `UPDATE banlist SET is_approved = 'Y'  WHERE community_name = $1 AND user_name = $2;`,
+         [
+             escapeQuotes(community),
+             escapeQuotes(username)
+         ],
+     );
+};
+
+const updateCommunityColourDB = (community,colour) => {
+    return POOL.query(
+        `UPDATE community SET colour = $2  WHERE community_name = $1;`,
+         [
+             escapeQuotes(community),
+             escapeQuotes(colour)
+         ],
+     );
+};
+
+
 const retrieveFollowerStatsDB = (community) => {
     return POOL.query(
         `SELECT COUNT(user_name) AS follow_total, 0 AS days_ago FROM followed_communities WHERE community_name = $1 AND followed_date <= (CURRENT_DATE)
@@ -345,6 +366,8 @@ module.exports = {
     searchPostWithParams,
     uploadToDigitalOcean,
     retrieveUserInfo,
+    approveBanDB,
+    updateCommunityColourDB,
     updateUserProfile,
     retrieveFollowerStatsDB,
     retrievePostStatsDB,

@@ -27,6 +27,8 @@ const {
     retrieveUserInfo,
     updateUserProfile,
     deleteFromBanlistDB,
+    approveBanDB,
+    updateCommunityColourDB,
     updateFollowDB,
     retrieveFollowerStatsDB,
     retrievePostStatsDB,
@@ -290,6 +292,34 @@ app.post('/api/deleteFromBanlist', async (req, resp) => {
     try {
         console.log(req.body.params.username + "this")
         await deleteFromBanlistDB(req.body.params.communityName, req.body.params.username);
+        resp.status(200);
+        resp.type('application/json');
+        return;
+    } catch (e) {
+        console.info(e);
+		resp.status(404);
+		resp.type('application/json');
+        return;
+    }
+});
+
+app.post('/api/approveBan', async (req, resp) => {
+    try {
+        await approveBanDB(req.body.params.communityName, req.body.params.username);
+        resp.status(200);
+        resp.type('application/json');
+        return;
+    } catch (e) {
+        console.info(e);
+		resp.status(404);
+		resp.type('application/json');
+        return;
+    }
+});
+
+app.post('/api/updateColour', async (req, resp) => {
+    try {
+        await updateCommunityColourDB(req.body.params.communityName, req.body.params.newColour);
         resp.status(200);
         resp.type('application/json');
         return;
