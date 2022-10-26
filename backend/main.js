@@ -262,7 +262,7 @@ app.get('/api/all_followed_communities', async (req, resp) => {
 
 app.get('/api/homepage_posts', async (req, resp) => {
     const currentTab = req.query.currentTab;
-    let sortBy = 'fav_point ASC';
+    let sortBy = 'fav_point DESC';
     if (currentTab == 'hot') {
         sortBy = 'view_count DESC';
     } else if (currentTab == 'new') {
