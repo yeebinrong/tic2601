@@ -1,6 +1,6 @@
 import React from 'react';
 import './HomePageComponent.scss';
-import { retrieveHomePagePosts } from '../../apis/app-api';
+import { retrieveHomePagePosts, modifyFavour } from '../../apis/app-api';
 import { getQueryParameters, withParams } from '../../constants/constants';
 import TabButton from '../TabButton';
 import MenuButton from '../MenuButton';
@@ -20,7 +20,7 @@ import StarsIcon from '@mui/icons-material/Stars';
 import ForwardIcon from '@mui/icons-material/Forward';
 import CreateCommunityComponent from '../CreateCommunityComponent/CreateCommunityComponent';
 
-export const renderPostLists = (posts, params, handleChange) => {
+export const renderPostLists = (posts, params, handleChange, onFavourChange) => {
     return (
     <>
         <Item>
@@ -34,7 +34,7 @@ export const renderPostLists = (posts, params, handleChange) => {
                 <p>No posts found!</p>
             </Item>
         )}
-        {posts && posts.map((post) => {
+        {posts && posts.map((post, index) => {
             return (
                 <Item key={post.post_id}>
                     <Stack
@@ -120,28 +120,24 @@ export const renderPostLists = (posts, params, handleChange) => {
                             <Box>
                                 <IconButton
                                     sx={{ p: '10px' }}
-                                    aria-label="upvote"
+                                    aria-label="upfavour"
                                 >
-                                    <ForwardIcon
-                                        style={{
-                                            transform:
-                                                'rotate(270deg)',
-                                        }}
-                                    />
+                                    {(post.is_favour === null || post.is_favour === -1) &&
+                                    <ForwardIcon className='upFavourStyle' onClick={() => onFavourChange(post.post_id, post.is_favour, 1, post.user_name, index)} />}
+                                    {post.is_favour === 1 &&
+                                        <ForwardIcon className='upFavourColorStyle' onClick={() => onFavourChange(post.post_id, post.is_favour, 0, post.user_name, index)} />}
                                 </IconButton>
                                 {post.fav_point
                                     ? post.fav_point
                                     : 0}
                                 <IconButton
                                     sx={{ p: '10px' }}
-                                    aria-label="downvote"
+                                    aria-label="downfavour"
                                 >
-                                    <ForwardIcon
-                                        style={{
-                                            transform:
-                                                'rotate(90deg)',
-                                        }}
-                                    />
+                                    {(post.is_favour === null || post.is_favour === 1) &&
+                                    <ForwardIcon className='downFavourStyle' onClick={() => onFavourChange(post.post_id, post.is_favour, -1, post.user_name, index)} />}
+                                    {post.is_favour === -1 &&
+                                    <ForwardIcon className='downFavourColorStyle' onClick={() => onFavourChange(post.post_id, post.is_favour, 0, post.user_name, index)} />}
                                 </IconButton>
                             </Box>
                             <Box>
@@ -161,7 +157,8 @@ export const renderPostLists = (posts, params, handleChange) => {
                                     sx={{ p: '10px' }}
                                     aria-label="favourite"
                                 >
-                                    <BookmarkIcon />
+                                    {(post.is_hidden === 'N') ?
+                                    <BookmarkIcon className='favouriteStyle' /> : <BookmarkIcon />}
                                 </IconButton>
                                 Favourite
                             </Box>
@@ -216,6 +213,7 @@ class HomePageComponent extends React.Component {
             this.props.setIsLoading(true);
             retrieveHomePagePosts({
                 ...getQueryParameters(this.props.location.search),
+                currentTab: this.props.params.currentTab
             }).then((res) => {
                 this.props.setIsLoading(false);
                 this.setState({
@@ -228,12 +226,13 @@ class HomePageComponent extends React.Component {
     shouldComponentUpdate(nextProps) {
         if (
             (nextProps.isVerifyDone && !this.props.isVerifyDone) ||
-            nextProps.location.search !== this.props.location.search ||
-            nextProps.params.currentTab !== this.props.params.currentTab
+            (nextProps.location.search !== this.props.location.search) ||
+            (nextProps.params.currentTab !== this.props.params.currentTab)
         ) {
             this.props.setIsLoading(true);
             retrieveHomePagePosts({
-                ...getQueryParameters(nextProps.location.search),
+                ...getQueryParameters(this.props.location.search),
+                currentTab: nextProps.params.currentTab
             }).then((res) => {
                 this.props.setIsLoading(false);
                 this.setState({
@@ -257,13 +256,56 @@ class HomePageComponent extends React.Component {
         });
     };
 
+    onFavourChange = (postId, favour, value, receiver, index) => {
+        modifyFavour({
+            postId: postId,
+            favour: favour ? favour : 0,
+            value: value,
+            receiver: receiver
+        }).then(res => {
+            if (!res.error) {
+                const tempPosts = this.state.posts;
+                if (favour) {
+                    if (favour === -1) {
+                        if (value === 1) {
+                            tempPosts[index].fav_point = tempPosts[index].fav_point || tempPosts[index].fav_point === 0 ? parseInt(tempPosts[index].fav_point) + 2 : 1;
+                            tempPosts[index].is_favour = 1;
+                        } else if (value === 0) {
+                            tempPosts[index].fav_point = tempPosts[index].fav_point || tempPosts[index].fav_point === 0 ? parseInt(tempPosts[index].fav_point) + 1 : 0;
+                            tempPosts[index].is_favour = null;
+                        }
+                    } else if (favour === 1) {
+                        if (value === -1) {
+                            tempPosts[index].fav_point = tempPosts[index].fav_point || tempPosts[index].fav_point === 0 ? parseInt(tempPosts[index].fav_point) - 2 : -1;
+                            tempPosts[index].is_favour = -1;
+                        } else if (value === 0) {
+                            tempPosts[index].fav_point = tempPosts[index].fav_point || tempPosts[index].fav_point === 0 ? parseInt(tempPosts[index].fav_point) - 1 : 0;
+                            tempPosts[index].is_favour = null;
+                        }
+                    }
+                } else {
+                    if (value === 1) {
+                        tempPosts[index].fav_point = tempPosts[index].fav_point || tempPosts[index].fav_point === 0 ? parseInt(tempPosts[index].fav_point) + 1 : 1;
+                        tempPosts[index].is_favour = 1;
+                    } else if (value === -1) {
+                        tempPosts[index].fav_point = tempPosts[index].fav_point || tempPosts[index].fav_point === 0 ? parseInt(tempPosts[index].fav_point) - 1 : -1;
+                        tempPosts[index].is_favour = -1;
+                    }
+                }
+                this.setState({
+                    posts: tempPosts,
+                });
+            }
+        })
+    };
+
     render() {
         return (
             <Grid container spacing={6} style={{ margin: '16px 160px' }}>
                 <Grid xs={9}>
                     <Box sx={{ width: '100%' }}>
                         <Stack spacing={2}>
-                            {renderPostLists(this.state.posts, this.props.params, this.handleChange)}
+                            {renderPostLists(this.state.posts, this.props.params, this.handleChange, this.onFavourChange)}
                         </Stack>
                     </Box>
                 </Grid>

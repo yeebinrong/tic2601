@@ -1,5 +1,5 @@
 import './CommunityComponent.scss';
-import { retrieveCommunityPosts, updateFollow, deleteFromBanlist, retrieveModPageStats, updateColour, approveBan} from '../../apis/app-api';
+import { modifyFavour, retrieveCommunityPosts, updateFollow, deleteFromBanlist, retrieveModPageStats, updateColour, approveBan} from '../../apis/app-api';
 import * as React from 'react';
 import {SketchPicker} from 'react-color';
 import Box from '@mui/material/Box';
@@ -379,6 +379,49 @@ class CommunityComponent extends React.Component {
            })
     }       
 
+    onFavourChange = (postId, favour, value, receiver, index) => {
+        modifyFavour({
+            postId: postId,
+            favour: favour ? favour : 0,
+            value: value,
+            receiver: receiver
+        }).then(res => {
+            if (!res.error) {
+                const tempPosts = this.state.posts;
+                if (favour) {
+                    if (favour === -1) {
+                        if (value === 1) {
+                            tempPosts[index].fav_point = tempPosts[index].fav_point || tempPosts[index].fav_point === 0 ? parseInt(tempPosts[index].fav_point) + 2 : 1;
+                            tempPosts[index].is_favour = 1;
+                        } else if (value === 0) {
+                            tempPosts[index].fav_point = tempPosts[index].fav_point || tempPosts[index].fav_point === 0 ? parseInt(tempPosts[index].fav_point) + 1 : 0;
+                            tempPosts[index].is_favour = null;
+                        }
+                    } else if (favour === 1) {
+                        if (value === -1) {
+                            tempPosts[index].fav_point = tempPosts[index].fav_point || tempPosts[index].fav_point === 0 ? parseInt(tempPosts[index].fav_point) - 2 : -1;
+                            tempPosts[index].is_favour = -1;
+                        } else if (value === 0) {
+                            tempPosts[index].fav_point = tempPosts[index].fav_point || tempPosts[index].fav_point === 0 ? parseInt(tempPosts[index].fav_point) - 1 : 0;
+                            tempPosts[index].is_favour = null;
+                        }
+                    }
+                } else {
+                    if (value === 1) {
+                        tempPosts[index].fav_point = tempPosts[index].fav_point || tempPosts[index].fav_point === 0 ? parseInt(tempPosts[index].fav_point) + 1 : 1;
+                        tempPosts[index].is_favour = 1;
+                    } else if (value === -1) {
+                        tempPosts[index].fav_point = tempPosts[index].fav_point || tempPosts[index].fav_point === 0 ? parseInt(tempPosts[index].fav_point) - 1 : -1;
+                        tempPosts[index].is_favour = -1;
+                    }
+                }
+                this.setState({
+                    posts: tempPosts,
+                });
+            }
+        })
+    };
+
     //Posts UI
     renderNorm = () => {
         return (
@@ -387,7 +430,7 @@ class CommunityComponent extends React.Component {
                     <Grid xs={9}>
                         <Box sx={{ width: '100%' }}>
                             <Stack spacing={2}>
-                            {renderPostLists(this.state.posts, this.props.params, this.handleChange)}
+                            {renderPostLists(this.state.posts, this.props.params, this.handleChange, this.onFavourChange)}
                             </Stack>
                         </Box>
                     </Grid>

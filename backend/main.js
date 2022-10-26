@@ -22,6 +22,7 @@ const {
     insertToUser,
     getAllPosts,
     getHomePagePosts,
+    updateFavour,
     insertOneCommunityAndReturnName,
     searchPostWithParams,
     uploadToDigitalOcean,
@@ -260,7 +261,14 @@ app.get('/api/all_followed_communities', async (req, resp) => {
 });
 
 app.get('/api/homepage_posts', async (req, resp) => {
-    const results = await getHomePagePosts(req.token.username);
+    const currentTab = req.query.currentTab;
+    let sortBy = 'fav_point DESC';
+    if (currentTab == 'hot') {
+        sortBy = 'view_count DESC';
+    } else if (currentTab == 'new') {
+        sortBy = 'age ASC';
+    }
+    const results = await getHomePagePosts(req.token.username, sortBy);
     if (results.rows && results.rows.length == 0) {
         resp.status(204);
         resp.type('application/json');
@@ -273,20 +281,44 @@ app.get('/api/homepage_posts', async (req, resp) => {
     return;
 });
 
+app.post('/api/update_favour', async (req, resp) => {
+    try {
+        await updateFavour(req.body.params.postId, req.body.params.favour, req.body.params.value, req.token.username, req.body.params.receiver);
+        resp.status(200);
+        resp.type('application/json');
+        resp.json({ message: 'favour ok' });
+        return;
+    } catch (e) {
+        console.info(e);
+		resp.status(404);
+		resp.type('application/json');
+        resp.json({ message: 'An error has occurred.' });
+        return;
+    }
+});
+
 // TODO catch / handle errors
 app.get('/api/search', async (req, resp) => {
     const { order, user, flair, community, q } = req.query;
-    const results = await searchPostWithParams(req.token.username, order, user, flair, community, q);
-    if (results.rows && results.rows.length == 0) {
-        resp.status(404);
+    try {
+        const results = await searchPostWithParams(req.token.username, order, user, flair, community, q);
+        if (results.rows && results.rows.length == 0) {
+            resp.status(404);
+            resp.type('application/json');
+            resp.json({rows: [], message: 'No posts found!'});
+            return;
+        }
+        resp.status(200);
         resp.type('application/json');
-        resp.json({rows: [], message: 'No posts found!'});
+        resp.json({rows: results.rows });
+        return;
+    } catch (e) {
+        console.log(e);
+        resp.status(400);
+        resp.type('application/json');
+        resp.json({ message: 'An error has occurred.' });
         return;
     }
-    resp.status(200);
-    resp.type('application/json');
-    resp.json({rows: results.rows });
-    return;
 });
 
 app.post('/api/deleteFromBanlist', async (req, resp) => {
@@ -381,7 +413,7 @@ app.get('/api/moderator', async (req, resp) => {
 app.get('/api/community', async (req, resp) => {
     const community = req.query.community_name;
     const username = req.token.username
-    const results1 = await retrieveCommunityPostsDB(community);
+    const results1 = await retrieveCommunityPostsDB(community, req.token.username);
     const results2 = await retrieveCommunityInfoDB(community);
     const results3 = await retrieveCommunityModsDB(community);
     const results4 = await retrieveCommunityStatsDB(community);

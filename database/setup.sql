@@ -28,31 +28,30 @@ CREATE OR REPLACE FUNCTION searchPostWithParamsFunc(
 	title VARCHAR(300),
 	flair FlairEnum,
 	fav_point BIGINT,
+	is_favour INTEGER,
 	comment_count BIGINT,
-	view_count INTEGER
+	date_deleted TIMESTAMP,
+	view_count INTEGER,
+	is_hidden trueorfalse
   )
   LANGUAGE plpgsql AS
 $func$
 DECLARE
-        paramQuery text := '';
-		appendParam text := ' WHERE ';
+        paramQuery text := ' WHERE (is_hidden IS NULL OR is_hidden = ''N'') ';
+		appendParam text := ' AND ';
 		BEGIN
 		raise notice 'userFilter: %', userFilter;
         IF userFilter != '' THEN
             paramQuery = paramQuery || appendParam || 'user_name = ' || '''' || userFilter || '''';
-			appendParam = ' AND ';
         END IF;
         IF flairFilter != '' THEN
             paramQuery = paramQuery || appendParam || 'flair = ' || '''' || flairFilter || '''';
-			appendParam = ' AND ';
         END IF;
         IF communityFilter != '' THEN
             paramQuery = paramQuery || appendParam || 'community_name = ' || '''' || communityFilter || '''';
-			appendParam = ' AND ';
         END IF;
         IF queryFilter != '' THEN
             paramQuery = paramQuery || appendParam || 'title ILIKE ' || '''' || '%' || queryFilter || '%' || '''';
-			appendParam = ' AND ';
         END IF;
 		CASE orderParam
 			WHEN 'new' THEN
@@ -65,15 +64,17 @@ DECLARE
 		END CASE;
 		RAISE NOTICE 'Value: %', 'SELECT * FROM posts' || paramQuery;
         RETURN QUERY EXECUTE 'WITH all_communities AS
-            (SELECT ac.community_name, p.user_name, AGE(CURRENT_TIMESTAMP, p.date_created), p.title, p.flair, p.post_id,
-                SUM(f.favour_point) AS fav_point, COUNT(c.comment_id) AS comment_count, p.view_count
+            (SELECT ac.community_name, p.user_name, AGE(CURRENT_TIMESTAMP, p.date_created), p.title, p.flair, p.post_id, p.date_deleted, p.view_count,
+			COALESCE(SUM(f.favour_point), 0) AS fav_point, fp.favour_point AS is_favour, COUNT(c.comment_id) AS comment_count, hf.hide_or_favourite AS is_hidden
             FROM community ac
             INNER JOIN posts p ON p.community_name = ac.community_name
             LEFT JOIN favours f ON f.post_id = p.post_id
+			LEFT JOIN favours fp ON fp.post_id = p.post_id AND fp.giver = $1
             LEFT JOIN comments c ON c.post_id = f.post_id
-            GROUP BY ac.community_name, p.post_id, c.comment_id)
-            SELECT DISTINCT post_id, community_name, user_name, age, title, flair, fav_point, comment_count, view_count
-            FROM all_communities' || paramQuery;
+			LEFT JOIN hide_or_fav_posts hf ON hf.post_id = p.post_id AND hf.user_name = $1
+            GROUP BY ac.community_name, p.post_id, c.comment_id, fp.favour_point, hf.hide_or_favourite)
+            SELECT DISTINCT post_id, community_name, user_name, age, title, flair, fav_point, is_favour, comment_count, date_deleted, view_count, is_hidden
+            FROM all_communities' || paramQuery USING currentUser;
 END;
 $func$;
 
