@@ -9,16 +9,18 @@ const fs = require('fs')
 const path = require('path')
 
 // Retrieve environment variables from .env
-global.env = secure({secret: process.env.ENV_PASS})
+if (process.env.ENV_PASS) {
+    global.env = secure({secret: process.env.ENV_PASS})
+}
 
-const EMAIL_USER = global.env.EMAIL_USER
-const EMAIL_PASS = global.env.EMAIL_PASS
-const SIGN_SECRET = global.env.SIGN_SECRET
-const POSTGRES_USER = global.env.POSTGRES_USER
-const POSTGRES_HOST = global.env.POSTGRES_HOST
-const POSTGRES_DATABASE = global.env.POSTGRES_DATABASE
-const POSTGRES_PASS = global.env.POSTGRES_PASS
-const POSTGRES_PORT = global.env.POSTGRES_PORT
+const EMAIL_USER = global.env && global.env.EMAIL_USER || process.env.EMAIL_USER;
+const EMAIL_PASS = global.env && global.env.EMAIL_PASS || process.env.EMAIL_PASS
+const SIGN_SECRET = global.env && global.env.SIGN_SECRET || process.env.SIGN_SECRET
+const POSTGRES_USER = global.env && global.env.POSTGRES_USER || process.env.POSTGRES_USER
+const POSTGRES_HOST = global.env && global.env.POSTGRES_HOST || process.env.POSTGRES_HOST
+const POSTGRES_DATABASE = global.env && global.env.POSTGRES_DATABASE || process.env.POSTGRES_DATABASE
+const POSTGRES_PASS = global.env && global.env.POSTGRES_PASS || process.env.POSTGRES_PASS
+const POSTGRES_PORT = global.env && global.env.POSTGRES_PORT || process.env.POSTGRES_PORT
 
 //######## POSTGRESQL ########
 const POOL = new Pool({
