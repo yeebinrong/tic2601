@@ -254,16 +254,16 @@ const retrievePostStatsDB = (community) => {
 const retrieveFavStatsDB = (community) => {
     return POOL.query(
         `SELECT SUM(f.favour_point) AS favour_total, 0 AS days_ago
-            FROM favours f WHERE f.post_id IN (SELECT p.post_id FROM posts p WHERE community_name = $1)
+            FROM post_favours f WHERE f.post_id IN (SELECT p.post_id FROM posts p WHERE community_name = $1)
         UNION
         SELECT SUM(f.favour_point) AS favour_total, 7 AS days_ago
-            FROM favours f WHERE f.post_id IN (SELECT p.post_id FROM posts p WHERE community_name = $1 AND date_created <= (CURRENT_DATE-7))
+            FROM post_favours f WHERE f.post_id IN (SELECT p.post_id FROM posts p WHERE community_name = $1 AND date_created <= (CURRENT_DATE-7))
         UNION
         SELECT SUM(f.favour_point) AS favour_total, 14 AS days_ago
-            FROM favours f WHERE f.post_id IN (SELECT p.post_id FROM posts p WHERE community_name = $1 AND date_created <= (CURRENT_DATE-14))
+            FROM post_favours f WHERE f.post_id IN (SELECT p.post_id FROM posts p WHERE community_name = $1 AND date_created <= (CURRENT_DATE-14))
         UNION
         SELECT SUM(f.favour_point) AS favour_total, 21 AS days_ago
-            FROM favours f WHERE f.post_id IN (SELECT p.post_id FROM posts p WHERE community_name = $1 AND date_created <= (CURRENT_DATE-21))
+            FROM post_favours f WHERE f.post_id IN (SELECT p.post_id FROM posts p WHERE community_name = $1 AND date_created <= (CURRENT_DATE-21))
         ORDER BY days_ago desc;`,
          [
              escapeQuotes(community),
@@ -279,7 +279,7 @@ const retrieveCommunityStatsDB = (community) => {
            LEFT JOIN followed_communities fc ON c.community_name = fc.community_name
            LEFT JOIN moderators m ON c.community_name = m.community_name
            LEFT JOIN posts p ON c.community_name = p.community_name
-           LEFT JOIN favours f ON p.post_id = f.post_id
+           LEFT JOIN post_favours f ON p.post_id = f.post_id AND f.community_name = p.community_name
            GROUP BY c.community_name
            HAVING c.community_name =  $1;`,
             [
