@@ -2,10 +2,7 @@ import React from 'react';
 import { Box, IconButton, Menu, MenuItem } from '@mui/material';
 import MoreHorizIcon from '@mui/icons-material/MoreHoriz';
 import ContentCopyIcon from '@mui/icons-material/ContentCopy';
-import ArchiveIcon from '@mui/icons-material/Archive';
-import PushPinIcon from '@mui/icons-material/PushPin';
 import DeleteIcon from '@mui/icons-material/Delete';
-import VisibilityOffIcon from '@mui/icons-material/VisibilityOff';
 import FlagIcon from '@mui/icons-material/Flag';
 
 const MenuButton = () => {
@@ -67,16 +64,7 @@ const MenuButton = () => {
                     <ContentCopyIcon style={{ marginRight: '8px' }} /> Copy Link
                 </MenuItem>
                 <MenuItem>
-                    <ArchiveIcon style={{ marginRight: '8px' }} /> Archive
-                </MenuItem>
-                <MenuItem>
-                    <PushPinIcon style={{ marginRight: '8px' }} /> Pin
-                </MenuItem>
-                <MenuItem>
                     <DeleteIcon style={{ marginRight: '8px' }} /> Delete
-                </MenuItem>
-                <MenuItem>
-                    <VisibilityOffIcon style={{ marginRight: '8px' }} /> Hide
                 </MenuItem>
                 <MenuItem>
                     <FlagIcon style={{ marginRight: '8px' }} /> Report

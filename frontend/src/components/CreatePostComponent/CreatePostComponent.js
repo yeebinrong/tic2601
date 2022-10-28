@@ -73,8 +73,6 @@ class CreatePostComponent extends React.Component {
                         <Divider style={{margin:'16px 0'}}></Divider>
                         <b>3. Search for duplicates before posting </b>
                         <Divider style={{margin:'16px 0'}}></Divider>
-                        <b>4. Read the community's rules</b>
-                        <Divider style={{margin:'16px 0'}}></Divider>
                     </div>
                 </Item>
             </Grid>

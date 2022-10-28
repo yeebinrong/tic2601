@@ -15,7 +15,6 @@ import {
 } from '@mui/material';
 import Grid from '@mui/material/Unstable_Grid2';
 import CommentIcon from '@mui/icons-material/Comment';
-import BookmarkIcon from '@mui/icons-material/Bookmark';
 import StarsIcon from '@mui/icons-material/Stars';
 import ForwardIcon from '@mui/icons-material/Forward';
 import CreateCommunityComponent from '../CreateCommunityComponent/CreateCommunityComponent';
@@ -174,16 +173,6 @@ export const renderPostLists = (posts, params, handleChange, onFavourChange) => 
                                     {post.comment_count}{' '}
                                     Comments
                                 </a>
-                            </Box>
-                            <Box>
-                                <IconButton
-                                    sx={{ p: '10px' }}
-                                    aria-label="favourite"
-                                >
-                                    {(post.is_hidden === 'N') ?
-                                    <BookmarkIcon className='favouriteStyle' /> : <BookmarkIcon />}
-                                </IconButton>
-                                Favourite
                             </Box>
                             <MenuButton />
                         </Stack>
