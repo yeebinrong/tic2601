@@ -447,3 +447,22 @@ export function retrieveCommunityByName(communityName) {
             status: err && err.response ? err.response.status : '',
         }));
 }
+
+export function reportUserInCommunity(userName, communityName) {
+    return axios
+        .post(`${HOST}/api/report`, {
+                userName,
+                communityName,
+            },
+            {
+                headers: {
+                    Accept: CONTENT_TYPE_JSON,
+            },
+        })
+        .then((resp) => ({ data: resp.data, error: false }))
+        .catch((err) => ({
+            data: err && err.response ? err.response.data : '',
+            error: true,
+            status: err && err.response ? err.response.status : '',
+        }));
+}

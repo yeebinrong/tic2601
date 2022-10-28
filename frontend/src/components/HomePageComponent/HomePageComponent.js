@@ -122,9 +122,9 @@ export const renderPostLists = (posts, params, handleChange, onFavourChange) => 
                                 height="315"
                                 src={post.url}
                                 title={`embedUrl-${index}`}
-                                frameborder="0"
+                                frameBorder="0"
                                 allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                                allowfullscreen
+                                allowFullScreen
                             />
                         </Stack>}
                         {post.url && post.url.includes('digitaloceanspaces') &&
@@ -135,7 +135,7 @@ export const renderPostLists = (posts, params, handleChange, onFavourChange) => 
                                 height="315"
                                 src={post.url}
                                 title={`embedUrl-${index}`}
-                                frameborder="0"
+                                frameBorder="0"
                             />
                         </Stack>}
                         <Stack direction="row" spacing={1}>
@@ -174,7 +174,10 @@ export const renderPostLists = (posts, params, handleChange, onFavourChange) => 
                                     Comments
                                 </a>
                             </Box>
-                            <MenuButton />
+                            <MenuButton
+                                communityName={post.community_name}
+                                postOwner={post.user_name}
+                            />
                         </Stack>
                     </Stack>
                 </Item>

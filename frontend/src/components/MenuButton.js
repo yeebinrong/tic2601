@@ -4,8 +4,11 @@ import MoreHorizIcon from '@mui/icons-material/MoreHoriz';
 import ContentCopyIcon from '@mui/icons-material/ContentCopy';
 import DeleteIcon from '@mui/icons-material/Delete';
 import FlagIcon from '@mui/icons-material/Flag';
+import { reportUserInCommunity } from '../apis/app-api';
+import { withSnackbar } from 'notistack';
+import { snackBarProps } from '../constants/constants';
 
-const MenuButton = () => {
+const MenuButton = (props) => {
     const [anchorEl, setAnchorEl] = React.useState(null);
     const open = Boolean(anchorEl);
     const handleClick = (event) => {
@@ -66,7 +69,24 @@ const MenuButton = () => {
                 <MenuItem>
                     <DeleteIcon style={{ marginRight: '8px' }} /> Delete
                 </MenuItem>
-                <MenuItem>
+                <MenuItem
+                    onClick={()=> {
+                        reportUserInCommunity(props.postOwner, props.communityName)
+                            .then(res => {
+                                if (!res.error) {
+                                    props.enqueueSnackbar(
+                                        `User [${props.postOwner}] is reported for [${props.communityName}] community.`,
+                                        snackBarProps('success'),
+                                    );
+                                } else {
+                                    props.enqueueSnackbar(
+                                        `An error has occurred reporting user [${props.postOwner}] for [${props.communityName}] community.`,
+                                        snackBarProps('error'),
+                                    );
+                                }
+                            })
+                    }}
+                >
                     <FlagIcon style={{ marginRight: '8px' }} /> Report
                 </MenuItem>
             </Menu>
@@ -74,4 +94,4 @@ const MenuButton = () => {
     );
 };
 
-export default MenuButton;
+export default withSnackbar(MenuButton);

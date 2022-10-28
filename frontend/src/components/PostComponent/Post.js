@@ -227,9 +227,9 @@ const Post = (props) => {
                                 height="315"
                                 src={post.url}
                                 title={`embedUrl`}
-                                frameborder="0"
+                                frameBorder="0"
                                 allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                                allowfullscreen
+                                allowFullScreen
                             />
                         </div>}
                         {post.url && post.url.includes('digitaloceanspaces') &&
@@ -240,7 +240,7 @@ const Post = (props) => {
                                 height="315"
                                 src={post.url}
                                 title={`embedUrl`}
-                                frameborder="0"
+                                frameBorder="0"
                             />
                         </div>}
                         {!post.url &&

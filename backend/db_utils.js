@@ -378,6 +378,15 @@ const updateUserProfile = (columnName, value, userName) => {
     );
 }
 
+const insertUserIntoBanList = (userName, communityName) => {
+    return POOL.query(`INSERT INTO banlist (user_name, community_name) VALUES ($1, $2) ON CONFLICT DO NOTHING`,
+        [
+            escapeQuotes(userName),
+            escapeQuotes(communityName),
+        ]
+    );
+}
+
 /* -------------------------------------------------------------------------- */
 //                        ######## DIGITALOCEAN METHODS ########
 /* -------------------------------------------------------------------------- */
@@ -437,5 +446,6 @@ module.exports = {
     getAllFollowedCommunities,
     insertTextPost,
     insertUrlPost,
+    insertUserIntoBanList,
     escapeQuotes
 }
