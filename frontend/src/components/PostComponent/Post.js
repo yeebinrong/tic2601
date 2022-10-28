@@ -5,10 +5,8 @@ import Box from '@mui/material/Box';
 import Container from '@mui/material/Container';
 import Avatar from '@mui/material/Avatar';
 import Typography from '@mui/material/Typography';
-import IconButton from '@mui/material/IconButton';
 import ArrowUpwardIcon from '@mui/icons-material/ArrowUpward';
 import ArrowDownwardIcon from '@mui/icons-material/ArrowDownward';
-import MoveToInboxOutlinedIcon from '@mui/icons-material/MoveToInboxOutlined';
 import { timeSince } from '../../utils/time';
 import './Post.scss';
 import { createComment, retrieveCommunityByName, retrievePostByIdAndCommunityName, updateComment } from '../../apis/app-api';
@@ -229,9 +227,9 @@ const Post = (props) => {
                                 height="315"
                                 src={post.url}
                                 title={`embedUrl`}
-                                frameborder="0"
+                                frameBorder="0"
                                 allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                                allowfullscreen
+                                allowFullScreen
                             />
                         </div>}
                         {post.url && post.url.includes('digitaloceanspaces') &&
@@ -242,7 +240,7 @@ const Post = (props) => {
                                 height="315"
                                 src={post.url}
                                 title={`embedUrl`}
-                                frameborder="0"
+                                frameBorder="0"
                             />
                         </div>}
                         {!post.url &&
@@ -257,8 +255,6 @@ const Post = (props) => {
                             {/*<IconButton color='primary' component='label' id='iconbutton'>*/}
                             {/*    <div id='downvote'>⬇</div>*/}
                             {/*</IconButton>*/}
-                            <IconButton component='label' size='large' id='iconbutton'>
-                                <MoveToInboxOutlinedIcon id='Archive'></MoveToInboxOutlinedIcon></IconButton>
                             <Button></Button>
 
                         </div>

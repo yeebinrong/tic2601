@@ -33,27 +33,30 @@ CREATE OR REPLACE FUNCTION searchPostWithParamsFunc(
 	comment_count BIGINT,
 	date_deleted TIMESTAMP,
 	view_count INTEGER,
-	is_hidden trueorfalse,
 	url VARCHAR(2048)
   )
   LANGUAGE plpgsql AS
 $func$
 DECLARE
-        paramQuery text := ' WHERE (is_hidden IS NULL OR is_hidden = ''N'') ';
-		appendParam text := ' AND ';
+        paramQuery text := ' WHERE ';
+		appendParam text := ' ';
 		BEGIN
 		raise notice 'userFilter: %', userFilter;
         IF userFilter != '' THEN
             paramQuery = paramQuery || appendParam || 'user_name = ' || '''' || userFilter || '''';
+			appendParam = ' AND ';
         END IF;
         IF flairFilter != '' THEN
             paramQuery = paramQuery || appendParam || 'flair = ' || '''' || flairFilter || '''';
+			appendParam = ' AND ';
         END IF;
         IF communityFilter != '' THEN
             paramQuery = paramQuery || appendParam || 'community_name = ' || '''' || communityFilter || '''';
+			appendParam = ' AND ';
         END IF;
         IF queryFilter != '' THEN
             paramQuery = paramQuery || appendParam || 'title ILIKE ' || '''' || '%' || queryFilter || '%' || '''';
+			appendParam = ' AND ';
         END IF;
 		CASE orderParam
 			WHEN 'new' THEN
@@ -67,15 +70,14 @@ DECLARE
 		RAISE NOTICE 'Value: %', 'SELECT * FROM posts' || paramQuery;
         RETURN QUERY EXECUTE 'WITH all_communities AS
             (SELECT ac.community_name, p.user_name, AGE(CURRENT_TIMESTAMP, p.date_created), p.title, p.flair, p.post_id, p.date_deleted, p.view_count,
-			COALESCE(SUM(f.favour_point), 0) AS fav_point, fp.favour_point AS is_favour, COUNT(c.comment_id) AS comment_count, hf.hide_or_favourite AS is_hidden, p.url
+			COALESCE(SUM(f.favour_point), 0) AS fav_point, fp.favour_point AS is_favour, COUNT(c.comment_id) AS comment_count, p.url
             FROM community ac
             INNER JOIN posts p ON p.community_name = ac.community_name
             LEFT JOIN post_favours f ON f.post_id = p.post_id AND f.community_name = p.community_name
 			LEFT JOIN post_favours fp ON fp.post_id = p.post_id AND fp.community_name = p.community_name AND fp.giver = $1
             LEFT JOIN comments c ON c.post_id = f.post_id AND c.community_name = p.community_name
-			LEFT JOIN hide_or_fav_posts hf ON hf.post_id = p.post_id AND hf.community_name = p.community_name AND hf.user_name = $1
-            GROUP BY ac.community_name, p.user_name, p.post_id, p.date_created, p.date_deleted, p.title, p.flair, p.view_count, p.url, c.comment_id, fp.favour_point, hf.hide_or_favourite)
-            SELECT DISTINCT post_id, community_name, user_name, age, title, flair, fav_point, is_favour, comment_count, date_deleted, view_count, is_hidden, url
+            GROUP BY ac.community_name, p.user_name, p.post_id, p.date_created, p.date_deleted, p.title, p.flair, p.view_count, p.url, c.comment_id, fp.favour_point)
+            SELECT DISTINCT post_id, community_name, user_name, age, title, flair, fav_point, is_favour, comment_count, date_deleted, view_count, url
             FROM all_communities' || paramQuery USING currentUser;
 END;
 $func$;
@@ -102,11 +104,9 @@ CREATE TABLE community (
 		PRIMARY KEY,
 		CHECK(length(community_name) > 3 AND length(community_name) < 21
 		AND community_name ~* '^[A-Za-z0-9_\-]+$' AND community_name !~* '\_%'),
-	pinned_post_id INTEGER DEFAULT NULL, -- foreign key is added after post table is created
 	datetime_created TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
 	description VARCHAR(256) NOT NULL DEFAULT 'Describe the community.',
 	profile_picture VARCHAR(256),
-	backdrop_picture VARCHAR(256),
 	colour CHAR(7) NOT NULL DEFAULT '#00b2d2' CHECK(colour ~* '^#[A-Fa-f0-9]{6}$') -- Colour theme of the community
 );
 
@@ -125,9 +125,6 @@ CREATE TABLE posts (
 	PRIMARY KEY (post_id, community_name)
 );
 
--- Alter community table to have pinned_post have foreign key
-ALTER TABLE community ADD FOREIGN KEY (community_name, pinned_post_id) REFERENCES posts(community_name, post_id) ON DELETE CASCADE ON UPDATE CASCADE;
-
 -- [Create post contents table]
 DROP TABLE IF EXISTS post_contents CASCADE;
 CREATE TABLE post_contents (
@@ -136,8 +133,6 @@ CREATE TABLE post_contents (
 	content VARCHAR(1000) NOT NULL,
 	is_edited TrueOrFalse NOT NULL DEFAULT 'N',
 	date_edited TIMESTAMP DEFAULT NULL,
-	is_archived TrueOrFalse DEFAULT 'N',
-	date_archived TIMESTAMP DEFAULT NULL,
 	PRIMARY KEY (post_id, community_name),
 	CONSTRAINT PFK
 	FOREIGN KEY (community_name, post_id)
@@ -173,17 +168,6 @@ CREATE TABLE followed_communities(
 	PRIMARY KEY (community_name, user_name)
 );
 
--- [Create rules table]
-DROP TABLE IF EXISTS rules CASCADE;
-CREATE TABLE rules (
-	community_name VARCHAR(21) NOT NULL REFERENCES community(community_name) ON DELETE CASCADE ON UPDATE CASCADE,
-	rule_id INTEGER NOT NULL,
-	title VARCHAR(300) NOT NULL,
-	description VARCHAR(1000) NOT NULL,
-	PRIMARY KEY (community_name, rule_id)
--- TODO allow sorting order of rules
-);
-
 -- [Create post_favours table]
 DROP TABLE IF EXISTS post_favours CASCADE;
 CREATE TABLE post_favours (
@@ -215,20 +199,6 @@ CREATE TABLE comment_favours (
 	ON DELETE CASCADE ON UPDATE CASCADE
 );
 
--- [Create hide_or_fav_posts table]
-DROP TABLE IF EXISTS hide_or_fav_posts CASCADE;
-CREATE TABLE hide_or_fav_posts (
-	community_name VARCHAR(21) NOT NULL,
-	post_id INTEGER NOT NULL,
-	user_name VARCHAR(30) NOT NULL REFERENCES users(user_name) ON DELETE CASCADE ON UPDATE CASCADE,
-	hide_or_favourite TrueOrFalse NOT NULL,
-	PRIMARY KEY (community_name, post_id, user_name),
-	CONSTRAINT PFK
-	FOREIGN KEY (community_name, post_id)
-	REFERENCES posts(community_name, post_id)
-	ON DELETE CASCADE ON UPDATE CASCADE
-);
-
 -- [Create moderators table]
 DROP TABLE IF EXISTS moderators CASCADE;
 CREATE TABLE moderators(
@@ -243,12 +213,11 @@ DROP TABLE IF EXISTS banlist CASCADE;
 CREATE TABLE banlist(
 	user_name VARCHAR(30) NOT NULL REFERENCES users(user_name) ON DELETE CASCADE ON UPDATE CASCADE,
 	community_name VARCHAR(21) NOT NULL,
-	rule_id INTEGER NOT NULL,
 	is_approved TrueOrFalse NOT NULL DEFAULT 'N',
 	PRIMARY KEY (community_name, user_name),
 	CONSTRAINT PFK
-	FOREIGN KEY (community_name, rule_id)
-	REFERENCES rules(community_name, rule_id)
+	FOREIGN KEY (community_name)
+	REFERENCES community(community_name)
 	ON DELETE CASCADE ON UPDATE CASCADE
 );
 
@@ -268,20 +237,11 @@ INSERT INTO community (community_name, colour, description) VALUES ('test_commun
 INSERT INTO community (community_name, colour) VALUES ('another_community', '#0D976F');
 INSERT INTO community (community_name, description) VALUES ('community_w_no_posts', 'This is an empty community that should not have any posts');
 INSERT INTO community (community_name, description) VALUES ('banned_community', 'testaccount should be banned from this community and not be able to view it');
--- Insert rules
-INSERT INTO rules (rule_id, community_name, title, description)
-	VALUES (1, 'test_community', 'This is the first rule', 'This is the first rule for test_community.');
-INSERT INTO rules (rule_id, community_name, title, description)
-	VALUES (2, 'test_community', 'This is the second rule', 'This is the second rule for test_community.');
-INSERT INTO rules (rule_id, community_name, title, description)
-	VALUES (1, 'community_w_no_posts', 'This a lonely rule here.', 'There is only one rule here in community_w_no_posts.');
-INSERT INTO rules (rule_id, community_name, title, description)
-	VALUES (1, 'banned_community', 'Rules 1 for banned_community', 'Testaccount ought to be banned from here.');
 -- Insert banlist
-INSERT INTO banlist (community_name, rule_id, user_name, is_approved)
-	VALUES ('banned_community', 1,'testaccount', 'Y');
-INSERT INTO banlist (community_name, rule_id, user_name, is_approved)
-	VALUES ('test_community', 2, 'test3', 'N');
+INSERT INTO banlist (community_name, user_name, is_approved)
+	VALUES ('banned_community','testaccount', 'Y');
+INSERT INTO banlist (community_name, user_name, is_approved)
+	VALUES ('test_community', 'test3', 'N');
 -- Insert followed community
 INSERT INTO followed_communities (community_name, user_name) VALUES ('test_community', 'testaccount');
 INSERT INTO followed_communities (community_name, user_name) VALUES ('another_community', 'testaccount');
@@ -313,24 +273,19 @@ INSERT INTO post_contents (community_name, post_id, content)
 	VALUES ('test_community', 2, 'This is post content for hello world two.');
 --
 INSERT INTO posts (post_id, community_name, title, user_name, flair)
-	VALUES (3, 'test_community', 'This post should be hidden for testaccount user!', 'anotheraccount', 'Text');
+	VALUES (3, 'test_community', 'This post is by testaccount user!', 'anotheraccount', 'Text');
 INSERT INTO post_contents (community_name, post_id, content)
 	VALUES ('test_community', 3, 'testaccount user should not be able to view this post!');
-INSERT INTO hide_or_fav_posts (community_name, post_id, user_name, hide_or_favourite)
-	VALUES ('test_community', 3, 'testaccount', 'Y');
 --
 INSERT INTO posts (post_id, community_name, title, user_name, flair)
-	VALUES (4, 'test_community', 'This post should be favourited for testaccount user!', 'test3', 'Text');
+	VALUES (4, 'test_community', 'This post is by testaccount user!', 'test3', 'Text');
 INSERT INTO post_contents (community_name, post_id, content)
-	VALUES ('test_community', 4, 'This post should appear as favourited for testaccount user!');
-INSERT INTO hide_or_fav_posts (community_name, post_id, user_name, hide_or_favourite)
-	VALUES ('test_community', 4, 'testaccount', 'N');
+	VALUES ('test_community', 4, 'This post is by testaccount user!');
 --
 INSERT INTO posts (post_id, community_name, title, user_name, flair)
-	VALUES (5, 'test_community', 'This post should be pinned when viewing test_community!', 'testaccount', 'Text');
+	VALUES (5, 'test_community', 'This post should be is for test_community!', 'testaccount', 'Text');
 INSERT INTO post_contents (community_name, post_id, content)
-	VALUES ('test_community', 5, 'This post should be pinned for test_community.');
-UPDATE community SET pinned_post_id = 5 WHERE community_name = 'test_community';
+	VALUES ('test_community', 5, 'This post content should be is for test_community.');
 --
 INSERT INTO posts (post_id, community_name, title, user_name, flair)
 	VALUES (6, 'test_community', 'This post should have 4 comments and 2 likes!', 'testaccount', 'Text');
@@ -448,18 +403,10 @@ INSERT INTO moderators (community_name, user_name, is_admin)
 	VALUES ('GoldenRetri', 'Wiley', 'Y');
 INSERT INTO moderators (community_name, user_name, is_admin)
 	VALUES ('GoldenRetri', 'Eli', 'Y');
-INSERT INTO rules (rule_id, community_name, title, description)
-	VALUES (1, 'Dogs','#1', 'No Swearing Words');
-INSERT INTO rules (rule_id, community_name, title, description)
-	VALUES (2, 'Dogs','#2', 'Let us create a peaceful community!');
-INSERT INTO rules (rule_id, community_name, title, description)
-	VALUES (1, 'DogOwners', '#1', 'No Swearing Words');
-INSERT INTO rules (rule_id, community_name, title, description)
-	VALUES (1, 'GoldenRetri', '#1', 'No Swearing Words');
-INSERT INTO banlist (community_name, rule_id, user_name, is_approved)
-	VALUES ('DogOwners', 1, 'Tami', 'Y');
-INSERT INTO banlist (community_name, rule_id, user_name, is_approved)
-	VALUES ('Dogs', 1, 'Coco', 'N');
+INSERT INTO banlist (community_name, user_name, is_approved)
+	VALUES ('DogOwners', 'Tami', 'Y');
+INSERT INTO banlist (community_name, user_name, is_approved)
+	VALUES ('Dogs', 'Coco', 'N');
 INSERT INTO followed_communities (community_name, user_name) VALUES ('Dogs', 'Cody');
 INSERT INTO followed_communities (community_name, user_name) VALUES ('DogOwners', 'Cody');
 INSERT INTO followed_communities (community_name, user_name) VALUES ('GoldenRetri', 'Cody');

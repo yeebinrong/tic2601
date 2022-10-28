@@ -47,18 +47,16 @@ const getHomePagePosts = (currentUser, sortBy) => {
     return POOL.query(
         `WITH following_communities AS
             (SELECT fc.community_name, p.user_name, AGE(CURRENT_TIMESTAMP, p.date_created), p.title, p.flair, p.post_id, p.date_deleted, p.view_count,
-            COALESCE(SUM(f.favour_point), 0) AS fav_point, fp.favour_point AS is_favour, COUNT(c.comment_id) AS comment_count, hf.hide_or_favourite AS is_hidden, p.url
+            COALESCE(SUM(f.favour_point), 0) AS fav_point, fp.favour_point AS is_favour, COUNT(c.comment_id) AS comment_count, p.url
             FROM followed_communities fc
             INNER JOIN posts p ON p.community_name = fc.community_name
             LEFT JOIN post_favours f ON f.post_id = p.post_id AND f.community_name = p.community_name
 			LEFT JOIN post_favours fp ON fp.post_id = p.post_id AND fp.community_name = p.community_name AND fp.giver = $1
             LEFT JOIN comments c ON c.post_id = f.post_id AND c.community_name = p.community_name
-            LEFT JOIN hide_or_fav_posts hf ON hf.post_id = p.post_id AND hf.community_name = p.community_name AND hf.user_name = $1
-            GROUP BY fc.community_name, fc.user_name, p.user_name, p.post_id, p.date_created, p.date_deleted, p.title, p.flair, p.url, p.view_count, fp.favour_point, c.comment_id, hf.hide_or_favourite
+            GROUP BY fc.community_name, fc.user_name, p.user_name, p.post_id, p.date_created, p.date_deleted, p.title, p.flair, p.url, p.view_count, fp.favour_point, c.comment_id
             HAVING fc.user_name = $1)
-        SELECT DISTINCT post_id, community_name, user_name, age, title, flair, fav_point, is_favour, comment_count, date_deleted, view_count, is_hidden, url
+        SELECT DISTINCT post_id, community_name, user_name, age, title, flair, fav_point, is_favour, comment_count, date_deleted, view_count, url
         FROM following_communities
-		WHERE is_hidden IS NULL OR is_hidden = 'N'
         ORDER BY ` + sortBy,
         [
             escapeQuotes(currentUser)
@@ -180,16 +178,15 @@ const retrieveCommunityPostsDB = (community, currentUser) => {
     return POOL.query(
            `WITH one_community AS
            (SELECT oc.community_name, p.user_name, AGE(CURRENT_TIMESTAMP, p.date_created), p.title, p.flair, p.post_id, p.date_deleted, p.view_count,
-           COALESCE(SUM(f.favour_point), 0) AS fav_point, fp.favour_point AS is_favour, COUNT(c.comment_id) AS comment_count, hf.hide_or_favourite AS is_hidden, p.url
+           COALESCE(SUM(f.favour_point), 0) AS fav_point, fp.favour_point AS is_favour, COUNT(c.comment_id) AS comment_count, p.url
                FROM community oc
                INNER JOIN posts p ON p.community_name = oc.community_name
                LEFT JOIN post_favours f ON f.post_id = p.post_id AND f.community_name = p.community_name
                LEFT JOIN post_favours fp ON fp.post_id = p.post_id AND fp.community_name = p.community_name AND fp.giver = $2
                LEFT JOIN comments c ON c.post_id = f.post_id AND c.community_name = p.community_name
-               LEFT JOIN hide_or_fav_posts hf ON hf.post_id = p.post_id AND hf.community_name = p.community_name AND hf.user_name = $2
-               GROUP BY oc.community_name, p.user_name, p.post_id, p.date_created, p.date_deleted, p.title, p.flair, p.url, p.view_count, fp.favour_point, c.comment_id, hf.hide_or_favourite
+               GROUP BY oc.community_name, p.user_name, p.post_id, p.date_created, p.date_deleted, p.title, p.flair, p.url, p.view_count, fp.favour_point, c.comment_id
                HAVING oc.community_name = $1)
-            SELECT DISTINCT post_id, community_name, user_name, age, title, flair, fav_point, is_favour, comment_count, date_deleted, view_count, is_hidden, url
+            SELECT DISTINCT post_id, community_name, user_name, age, title, flair, fav_point, is_favour, comment_count, date_deleted, view_count, url
             FROM one_community ORDER BY age DESC;`,
             [
                 escapeQuotes(community),
@@ -381,6 +378,15 @@ const updateUserProfile = (columnName, value, userName) => {
     );
 }
 
+const insertUserIntoBanList = (userName, communityName) => {
+    return POOL.query(`INSERT INTO banlist (user_name, community_name) VALUES ($1, $2) ON CONFLICT DO NOTHING`,
+        [
+            escapeQuotes(userName),
+            escapeQuotes(communityName),
+        ]
+    );
+}
+
 /* -------------------------------------------------------------------------- */
 //                        ######## DIGITALOCEAN METHODS ########
 /* -------------------------------------------------------------------------- */
@@ -440,5 +446,6 @@ module.exports = {
     getAllFollowedCommunities,
     insertTextPost,
     insertUrlPost,
+    insertUserIntoBanList,
     escapeQuotes
 }

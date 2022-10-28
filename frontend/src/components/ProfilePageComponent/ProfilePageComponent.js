@@ -147,18 +147,6 @@ class ProfilePageComponent extends React.Component {
                                     {this.props.userInfo.username !== '' &&
                                     this.state.user_name === this.props.userInfo.username &&
                                     <Tab
-                                        label="Saved"
-                                        value="saved"
-                                    />}
-                                    {this.props.userInfo.username !== '' &&
-                                    this.state.user_name === this.props.userInfo.username &&
-                                    <Tab
-                                        label="Hidden"
-                                        value="hidden"
-                                    />}
-                                    {this.props.userInfo.username !== '' &&
-                                    this.state.user_name === this.props.userInfo.username &&
-                                    <Tab
                                         label="Favoured"
                                         value="favoured"
                                     />}

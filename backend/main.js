@@ -44,7 +44,8 @@ const {
     retrieveCommunityPostsDB,
     getAllFollowedCommunities,
     insertTextPost,
-    insertUrlPost
+    insertUrlPost,
+    insertUserIntoBanList
 } = require('./db_utils.js')
 
 /* -------------------------------------------------------------------------- */
@@ -505,7 +506,7 @@ app.get('/api/users/:userName', async (req, resp) => {
 app.post('/api/update_description', async (req, resp) => {
     const { description } = req.body;
     try {
-        const results = await updateUserProfile('user_description', description, req.token.username)
+        await updateUserProfile('user_description', description, req.token.username)
     } catch (e) {
         console.info(`ERROR: Update user description failed with following ${e}`)
         resp.status(400)
@@ -532,7 +533,26 @@ app.post('/api/upload', upload.single('file'), async (req, resp) => {
         return;
     } catch (e) {
         console.info(e);
-		resp.status(500);
+		resp.status(400);
+		resp.type('application/json');
+		resp.json({ message: `${e}`});
+        return;
+    }
+})
+
+// POST /api/report
+app.post('/api/report', async (req, resp) => {
+    console.log(req);
+    try {
+        const { userName, communityName } = req.body;
+        await insertUserIntoBanList(userName, communityName);
+        resp.status(200);
+        resp.type('application/json');
+        resp.json({ message: 'report ok' });
+        return;
+    } catch (e) {
+        console.log(e);
+		resp.status(400);
 		resp.type('application/json');
 		resp.json({ message: `${e}`});
         return;

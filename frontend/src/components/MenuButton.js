@@ -2,13 +2,13 @@ import React from 'react';
 import { Box, IconButton, Menu, MenuItem } from '@mui/material';
 import MoreHorizIcon from '@mui/icons-material/MoreHoriz';
 import ContentCopyIcon from '@mui/icons-material/ContentCopy';
-import ArchiveIcon from '@mui/icons-material/Archive';
-import PushPinIcon from '@mui/icons-material/PushPin';
 import DeleteIcon from '@mui/icons-material/Delete';
-import VisibilityOffIcon from '@mui/icons-material/VisibilityOff';
 import FlagIcon from '@mui/icons-material/Flag';
+import { reportUserInCommunity } from '../apis/app-api';
+import { withSnackbar } from 'notistack';
+import { snackBarProps } from '../constants/constants';
 
-const MenuButton = () => {
+const MenuButton = (props) => {
     const [anchorEl, setAnchorEl] = React.useState(null);
     const open = Boolean(anchorEl);
     const handleClick = (event) => {
@@ -67,18 +67,26 @@ const MenuButton = () => {
                     <ContentCopyIcon style={{ marginRight: '8px' }} /> Copy Link
                 </MenuItem>
                 <MenuItem>
-                    <ArchiveIcon style={{ marginRight: '8px' }} /> Archive
-                </MenuItem>
-                <MenuItem>
-                    <PushPinIcon style={{ marginRight: '8px' }} /> Pin
-                </MenuItem>
-                <MenuItem>
                     <DeleteIcon style={{ marginRight: '8px' }} /> Delete
                 </MenuItem>
-                <MenuItem>
-                    <VisibilityOffIcon style={{ marginRight: '8px' }} /> Hide
-                </MenuItem>
-                <MenuItem>
+                <MenuItem
+                    onClick={()=> {
+                        reportUserInCommunity(props.postOwner, props.communityName)
+                            .then(res => {
+                                if (!res.error) {
+                                    props.enqueueSnackbar(
+                                        `User [${props.postOwner}] is reported for [${props.communityName}] community.`,
+                                        snackBarProps('success'),
+                                    );
+                                } else {
+                                    props.enqueueSnackbar(
+                                        `An error has occurred reporting user [${props.postOwner}] for [${props.communityName}] community.`,
+                                        snackBarProps('error'),
+                                    );
+                                }
+                            })
+                    }}
+                >
                     <FlagIcon style={{ marginRight: '8px' }} /> Report
                 </MenuItem>
             </Menu>
@@ -86,4 +94,4 @@ const MenuButton = () => {
     );
 };
 
-export default MenuButton;
+export default withSnackbar(MenuButton);

@@ -5,11 +5,9 @@ const { getCommunityByName, getCommunityMemberCount, getFollowedCommunities } = 
 // example:
 //{
 //   "community_name": "test_community",
-//   "pinned_post": 3,
 //   "datetime_created": "2022-09-26T12:38:45.608Z",
 //   "description": "This is the very first community created ever!",
 //   "profile_picture": null,
-//   "backdrop_picture": null,
 //   "colour": "#E30D00",
 //   "member_count": "1",
 //   "joined": true
