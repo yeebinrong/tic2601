@@ -14,7 +14,7 @@ import {
 import ForwardIcon from '@mui/icons-material/Forward';
 import { timeSince } from '../../utils/time';
 import './Post.scss';
-import { createComment, retrieveCommunityByName, retrievePostByIdAndCommunityName, updateComment, updateCommentFavour } from '../../apis/app-api';
+import { createComment, modifyFavour, retrieveCommunityByName, retrievePostByIdAndCommunityName, updateComment, updateCommentFavour } from '../../apis/app-api';
 import { useParams } from 'react-router-dom';
 
 
@@ -140,7 +140,7 @@ const Comment = (props) => {
 
     const subComments = props.comment.reply_comments && props.comment.reply_comments.map((cmt) =>
         <li key={cmt.comment_id}>
-            <Comment comment={cmt} parentComment={props.comment}  reloadPostFunc={props.reloadPostFunc} />
+            <Comment comment={cmt} parentComment={props.comment} reloadPostFunc={props.reloadPostFunc} />
         </li>,
     );
     const onFavourChange = () => {
@@ -256,6 +256,18 @@ const Post = (props) => {
         });
     }
 
+    const onFavourChange = (value) => {
+        modifyFavour({
+            postId: post.post_id,
+            favour: post.is_favour ? post.is_favour : 0,
+            value: value,
+            receiver: post.user_name,
+            communityName: post.community_name,
+        }).then(res => {
+            reloadPostFunc()
+        })
+    }
+
     return (
         <Container maxWidth='lg'>
             {post && <Box display='grid' gridTemplateColumns='repeat(12, 1fr)' gap={2}>
@@ -300,15 +312,34 @@ const Post = (props) => {
                         {!post.url &&
                             <div>{post.content}</div>}
                         <div id={'post-statusline'}>
+
+                            <Stack direction="row" spacing={1}>
+                                <Box>
+                                    <IconButton
+                                        sx={{ p: '10px' }}
+                                        aria-label="upfavour"
+                                    >
+                                        {(post.is_favour === 0 || post.is_favour === -1) &&
+                                            <ForwardIcon className='upFavourStyle' onClick={() => onFavourChange(1)} />}
+                                        {post.is_favour === 1 &&
+                                            <ForwardIcon className='upFavourColorStyle' onClick={() => onFavourChange(0)} />}
+                                    </IconButton>
+                                    {post.fav_point
+                                        ? post.fav_point
+                                        : 0}
+                                    <IconButton
+                                        sx={{ p: '10px' }}
+                                        aria-label="downfavour"
+                                    >
+                                        {(post.is_favour === 0 || post.is_favour === 1) &&
+                                            <ForwardIcon className='downFavourStyle' onClick={() => onFavourChange(-1)} />}
+                                        {post.is_favour === -1 &&
+                                            <ForwardIcon className='downFavourColorStyle' onClick={() => onFavourChange(0)} />}
+                                    </IconButton>
+                                </Box>
+                            </Stack>
+
                             <Button disabled>{post['comment_count']} comments</Button>
-                            <UpVote type={'post'} postId={post.post_id}></UpVote>
-                            <DownVote type={'post'} postId={post.post_id}></DownVote>
-                            {/*<IconButton color='primary' component='label' id='iconbutton'>*/}
-                            {/*    <div id='upvote'>⬆</div>*/}
-                            {/*</IconButton>*/}
-                            {/*<IconButton color='primary' component='label' id='iconbutton'>*/}
-                            {/*    <div id='downvote'>⬇</div>*/}
-                            {/*</IconButton>*/}
                             <Button></Button>
 
                         </div>
