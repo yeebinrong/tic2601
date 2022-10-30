@@ -40,7 +40,7 @@ exports.getCommentsByPostId = (currentUser, id, communityName) => {
 
 exports.getCommentsById = (currentUser, id, communityName, postId) => {
     return POOL.query(commentWithFavourPoint + `
-    WHERE comment_id = $2
+    WHERE comments.comment_id = $2
       AND comments.community_name = $3
       AND comments.post_id = $4
     `, [currentUser, id, communityName, postId]);
@@ -63,3 +63,26 @@ exports.updateComment = (commentId, content, communityName, postId) => {
         'UPDATE comments SET content = $1, is_edited = \'Y\' WHERE comment_id = $2 AND community_name = $3 AND post_id = $4 RETURNING *',
         [content, commentId, communityName, postId]);
 };
+
+
+exports.insertOrUpdateFavour = (communityName, postId, commentId, giver, receiver, fav_point) => {
+    if (fav_point == 0) {
+
+        return POOL.query(`
+        DELETE FROM comment_favours 
+        WHERE community_name =$1
+        AND post_id = $2
+        AND comment_id = $3
+        AND giver = $4`,
+            [communityName, postId, commentId, giver],
+        )
+    }
+
+    return POOL.query(
+        `
+        INSERT INTO comment_favours(community_name,post_id,comment_id,giver,receiver,favour_point)
+        VALUES ($1, $2, $3, $4, $5, $6)
+        ON CONFLICT (community_name,post_id,comment_id,giver) DO UPDATE 
+        SET favour_point = excluded.favour_point`,
+        [communityName, postId, commentId, giver, receiver, fav_point]);
+}

@@ -1,40 +1,81 @@
 import React, { useState, useEffect } from 'react';
 import TextareaAutosize from '@mui/base/TextareaAutosize';
 import Button from '@mui/material/Button';
-import Box from '@mui/material/Box';
 import Container from '@mui/material/Container';
 import Avatar from '@mui/material/Avatar';
 import Typography from '@mui/material/Typography';
 import ArrowUpwardIcon from '@mui/icons-material/ArrowUpward';
 import ArrowDownwardIcon from '@mui/icons-material/ArrowDownward';
+import {
+    Stack,
+    Box,
+    IconButton,
+} from '@mui/material';
+import ForwardIcon from '@mui/icons-material/Forward';
 import { timeSince } from '../../utils/time';
 import './Post.scss';
-import { createComment, retrieveCommunityByName, retrievePostByIdAndCommunityName, updateComment } from '../../apis/app-api';
+import { createComment, retrieveCommunityByName, retrievePostByIdAndCommunityName, updateComment, updateCommentFavour } from '../../apis/app-api';
 import { useParams } from 'react-router-dom';
 
 
-const UpVote = (props) => {
+const UpVote = ({ comment, onFavourChange }) => {
     let callUpVoteAPI = () => {
-        if (props.type === 'post') {
-            console.log(`upvote post ${props.postId}`);
-        } else {
-            console.log(`upvote comment ${props.commentId}`);
-        }
+        console.log(`upvote comment ${comment}`);
+        updateCommentFavour(
+            comment.community_name,
+            comment.post_id,
+            comment.comment_id,
+            comment.is_favour === 1 ? 0 : 1
+        ).then(resp => {
+            console.log(resp);
+            onFavourChange()
+        })
     };
     return (
-        <ArrowUpwardIcon onClick={callUpVoteAPI} />
+        <div>
+            {comment &&
+                <IconButton
+                    sx={{ p: '10px' }}
+                    aria-label="upfavour"
+                >
+                    {(comment.is_favour === 0 || comment.is_favour === -1) &&
+                        <ForwardIcon className='upFavourStyle' onClick={() => { callUpVoteAPI() }} />}
+                    {comment.is_favour === 1 &&
+                        <ForwardIcon className='upFavourColorStyle' onClick={() => { callUpVoteAPI() }} />}
+                </IconButton>
+                // <ArrowUpwardIcon onClick={callUpVoteAPI} />
+            }
+
+        </div>
     );
 };
-const DownVote = (props) => {
+const DownVote = ({ comment, onFavourChange }) => {
     let callDownVoteAPI = () => {
-        if (props.type === 'post') {
-            console.log(`downvote post ${props.postId}`);
-        } else {
-            console.log(`downvote comment ${props.commentId}`);
-        }
+        console.log(`downvote comment ${comment}`);
+        updateCommentFavour(
+            comment.community_name,
+            comment.post_id,
+            comment.comment_id,
+            comment.is_favour === -1 ? 0 : -1
+        ).then(resp => {
+            onFavourChange()
+        })
     };
     return (
-        <ArrowDownwardIcon onClick={callDownVoteAPI} />
+        <div>
+            {comment &&
+                <IconButton
+                    sx={{ p: '10px' }}
+                    aria-label="upfavour"
+                >
+                    {(comment.is_favour === 0 || comment.is_favour === 1) &&
+                        <ForwardIcon className='downFavourStyle' onClick={() => { callDownVoteAPI() }} />}
+                    {comment.is_favour === -1 &&
+                        <ForwardIcon className='downFavourColorStyle' onClick={() => { callDownVoteAPI() }} />}
+                </IconButton>
+            }
+
+        </div>
     );
 };
 
@@ -99,9 +140,12 @@ const Comment = (props) => {
 
     const subComments = props.comment.reply_comments && props.comment.reply_comments.map((cmt) =>
         <li key={cmt.comment_id}>
-            <Comment comment={cmt} parentComment={props.comment} />
+            <Comment comment={cmt} parentComment={props.comment}  reloadPostFunc={props.reloadPostFunc} />
         </li>,
     );
+    const onFavourChange = () => {
+        props.reloadPostFunc && props.reloadPostFunc()
+    }
     let [showReplyBox, setShowReplyBox] = useState(false);
     let [showEditBox, setShowEditBox] = useState(false);
     return (
@@ -117,8 +161,15 @@ const Comment = (props) => {
             </div>
 
             <div>{props.comment.content}</div>
-            <UpVote type={'comment'} commentId={props.comment.comment_id}></UpVote>
-            <DownVote type={'comment'} commentId={props.comment.comment_id}></DownVote>
+            <Stack direction="row" spacing={1}>
+                <UpVote type={'comment'} comment={props.comment} onFavourChange={onFavourChange}></UpVote>
+                <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                    <Typography>
+                        {props.comment.fav_point}
+                    </Typography>
+                </Box>
+                <DownVote type={'comment'} comment={props.comment} onFavourChange={onFavourChange}></DownVote>
+            </Stack>
             <Button size='small' onClick={() => {
                 setShowReplyBox(!showReplyBox);
                 setShowEditBox(false);
@@ -176,29 +227,32 @@ const Post = (props) => {
     const [post, setPost] = useState(null);
     const [community, setCommunity] = useState(null);
     const { community_name, postId } = useParams();
+    const [reloadPost, setReloadPost] = useState(1);
+
+    const reloadPostFunc = () => {
+        setReloadPost(reloadPost + 1)
+    }
 
     useEffect(() => {
-        if (props.isVerifyDone && !post) {
-            retrievePostByIdAndCommunityName(postId, community_name).then((resp) => {
-                setPost(resp.data);
-                console.log(resp.data);
-                retrieveCommunityByName(resp.data.community_name).then((resp) => {
-                    setCommunity({
-                        ...resp.data,
-                        joined: true,
-                    });
+        retrievePostByIdAndCommunityName(postId, community_name).then((resp) => {
+            setPost(resp.data);
+            console.log(resp.data);
+            retrieveCommunityByName(resp.data.community_name).then((resp) => {
+                setCommunity({
+                    ...resp.data,
+                    joined: true,
                 });
-                return resp.data;
             });
-        }
+            return resp.data;
+        });
         // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [props.isVerifyDone]);
+    }, [props.isVerifyDone, reloadPost]);
 
 
     let commentComponents = null;
     if (post && post.comments) {
         commentComponents = post.comments.map((cmt) => {
-            return <Comment key={cmt.comment_id} comment={cmt} />;
+            return <Comment key={cmt.comment_id} comment={cmt} reloadPostFunc={reloadPostFunc} />;
         });
     }
 
@@ -221,30 +275,30 @@ const Post = (props) => {
                         </Box>
                         <h2>{post.title}</h2>
                         {post.url && !post.url.includes('digitaloceanspaces') &&
-                        <div>
-                            <iframe
-                                width="560"
-                                height="315"
-                                src={post.url}
-                                title={`embedUrl`}
-                                frameBorder="0"
-                                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                                allowFullScreen
-                            />
-                        </div>}
+                            <div>
+                                <iframe
+                                    width="560"
+                                    height="315"
+                                    src={post.url}
+                                    title={`embedUrl`}
+                                    frameBorder="0"
+                                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                                    allowFullScreen
+                                />
+                            </div>}
                         {post.url && post.url.includes('digitaloceanspaces') &&
-                        <div>
-                            <img
-                                alt={''}
-                                width="560"
-                                height="315"
-                                src={post.url}
-                                title={`embedUrl`}
-                                frameBorder="0"
-                            />
-                        </div>}
+                            <div>
+                                <img
+                                    alt={''}
+                                    width="560"
+                                    height="315"
+                                    src={post.url}
+                                    title={`embedUrl`}
+                                    frameBorder="0"
+                                />
+                            </div>}
                         {!post.url &&
-                        <div>{post.content}</div>}
+                            <div>{post.content}</div>}
                         <div id={'post-statusline'}>
                             <Button disabled>{post['comment_count']} comments</Button>
                             <UpVote type={'post'} postId={post.post_id}></UpVote>

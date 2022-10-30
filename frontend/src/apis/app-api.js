@@ -433,6 +433,26 @@ export function updateComment(communityName, postId, commentId, content) {
         }));
 }
 
+export function updateCommentFavour(communityName, postId, commentId, favourPoint) {
+    return axios
+        .post(
+            `${HOST}/api/community/${communityName}/posts/${postId}/comments/${commentId}/favour`,
+            {
+                favourPoint,
+            },
+            {
+                headers: {
+                    Accept: CONTENT_TYPE_JSON,
+                },
+            })
+        .then((resp) => ({ data: resp.data, error: false }))
+        .catch((err) => ({
+            data: err && err.response ? err.response.data : '',
+            error: true,
+            status: err && err.response ? err.response.status : '',
+        }));
+}
+
 export function retrieveCommunityByName(communityName) {
     return axios
         .get(`${HOST}/api/community/${communityName}`, {

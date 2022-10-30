@@ -1,4 +1,4 @@
-const { createComment, getCommentsById, updateComment } = require('../db/comment');
+const { createComment, getCommentsById, updateComment, insertOrUpdateFavour } = require('../db/comment');
 
 exports.createComment = async (req, resp) => {
     let username = req.token.username;
@@ -59,4 +59,43 @@ exports.updateComment = async (req, resp) => {
             ...updatedComment.rows[0],
         },
     );
+};
+
+exports.insertOrUpdateFavour = async (req, resp) => {
+    let username = req.token.username;
+    let communityName = req.params.communityName;
+    let postId = req.params.postId;
+    let commentId = req.params.commentId;
+    let favourPoint = req.body.favourPoint;
+
+    let commentFromDB = await getCommentsById(
+        username,
+        commentId,
+        communityName,
+        postId,
+    );
+    if (commentFromDB.rows.length === 0) {
+        resp.status(404);
+        resp.type('application/json');
+        resp.json({ message: 'comment not found' });
+        return;
+    }
+
+    const favour = await insertOrUpdateFavour(
+        communityName,
+        postId,
+        commentId,
+        username,
+        commentFromDB.rows[0].commenter,
+        favourPoint,
+    )
+
+    resp.status(200);
+    resp.type('application/json');
+    resp.json(
+        {
+            status: 'ok'
+        },
+    );
+
 };
