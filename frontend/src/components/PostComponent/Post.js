@@ -4,9 +4,10 @@ import Button from '@mui/material/Button';
 import Container from '@mui/material/Container';
 import Avatar from '@mui/material/Avatar';
 import Typography from '@mui/material/Typography';
-import ArrowUpwardIcon from '@mui/icons-material/ArrowUpward';
-import ArrowDownwardIcon from '@mui/icons-material/ArrowDownward';
+import { styled } from '@mui/material/styles';
 import {
+    Paper,
+    Divider,
     Stack,
     Box,
     IconButton,
@@ -14,8 +15,16 @@ import {
 import ForwardIcon from '@mui/icons-material/Forward';
 import { timeSince } from '../../utils/time';
 import './Post.scss';
-import { createComment, modifyFavour, retrieveCommunityByName, retrievePostByIdAndCommunityName, updateComment, updateCommentFavour } from '../../apis/app-api';
+import { createComment, modifyFavour, retrieveCommunityByName, retrievePostByIdAndCommunityName, updateComment, updateCommentFavour, updateFollow } from '../../apis/app-api';
 import { useParams } from 'react-router-dom';
+
+const Item = styled(Paper)(({ theme }) => ({
+    backgroundColor: theme.palette.mode === 'dark' ? '#1A2027' : '#fff',
+    ...theme.typography.body2,
+    padding: theme.spacing(1),
+    textAlign: 'center',
+    color: theme.palette.text.secondary,
+}));
 
 
 const UpVote = ({ comment, onFavourChange }) => {
@@ -89,7 +98,6 @@ const User = (props) => {
 };
 const CommentBox = (props) => {
     let [commentText, setCommentText] = useState('');
-    console.log(props);
     let callCreateCommentApi = () => {
         if (!commentText) {
             return;
@@ -193,32 +201,43 @@ const Comment = (props) => {
         </div>
     );
 };
-const Community = (props) => {
+const Community = ({ community, reloadPostFunc }) => {
+
+    const joined = community.joined
+    const changeFollow = () => {
+        updateFollow({
+            communityName: community.community_name,
+            isFollowing: joined ? "1" : "0"
+        }).then(res => {
+            reloadPostFunc()
+        })
+    }
+    const followStatus = joined ? 'Following' : 'Follow'
 
     return (
         <div>
-            <div className='community-header'></div>
-            <div className='community-box'>
-                <Box sx={{ display: 'flex', alignItems: 'center' }}>
-                    <Avatar>H</Avatar>
-                    <div variant='caption' display='block' gutterBottom id='communityName'>
-                        <b>{props.community.name}</b></div>
-                </Box>
-                <div variant='caption' display='block' gutterBottom
-                    id='communityDescruption'>{props.community.description}</div>
-                <br></br>
-                <div>
-                    <div variant='caption' display='block' gutterBottom id='communityMember'>
-                        <b>{props.community.member_count}</b></div>
-                    <div> Members</div>
-                </div>
-                <hr></hr>
-                <div variant='caption' display='block'
-                    gutterBottom>Created {props.community.datetime_created?.toLocaleString()}</div>
-                <br></br>
-                <Button variant='outlined'
-                    className='join-button'>{props.community.joined ? 'Joined' : 'Join'}</Button>
+
+            <div style={{ backgroundColor: community.colour, height: '35px', borderRadius: '5px', paddingTop: '10px', textIndent: '16px' }}>
+
+                <b className={'sideBoxHeader'}>About Community</b>
             </div>
+            <Item>
+                <div style={{ textAlign: 'left', padding: 10 }}>
+                    <b>Welcome to r/{community.community_name}</b>
+                    <p>{community.description}</p>
+                    <Divider style={{ margin: '16px 0' }}></Divider>
+                    <b>Creation Date:{community.datetime_created}</b>
+                    <Divider style={{ margin: '16px 0' }}></Divider>
+                    <Button
+                        style={{ borderRadius: '14px' }}
+                        variant="contained"
+                        onClick={changeFollow}
+                        color={joined === true ? "primary" : "secondary"}>
+                        {followStatus}
+                    </Button>
+                </div>
+            </Item>
+
         </div>
     );
 };
@@ -227,26 +246,25 @@ const Post = (props) => {
     const [post, setPost] = useState(null);
     const [community, setCommunity] = useState(null);
     const { community_name, postId } = useParams();
-    const [reloadPost, setReloadPost] = useState(1);
 
     const reloadPostFunc = () => {
-        setReloadPost(reloadPost + 1)
+        if (props.isVerifyDone) {
+            retrievePostByIdAndCommunityName(postId, community_name).then((resp) => {
+                setPost(resp.data);
+                retrieveCommunityByName(resp.data.community_name).then((resp) => {
+                    setCommunity({
+                        ...resp.data,
+                    });
+                });
+                return resp.data;
+            });
+        }
     }
 
     useEffect(() => {
-        retrievePostByIdAndCommunityName(postId, community_name).then((resp) => {
-            setPost(resp.data);
-            console.log(resp.data);
-            retrieveCommunityByName(resp.data.community_name).then((resp) => {
-                setCommunity({
-                    ...resp.data,
-                    joined: true,
-                });
-            });
-            return resp.data;
-        });
         // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [props.isVerifyDone, reloadPost]);
+        reloadPostFunc()
+    }, [props.isVerifyDone]);
 
 
     let commentComponents = null;
@@ -357,7 +375,8 @@ const Post = (props) => {
                     </div>
                 </Box>
                 <Box gridColumn='span 4'>
-                    {community && <Community community={community}></Community>}
+                    {community && <Community community={community} reloadPostFunc={reloadPostFunc} ></Community>}
+
 
                 </Box>
             </Box>

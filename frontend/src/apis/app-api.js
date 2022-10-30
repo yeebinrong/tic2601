@@ -182,8 +182,9 @@ export function updateColour(params) {
 
 export function updateFollow(params) {
     return axios
-        .post(`${HOST}/api/updateFollow`, {
+        .post(`${HOST}/api/updateFollow`, 
             params,
+            {
             headers: {
                 Accept: CONTENT_TYPE_JSON,
             },

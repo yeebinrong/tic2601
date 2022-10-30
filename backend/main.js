@@ -419,10 +419,10 @@ app.post('/api/updateColour', async (req, resp) => {
 
 app.post('/api/updateFollow', async (req, resp) => {
     try {
-        await updateFollowDB(req.body.params.communityName, req.body.params.isFollowing, req.token.username);
+        await updateFollowDB(req.body.communityName, req.body.isFollowing, req.token.username);
         resp.status(200);
         resp.type('application/json');
-        resp.json({ isFollowing: req.body.params.isFollowing === '0' ? '1' : '0' });
+        resp.json({ isFollowing: req.body.isFollowing === '0' ? '1' : '0' });
         return;
     } catch (e) {
         console.info(e);
