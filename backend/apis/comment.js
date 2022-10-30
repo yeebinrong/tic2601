@@ -29,7 +29,7 @@ exports.updateComment = async (req, resp) => {
         return;
     }
 
-    let commentFromDB = await getCommentsById(req.params.commentId, req.params.communityName, req.params.postId);
+    let commentFromDB = await getCommentsById(username, req.params.commentId, req.params.communityName, req.params.postId);
 
     if (commentFromDB.rows.length === 0) {
         resp.status(404);
