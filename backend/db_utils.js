@@ -46,16 +46,17 @@ const getAllFollowedCommunities = (username) => {
 const getHomePagePosts = (currentUser, sortBy) => {
     return POOL.query(
         `WITH following_communities AS
-            (SELECT fc.community_name, p.user_name, AGE(CURRENT_TIMESTAMP, p.date_created), p.title, p.flair, p.post_id, p.date_deleted, p.view_count,
-            COALESCE(SUM(f.favour_point), 0) AS fav_point, fp.favour_point AS is_favour, COUNT(c.comment_id) AS comment_count, p.url
+            (SELECT fc.community_name, p.user_name, AGE(CURRENT_TIMESTAMP, p.date_created), p.title, p.flair, p.url, p.post_id, p.view_count,
+            COALESCE(SUM(f.favour_point), 0) AS fav_point, fp.favour_point AS is_favour, COUNT(c.comment_id) AS comment_count, u.profile_picture
             FROM followed_communities fc
-            INNER JOIN posts p ON p.community_name = fc.community_name
+            INNER JOIN posts p ON p.community_name = fc.community_name AND p.date_deleted IS NULL
             LEFT JOIN post_favours f ON f.post_id = p.post_id AND f.community_name = p.community_name
-			LEFT JOIN post_favours fp ON fp.post_id = p.post_id AND fp.community_name = p.community_name AND fp.giver = $1
+            LEFT JOIN post_favours fp ON fp.post_id = p.post_id AND fp.community_name = p.community_name AND fp.giver = $1
             LEFT JOIN comments c ON c.post_id = f.post_id AND c.community_name = p.community_name
-            GROUP BY fc.community_name, fc.user_name, p.user_name, p.post_id, p.date_created, p.date_deleted, p.title, p.flair, p.url, p.view_count, fp.favour_point, c.comment_id
+            LEFT JOIN users u ON u.user_name = p.user_name
+            GROUP BY fc.community_name, fc.user_name, p.user_name, p.post_id, p.date_created, p.date_deleted, p.title, p.flair, p.url, p.view_count, fp.favour_point, c.comment_id, u.profile_picture
             HAVING fc.user_name = $1)
-        SELECT DISTINCT post_id, community_name, user_name, age, title, flair, fav_point, is_favour, comment_count, date_deleted, view_count, url
+        SELECT DISTINCT post_id, community_name, user_name, age, title, flair, fav_point, is_favour, comment_count, view_count, url, profile_picture
         FROM following_communities
         ORDER BY ` + sortBy,
         [
@@ -65,26 +66,9 @@ const getHomePagePosts = (currentUser, sortBy) => {
 }
 
 const updatePostFavour = (postId, favour, value, currentUser, receiver, communityName) => {
-    if (value == 0) {
-        return POOL.query(`DELETE FROM post_favours WHERE community_name = $1 AND post_id = ` + postId + ` AND giver = $2 AND receiver = $3`,
-            [
-                escapeQuotes(communityName),
-                escapeQuotes(currentUser),
-                escapeQuotes(receiver)
-            ]
-        )
-    } else if (favour == 0) {
-        return POOL.query(`INSERT INTO post_favours (community_name, post_id, favour_point, giver, receiver)
-                            VALUES($1, ` + postId + `, ` + value + `, $2, $3)`,
-            [
-                escapeQuotes(communityName),
-                escapeQuotes(currentUser),
-                escapeQuotes(receiver)
-            ]
-        )
-    } else if (favour != 0) {
-        return POOL.query(`UPDATE post_favours SET favour_point = ` + value + `
-                            WHERE community_name = $1 AND post_id = ` + postId + ` AND giver = $2 AND receiver = $3`,
+    if (favour === 0) {
+        return POOL.query(`INSERT INTO post_favours (community_name, post_id, giver, receiver, favour_point)
+                            VALUES($1, ` + postId + `, $2, $3, ` + value + `)`,
             [
                 escapeQuotes(communityName),
                 escapeQuotes(currentUser),
@@ -92,7 +76,39 @@ const updatePostFavour = (postId, favour, value, currentUser, receiver, communit
             ]
         )
     }
+    else {
+        if (value == 0) {
+            return POOL.query(`DELETE FROM post_favours WHERE community_name = $1 AND post_id = ` + postId + ` AND giver = $2 AND receiver = $3`,
+                [
+                    escapeQuotes(communityName),
+                    escapeQuotes(currentUser),
+                    escapeQuotes(receiver)
+                ]
+            )
+        }
+        else {
+            return POOL.query(`UPDATE post_favours SET favour_point = ` + value + `
+                                WHERE community_name = $1 AND post_id = ` + postId + ` AND giver = $2 AND receiver = $3`,
+                [
+                    escapeQuotes(communityName),
+                    escapeQuotes(currentUser),
+                    escapeQuotes(receiver)
+                ]
+            )
+        }
+    }
 }
+
+const deletePost = (community,username,title,currentUser) => {
+    return POOL.query(`UPDATE posts SET date_deleted = CURRENT_TIMESTAMP WHERE community_name = $1 AND user_name = $2 AND title = $3 AND user_name = $4;`,
+        [
+            escapeQuotes(community),
+            escapeQuotes(username),
+            escapeQuotes(title),
+            escapeQuotes(currentUser),
+        ]
+    );
+};
 
 // This sql inserts a row into community table with the specified communityName,
 // using the autoincrement id returned from inserting that row,
@@ -178,15 +194,16 @@ const retrieveCommunityPostsDB = (community, currentUser) => {
     return POOL.query(
            `WITH one_community AS
            (SELECT oc.community_name, p.user_name, AGE(CURRENT_TIMESTAMP, p.date_created), p.title, p.flair, p.post_id, p.date_deleted, p.view_count,
-           COALESCE(SUM(f.favour_point), 0) AS fav_point, fp.favour_point AS is_favour, COUNT(c.comment_id) AS comment_count, p.url
+           COALESCE(SUM(f.favour_point), 0) AS fav_point, fp.favour_point AS is_favour, COUNT(c.comment_id) AS comment_count, p.url, u.profile_picture
                FROM community oc
                INNER JOIN posts p ON p.community_name = oc.community_name
                LEFT JOIN post_favours f ON f.post_id = p.post_id AND f.community_name = p.community_name
                LEFT JOIN post_favours fp ON fp.post_id = p.post_id AND fp.community_name = p.community_name AND fp.giver = $2
                LEFT JOIN comments c ON c.post_id = f.post_id AND c.community_name = p.community_name
-               GROUP BY oc.community_name, p.user_name, p.post_id, p.date_created, p.date_deleted, p.title, p.flair, p.url, p.view_count, fp.favour_point, c.comment_id
+               LEFT JOIN users u ON u.user_name = p.user_name
+               GROUP BY oc.community_name, p.user_name, p.post_id, p.date_created, p.date_deleted, p.title, p.flair, p.url, p.view_count, fp.favour_point, c.comment_id, u.profile_picture
                HAVING oc.community_name = $1)
-            SELECT DISTINCT post_id, community_name, user_name, age, title, flair, fav_point, is_favour, comment_count, date_deleted, view_count, url
+            SELECT DISTINCT post_id, community_name, user_name, age, title, flair, fav_point, is_favour, comment_count, date_deleted, view_count, url, profile_picture
             FROM one_community ORDER BY age DESC;`,
             [
                 escapeQuotes(community),
@@ -425,6 +442,7 @@ module.exports = {
     getAllPosts,
     getHomePagePosts,
     updatePostFavour,
+    deletePost,
     insertOneCommunityAndReturnName,
     searchPostWithParams,
     uploadToDigitalOcean,
