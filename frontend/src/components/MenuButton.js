@@ -4,7 +4,7 @@ import MoreHorizIcon from '@mui/icons-material/MoreHoriz';
 import ContentCopyIcon from '@mui/icons-material/ContentCopy';
 import DeleteIcon from '@mui/icons-material/Delete';
 import FlagIcon from '@mui/icons-material/Flag';
-import { reportUserInCommunity } from '../apis/app-api';
+import { deleteAPost, reportUserInCommunity } from '../apis/app-api';
 import { withSnackbar } from 'notistack';
 import { snackBarProps } from '../constants/constants';
 
@@ -16,6 +16,26 @@ const MenuButton = (props) => {
     };
     const handleClose = () => {
         setAnchorEl(null);
+    };
+    function handleDelete(communityName, postOwner, title) {
+        deleteAPost({communityName:communityName,postOwner:postOwner,title:title})
+            .then(res => {
+                if (!res.error) {
+                    const tempPosts = communityName;
+                    this.setState({
+                        posts: tempPosts,
+                    });
+                    props.enqueueSnackbar(
+                        `Post has been deleted successfully.`,
+                        snackBarProps('success'),
+                    );
+                } else {
+                    props.enqueueSnackbar(
+                        `An error has occurred`,
+                        snackBarProps('error'),
+                    );
+                }
+            });
     };
 
     return (
@@ -63,10 +83,10 @@ const MenuButton = (props) => {
                     },
                 }}
             >
-                <MenuItem>
+                <MenuItem onClick={() => {navigator.clipboard.writeText(props.url)}}>
                     <ContentCopyIcon style={{ marginRight: '8px' }} /> Copy Link
                 </MenuItem>
-                <MenuItem>
+                <MenuItem onClick={() => handleDelete(props.communityName, props.postOwner, props.title, props.isDeleted)}>
                     <DeleteIcon style={{ marginRight: '8px' }} /> Delete
                 </MenuItem>
                 <MenuItem

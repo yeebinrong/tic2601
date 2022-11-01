@@ -177,6 +177,8 @@ export const renderPostLists = (posts, params, handleChange, onFavourChange) => 
                             <MenuButton
                                 communityName={post.community_name}
                                 postOwner={post.user_name}
+                                postTitle={post.title}
+                                url={post.url}
                             />
                         </Stack>
                     </Stack>
@@ -194,6 +196,12 @@ export const Item = styled(Paper)(({ theme }) => ({
 }));
 
 export const renderBackToTopChip = () => {
+    function scrollToTop() {
+        window.scrollTo({
+        top: 0,
+        behavior: "smooth"
+    });}
+
     return (
         <>
             <Box
@@ -210,6 +218,7 @@ export const renderBackToTopChip = () => {
                         position: 'fixed',
                         bottom: '23px',
                     }}
+                    onClick={() => scrollToTop()}
                 />
             </Box>
         </>
