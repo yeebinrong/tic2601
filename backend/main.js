@@ -24,6 +24,7 @@ const {
     getAllPosts,
     getHomePagePosts,
     updatePostFavour,
+    deletePost,
     insertOneCommunityAndReturnName,
     searchPostWithParams,
     uploadToDigitalOcean,
@@ -334,6 +335,22 @@ app.post('/api/update_favour', async (req, resp) => {
         resp.status(200);
         resp.type('application/json');
         resp.json({ message: 'favour ok' });
+        return;
+    } catch (e) {
+        console.info(e);
+		resp.status(404);
+		resp.type('application/json');
+        resp.json({ message: 'An error has occurred.' });
+        return;
+    }
+});
+
+app.post('/api/delete_post', async (req, resp) => {
+    try {
+        await deletePost(req.body.params.communityName, req.body.params.postOwner, req.body.params.title, req.token.username);
+        resp.status(200);
+        resp.type('application/json');
+        resp.json({ message: 'delete ok' });
         return;
     } catch (e) {
         console.info(e);

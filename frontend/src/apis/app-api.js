@@ -117,6 +117,22 @@ export function modifyFavour(params) {
         }));
 }
 
+export function deleteAPost(params) {
+    return axios
+        .post(`${HOST}/api/delete_post`, {
+            params,
+            headers: {
+                Accept: CONTENT_TYPE_JSON,
+            },
+        })
+        .then((resp) => ({ data: resp.data, error: false }))
+        .catch((err) => ({
+            data: err && err.response ? err.response.data : '',
+            error: true,
+            status: err && err.response ? err.response.status : '',
+        }));
+}
+
 export function searchForPostWithParams(params) {
     return axios
         .get(`${HOST}/api/search`, {
