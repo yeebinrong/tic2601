@@ -83,7 +83,7 @@ const MenuButton = (props) => {
             >
                 <MenuItem
                     onClick={() => {
-                        navigator.clipboard.writeText(`https://readit-xxtqn.ondigitalocean.app/${props.href}`);
+                        navigator.clipboard.writeText(`https://readit-xxtqn.ondigitalocean.app${props.href}`);
                         props.enqueueSnackbar(
                             `Link copied!`,
                             snackBarProps('success'),
