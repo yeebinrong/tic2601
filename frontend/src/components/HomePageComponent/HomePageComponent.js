@@ -10,12 +10,12 @@ import {
     Stack,
     Paper,
     IconButton,
+    Avatar,
     Divider,
     Chip,
 } from '@mui/material';
 import Grid from '@mui/material/Unstable_Grid2';
 import CommentIcon from '@mui/icons-material/Comment';
-import StarsIcon from '@mui/icons-material/Stars';
 import ForwardIcon from '@mui/icons-material/Forward';
 import CreateCommunityComponent from '../CreateCommunityComponent/CreateCommunityComponent';
 
@@ -51,15 +51,22 @@ export const renderPostLists = (posts, params, handleChange, onFavourChange) => 
                             }
                             spacing={2}
                         >
-                            <Box>
-                                <IconButton
-                                    color="primary"
-                                    sx={{ p: '10px' }}
-                                    aria-label="stars"
-                                >
-                                    <StarsIcon />
-                                </IconButton>
-                                <a href={`/community/${post.community_name}/posts/best`}>
+                            <Box
+                                style={{
+                                    display: 'flex',
+                                    margin: '5px 0 0 5px',
+                                }}
+                            >
+                                <Avatar
+                                sx={{ width: 32, height: 32 }}
+                                src={post.profile_picture ?
+                                    post.profile_picture:
+                                    `/static/user-avatar-default.png`}>
+                                </Avatar>
+                                <a href={`/community/${post.community_name}/posts/best`}
+                                style={{
+                                    margin: '6px 0 0 11px',
+                                }}>
                                     r/{post.community_name}
                                 </a>
                             </Box>
