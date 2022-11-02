@@ -10,16 +10,16 @@ import {
     Stack,
     Paper,
     IconButton,
+    Avatar,
     Divider,
     Chip,
 } from '@mui/material';
 import Grid from '@mui/material/Unstable_Grid2';
 import CommentIcon from '@mui/icons-material/Comment';
-import StarsIcon from '@mui/icons-material/Stars';
 import ForwardIcon from '@mui/icons-material/Forward';
 import CreateCommunityComponent from '../CreateCommunityComponent/CreateCommunityComponent';
 
-export const renderPostLists = (posts, params, handleChange, onFavourChange) => {
+export const renderPostLists = (posts, params, handleChange, onFavourChange, onDeletePostCallBack, currentUser) => {
     return (
     <>
         <Item>
@@ -42,6 +42,7 @@ export const renderPostLists = (posts, params, handleChange, onFavourChange) => 
                         style={{ margin: '6px' }}
                     >
                         <Stack
+                            style={{ paddingTop: '8px' }}
                             direction="row"
                             divider={
                                 <Divider
@@ -51,30 +52,43 @@ export const renderPostLists = (posts, params, handleChange, onFavourChange) => 
                             }
                             spacing={2}
                         >
-                            <Box>
-                                <IconButton
-                                    color="primary"
-                                    sx={{ p: '10px' }}
-                                    aria-label="stars"
-                                >
-                                    <StarsIcon />
-                                </IconButton>
-                                <a href={`/community/${post.community_name}/posts/best`}>
+                            <Box
+                                style={{
+                                    display: 'flex',
+                                }}
+                            >
+                                <Avatar
+                                    style={{ margin: '0 8px 0 8px' }}
+                                    sx={{ width: 32, height: 32 }}
+                                    // TODO add community profile picture?
+                                    src={`/static/user-avatar-default.png`}>
+                                </Avatar>
+                                <a href={`/community/${post.community_name}/posts/best`}
+                                style={{
+                                    margin: 'auto',
+                                }}>
                                     r/{post.community_name}
                                 </a>
                             </Box>
                             <Box
                                 style={{
-                                    paddingTop: '11px',
+                                    display: 'flex',
                                 }}
                             >
-                                <a href={`/user/${post.user_name}/view`}>
+                                <Avatar
+                                    style={{ margin: '0 8px 0 0' }}
+                                    sx={{ width: 32, height: 32 }}
+                                    src={post.profile_picture ?
+                                        post.profile_picture:
+                                        `/static/user-avatar-default.png`}>
+                                </Avatar>
+                                <a style={{ margin: 'auto' }} href={`/user/${post.user_name}/view`}>
                                     Posted by u/{post.user_name}
                                 </a>
                             </Box>
                             <Box
                                 style={{
-                                    paddingTop: '11px',
+                                    margin: 'auto 0 auto 8px',
                                 }}
                             >
                                 {(post.age.years &&
@@ -112,7 +126,7 @@ export const renderPostLists = (posts, params, handleChange, onFavourChange) => 
                                 color="primary"
                                 variant="outlined"
                                 size="small"
-                                clickable={true}
+                                clickable={false}
                             />
                         </Stack>
                         {post.url && !post.url.includes('digitaloceanspaces') &&
@@ -176,7 +190,11 @@ export const renderPostLists = (posts, params, handleChange, onFavourChange) => 
                             </Box>
                             <MenuButton
                                 communityName={post.community_name}
+                                postId={post.post_id}
                                 postOwner={post.user_name}
+                                href={`/community/${post.community_name}/view/${post.post_id}`}
+                                deleteCallback={onDeletePostCallBack}
+                                canDelete={post.user_name === currentUser}
                             />
                         </Stack>
                     </Stack>
@@ -194,6 +212,12 @@ export const Item = styled(Paper)(({ theme }) => ({
 }));
 
 export const renderBackToTopChip = () => {
+    function scrollToTop() {
+        window.scrollTo({
+        top: 0,
+        behavior: "smooth"
+    });}
+
     return (
         <>
             <Box
@@ -210,6 +234,7 @@ export const renderBackToTopChip = () => {
                         position: 'fixed',
                         bottom: '23px',
                     }}
+                    onClick={() => scrollToTop()}
                 />
             </Box>
         </>
@@ -315,13 +340,22 @@ class HomePageComponent extends React.Component {
         })
     };
 
+    onDeletePostCallBack = (name, id) => {
+        let tempPosts = this.state.posts;
+        tempPosts = tempPosts.filter(p => !(p.community_name === name && p.post_id === id));
+        this.setState({
+            posts: tempPosts,
+        });
+    }
+
     render() {
+        console.log(this.props);
         return (
             <Grid container spacing={6} style={{ margin: '16px 160px' }}>
                 <Grid xs={9}>
                     <Box sx={{ width: '100%' }}>
                         <Stack spacing={2}>
-                            {renderPostLists(this.state.posts, this.props.params, this.handleChange, this.onFavourChange)}
+                            {renderPostLists(this.state.posts, this.props.params, this.handleChange, this.onFavourChange, this.onDeletePostCallBack, this.props.userInfo?.username)}
                         </Stack>
                     </Box>
                 </Grid>

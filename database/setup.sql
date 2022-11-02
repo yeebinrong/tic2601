@@ -31,9 +31,9 @@ CREATE OR REPLACE FUNCTION searchPostWithParamsFunc(
 	fav_point BIGINT,
 	is_favour INTEGER,
 	comment_count BIGINT,
-	date_deleted TIMESTAMP,
 	view_count INTEGER,
-	url VARCHAR(2048)
+	url VARCHAR(2048),
+        profile_picture VARCHAR(256)
   )
   LANGUAGE plpgsql AS
 $func$
@@ -68,16 +68,17 @@ DECLARE
 			ELSE
 		END CASE;
 		RAISE NOTICE 'Value: %', 'SELECT * FROM posts' || paramQuery;
-        RETURN QUERY EXECUTE 'WITH all_communities AS
-            (SELECT ac.community_name, p.user_name, AGE(CURRENT_TIMESTAMP, p.date_created), p.title, p.flair, p.post_id, p.date_deleted, p.view_count,
-			COALESCE(SUM(f.favour_point), 0) AS fav_point, fp.favour_point AS is_favour, COUNT(c.comment_id) AS comment_count, p.url
-            FROM community ac
-            INNER JOIN posts p ON p.community_name = ac.community_name
-            LEFT JOIN post_favours f ON f.post_id = p.post_id AND f.community_name = p.community_name
-			LEFT JOIN post_favours fp ON fp.post_id = p.post_id AND fp.community_name = p.community_name AND fp.giver = $1
-            LEFT JOIN comments c ON c.post_id = f.post_id AND c.community_name = p.community_name
-            GROUP BY ac.community_name, p.user_name, p.post_id, p.date_created, p.date_deleted, p.title, p.flair, p.view_count, p.url, c.comment_id, fp.favour_point)
-            SELECT DISTINCT post_id, community_name, user_name, age, title, flair, fav_point, is_favour, comment_count, date_deleted, view_count, url
+        RETURN QUERY EXECUTE
+        'WITH all_communities AS
+                (SELECT ac.community_name, p.user_name, AGE(CURRENT_TIMESTAMP, p.date_created), p.title, p.flair, p.url, p.post_id, p.view_count,
+                COALESCE((SELECT SUM(favour_point) FROM post_favours WHERE post_id = p.post_id AND community_name = p.community_name), 0) AS fav_point, fp.favour_point AS is_favour,
+                (SELECT count(*) FROM comments WHERE post_id = p.post_id AND community_name = p.community_name) AS comment_count, u.profile_picture
+                FROM community ac
+                INNER JOIN posts p ON p.community_name = ac.community_name AND p.date_deleted IS NULL
+                LEFT JOIN post_favours fp ON fp.post_id = p.post_id AND fp.community_name = p.community_name AND fp.giver = $1
+                LEFT JOIN users u ON u.user_name = p.user_name
+            GROUP BY ac.community_name, p.user_name, p.date_created, p.title, p.flair, p.url, p.post_id, p.view_count, p.community_name, fp.favour_point, u.profile_picture)
+            SELECT DISTINCT post_id, community_name, user_name, age, title, flair, fav_point, is_favour, comment_count, view_count, url, profile_picture
             FROM all_communities' || paramQuery USING currentUser;
 END;
 $func$;
@@ -273,7 +274,7 @@ INSERT INTO post_contents (community_name, post_id, content)
 	VALUES ('test_community', 2, 'This is post content for hello world two.');
 --
 INSERT INTO posts (post_id, community_name, title, user_name, flair)
-	VALUES (3, 'test_community', 'This post is by testaccount user!', 'anotheraccount', 'Text');
+	VALUES (3, 'test_community', 'This post is by anotheraccount user!', 'anotheraccount', 'Text');
 INSERT INTO post_contents (community_name, post_id, content)
 	VALUES ('test_community', 3, 'testaccount user should not be able to view this post!');
 --
@@ -370,7 +371,7 @@ INSERT INTO post_favours (community_name, post_id, favour_point, giver, receiver
 INSERT INTO comments (comment_id, community_name, post_id, commenter,datetime_created,content)
 	VALUES (1, 'Dogs', 2, 'Arial', '20220830','Happy to help:)');
 INSERT INTO comments (comment_id, community_name, post_id,replying_to,commenter,datetime_created,content)
-	VALUES (2, 'Dogs', 2, 2,'Benji', '20220830','Thank you!!');
+	VALUES (2, 'Dogs', 2, 1,'Benji', '20220830','Thank you!!');
 INSERT INTO comment_favours (community_name, post_id, comment_id, favour_point, giver, receiver)
 	VALUES ('Dogs', 2, 2, 1, 'Arial', 'Benji');
 INSERT INTO users(user_name,password, email,user_description)
