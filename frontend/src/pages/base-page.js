@@ -119,7 +119,7 @@ class BasePage extends React.Component {
                                     });
                                 }}
                             />
-                            <div style={{ display: 'flex', flexGrow: '1', marginLeft: '16px' }}>\
+                            <div style={{ display: 'flex', flexGrow: '1', marginLeft: '16px' }}>
                                 <Autocomplete
                                     multiple
                                     inputValue={this.state.searchBarText}
