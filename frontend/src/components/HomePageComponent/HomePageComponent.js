@@ -42,6 +42,7 @@ export const renderPostLists = (posts, params, handleChange, onFavourChange) => 
                         style={{ margin: '6px' }}
                     >
                         <Stack
+                            style={{ paddingTop: '8px' }}
                             direction="row"
                             divider={
                                 <Divider
@@ -54,34 +55,40 @@ export const renderPostLists = (posts, params, handleChange, onFavourChange) => 
                             <Box
                                 style={{
                                     display: 'flex',
-                                    margin: '5px 0 0 5px',
                                 }}
                             >
                                 <Avatar
-                                sx={{ width: 32, height: 32 }}
-                                src={post.profile_picture ?
-                                    post.profile_picture:
-                                    `/static/user-avatar-default.png`}>
+                                    style={{ margin: '0 8px 0 8px' }}
+                                    sx={{ width: 32, height: 32 }}
+                                    // TODO add community profile picture?
+                                    src={`/static/user-avatar-default.png`}>
                                 </Avatar>
                                 <a href={`/community/${post.community_name}/posts/best`}
                                 style={{
-                                    margin: '6px 0 0 11px',
+                                    margin: 'auto',
                                 }}>
                                     r/{post.community_name}
                                 </a>
                             </Box>
                             <Box
                                 style={{
-                                    paddingTop: '11px',
+                                    display: 'flex',
                                 }}
                             >
-                                <a href={`/user/${post.user_name}/view`}>
+                                <Avatar
+                                    style={{ margin: '0 8px 0 0' }}
+                                    sx={{ width: 32, height: 32 }}
+                                    src={post.profile_picture ?
+                                        post.profile_picture:
+                                        `/static/user-avatar-default.png`}>
+                                </Avatar>
+                                <a style={{ margin: 'auto' }} href={`/user/${post.user_name}/view`}>
                                     Posted by u/{post.user_name}
                                 </a>
                             </Box>
                             <Box
                                 style={{
-                                    paddingTop: '11px',
+                                    margin: 'auto 0 auto 8px',
                                 }}
                             >
                                 {(post.age.years &&
@@ -119,7 +126,7 @@ export const renderPostLists = (posts, params, handleChange, onFavourChange) => 
                                 color="primary"
                                 variant="outlined"
                                 size="small"
-                                clickable={true}
+                                clickable={false}
                             />
                         </Stack>
                         {post.url && !post.url.includes('digitaloceanspaces') &&
