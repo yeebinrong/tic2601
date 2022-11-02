@@ -149,6 +149,55 @@ export function approveBan(params) {
         }));
 }
 
+export function updateComDesc(params) {
+    return axios
+        .post(`${HOST}/api/updateComDesc`, {
+            params,
+            headers: {
+                Accept: CONTENT_TYPE_JSON,
+            },
+        })
+        .then((resp) => ({ data: resp.data, error: false }))
+        .catch((err) => ({
+            data: err && err.response ? err.response.data : '',
+            error: true,
+            status: err && err.response ? err.response.status : '',
+        }));
+}
+
+export function addMods(params) {
+    return axios
+        .post(`${HOST}/api/addMods`, {
+            params,
+            headers: {
+                Accept: CONTENT_TYPE_JSON,
+            },
+        })
+        .then((resp) => ({ data: resp.data, error: false }))
+        .catch((err) => ({
+            data: err && err.response ? err.response.data : '',
+            error: true,
+            status: err && err.response ? err.response.status : '',
+        }));
+}
+
+
+export function deleteFromMods(params) {
+    return axios
+        .post(`${HOST}/api/deleteFromMods`, {
+            params,
+            headers: {
+                Accept: CONTENT_TYPE_JSON,
+            },
+        })
+        .then((resp) => ({ data: resp.data, error: false }))
+        .catch((err) => ({
+            data: err && err.response ? err.response.data : '',
+            error: true,
+            status: err && err.response ? err.response.status : '',
+        }));
+}
+
 export function deleteFromBanlist(params) {
     return axios
         .post(`${HOST}/api/deleteFromBanlist`, {
@@ -164,6 +213,7 @@ export function deleteFromBanlist(params) {
             status: err && err.response ? err.response.status : '',
         }));
 }
+
 export function updateColour(params) {
     return axios
     .post(`${HOST}/api/updateColour`, {

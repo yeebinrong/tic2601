@@ -1,5 +1,6 @@
 import './CommunityComponent.scss';
-import { modifyFavour, retrieveCommunityPosts, updateFollow, deleteFromBanlist, retrieveModPageStats, updateColour, approveBan} from '../../apis/app-api';
+import moment from 'moment';
+import { modifyFavour, retrieveCommunityPosts, updateFollow, deleteFromBanlist,deleteFromMods, retrieveModPageStats, updateColour, approveBan,updateComDesc, addMods} from '../../apis/app-api';
 import * as React from 'react';
 import {SketchPicker} from 'react-color';
 import Box from '@mui/material/Box';
@@ -11,7 +12,7 @@ import Divider from '@mui/material/Divider';
 import Avatar from '@mui/material/Avatar';
 import Button from '@mui/material/Button';
 import PostModButton from './PostModButton';
-import { Checkbox, Chip } from '@mui/material';
+import { Checkbox, Chip , TextField} from '@mui/material';
 import {snackBarProps, withParams } from '../../constants/constants';
 import { renderPostLists } from '../HomePageComponent/HomePageComponent';
 import { LineChart,Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend } from 'recharts';
@@ -45,63 +46,25 @@ const followerData = [
 ];
 
 const postData = [
-{
-    name: '21 Days ago',
-    Value: 0,
-},
-{
-    name: '14 Days ago',
-    Value: 0,
-},
-{
-    name: '7 Days ago',
-    Value: 0,
-},
-{
-    name: 'Now',
-    Value: 0,
-},
+    {
+        name: '21 Days ago',
+        Value: 0,
+    },
+    {
+        name: '14 Days ago',
+        Value: 0,
+    },
+    {
+        name: '7 Days ago',
+        Value: 0,
+    },
+    {
+        name: 'Now',
+        Value: 0,
+    },
 ];
 
 const favData = [
-    {
-        name: '21 Days ago',
-        Value: 0,
-    },
-    {
-        name: '14 Days ago',
-        Value: 0,
-    },
-    {
-        name: '7 Days ago',
-        Value: 0,
-    },
-    {
-        name: 'Now',
-        Value: 0,
-    },
-];
-
-const modStats = [
-    {
-        name: '21 Days ago',
-        Value: 0,
-    },
-    {
-        name: '14 Days ago',
-        Value: 0,
-    },
-    {
-        name: '7 Days ago',
-        Value: 0,
-    },
-    {
-        name: 'Now',
-        Value: 0,
-    },
-];
-
-const data = [
     {
         name: '21 Days ago',
         Value: 0,
@@ -182,6 +145,8 @@ class CommunityComponent extends React.Component {
             bans:[],
             following:"",
             followStatus: "",
+            newMod:"",
+            newModAdmin:true
         };
 
         if (props.isVerifyDone) {
@@ -217,7 +182,8 @@ class CommunityComponent extends React.Component {
 
     shouldComponentUpdate (nextProps) {
         if ((nextProps.isVerifyDone && !this.props.isVerifyDone) ||
-        (nextProps.location.community !== this.props.location.community)
+        (nextProps.location.community !== this.props.location.community)||
+        (nextProps.params.mode !== this.props.params.mode)
         ) {
             this.props.setIsLoading(true);
             retrieveCommunityPosts(nextProps.params.community_name).then(res => {
@@ -226,6 +192,7 @@ class CommunityComponent extends React.Component {
                     posts: res.data.postsRows,
                     mod: res.data.modRows,
                     info: res.data.infoRows,
+                    description: res.data.infoRows.description,
                     stats: res.data.statsRows,
                     bans: res.data.banRows,
                     following: res.data.isFollowing,
@@ -260,7 +227,7 @@ class CommunityComponent extends React.Component {
 
     //Mod page Banlist Approve Checkbox onChcek
     handleCheck= (banusername, index) => {
-        console.log(banusername)
+       // console.log(banusername)
         approveBan({communityName:this.props.params.community_name,username:banusername})
             .then(res => {
                 if (!res.error) {
@@ -280,6 +247,14 @@ class CommunityComponent extends React.Component {
                     );
                 }
             });
+    }
+
+    //New Mod Admin Rights
+    handleAdminCheck= () => {
+        this.setState({
+            newModAdmin: !(this.state.newModAdmin)
+     });
+     console.log(this.state.newModAdmin);
     }
 
     //postrenderlist onChange
@@ -307,6 +282,36 @@ class CommunityComponent extends React.Component {
         }
     };
 
+    //Community Description OnClick
+    handleDescChange = (inputDesc) => {
+        console.log(inputDesc)
+        updateComDesc({communityName:this.props.params.community_name,newDesc:inputDesc})
+    }
+
+    //Adding New Mods
+    handleNewMods = (username,isadmin) => {
+        console.log(this.props.params.community_name + username + isadmin)
+        addMods({communityName:this.props.params.community_name,userName:username,isAdmin:isadmin ? "Y" : "N"})
+        .then(res => {
+            if (!res.error) {
+                const tempMods = res.data.modRows;
+                console.log(tempMods);
+                    this.setState({
+                        mod: tempMods
+                    })
+                this.props.enqueueSnackbar(
+                    `User [${username}] is now a moderator.`,
+                    snackBarProps('success'),
+                );
+            } else {
+                this.props.enqueueSnackbar(
+                    `An error has occurred`,
+                    snackBarProps('error'),
+                );
+            }
+        });
+    }
+
     //Delete Button onClick
     handleDelete = (banusername, index) => {
         deleteFromBanlist({communityName:this.props.params.community_name,username:banusername})
@@ -318,6 +323,28 @@ class CommunityComponent extends React.Component {
                     });
                     this.props.enqueueSnackbar(
                         `User [${banusername}] unbanned successfully.`,
+                        snackBarProps('success'),
+                    );
+                } else {
+                    this.props.enqueueSnackbar(
+                        `An error has occurred`,
+                        snackBarProps('error'),
+                    );
+                }
+            });
+    };
+
+    //Mod Delete Button onClick
+    handleDeleteMod = (modUserName) => {
+        deleteFromMods({communityName:this.props.params.community_name,username:modUserName})
+            .then(res => {
+                if (!res.error) {
+                    const tempMods = this.state.mod.filter(mods => mods.user_name !== modUserName);
+                    this.setState({
+                        mod: tempMods
+                    })
+                    this.props.enqueueSnackbar(
+                        `User [${modUserName}] is no longer moderator.`,
                         snackBarProps('success'),
                     );
                 } else {
@@ -445,7 +472,7 @@ class CommunityComponent extends React.Component {
                                 <b>Welcome to r/{this.state.info.community_name}</b>
                                 <p>{this.state.info.description}</p>
                                 <Divider style={{margin:'16px 0'}}></Divider>
-                                <b>Creation Date:{this.state.info.datetime_created}</b>
+                                <b>Creation Date:{moment(this.state.info.datetime_created).format('DD/MM/YYYY')}</b>
                                 <Divider style={{margin:'16px 0'}}></Divider>
                                 <div style={{ marginTop: '16px' }}>
                                     <Chip
@@ -489,7 +516,6 @@ class CommunityComponent extends React.Component {
                         {followerData[3].Value=stat.follower_count ? stat.follower_count : "0"}
                         {postData[3].Value=stat.post_count ? stat.post_count : "0"}
                         {favData[3].Value=stat.fav_total ? stat.fav_total : "0"}
-                        {modStats[3].Value=stat.mod_count ? stat.mod_count : "0"}
                         return(
                             <div className={'modPage'}>
                                 <Box sx={{ flexGrow: 1 }}>
@@ -507,11 +533,11 @@ class CommunityComponent extends React.Component {
                                                                         <th>Total Favours</th>
                                                                         <th>Moderator Count</th>
                                                                     </tr>
-                                                                    <tr> {console.log(stat.follower_count)}
+                                                                    <tr>
                                                                         <td>{followerData[3].Value}</td>
                                                                         <td>{postData[3].Value}</td>
                                                                         <td>{favData[3].Value}</td>
-                                                                        <td>{modStats[3].Value}</td>
+                                                                        <td>{stat.mod_count ? stat.mod_count : "0"}</td>
                                                                     </tr>
                                                                 </table>
                                                             </Paper>
@@ -545,43 +571,112 @@ class CommunityComponent extends React.Component {
                                             <Item>
                                                 <Box>
                                                     <Stack spacing={1} direction={'column'}>
-                                                        <div>
-                                                            <table>
-                                                                <tr>
-                                                                    <th>Username</th>
-                                                                    <th>Approve?</th>
-                                                                    <th>Delete</th>
-                                                                </tr>
-                                                                {this.state.bans?.map((ban, index) => {
-                                                                        return(
-                                                                            <tr>
-                                                                                <td>
-                                                                                    {ban.user_name}
-                                                                                </td>
-                                                                                <td>
-                                                                                    {ban.is_approved === 'Y' ? <Checkbox disabled checked/> : <Checkbox onChange={() => this.handleCheck(ban.user_name, index)}/>}
-                                                                                </td>
-                                                                                <td>
-                                                                                    <Button style={{ borderRadius: '14px' }} variant="contained" color="secondary" onClick={() => this.handleDelete(ban.user_name, index)}>Delete</Button>
-                                                                                </td>
-                                                                            </tr>
-                                                                        )
-                                                                    })}
-                                                            </table>
-                                                        </div>
-                                                        {/* <div><b>Allow Favours: </b><Checkbox></Checkbox></div> */}
+                                                        <Paper component="form" sx={{ p: '2px 4px', display: 'flex', justifyContent: 'center' }}>    
+                                                            <div>
+                                                                <table>
+                                                                    <tr>
+                                                                        <th>Username</th>
+                                                                        <th>Approve?</th>
+                                                                        <th>Delete</th>
+                                                                    </tr>
+                                                                    {this.state.bans?.map((ban, index) => {
+                                                                            return(
+                                                                                <tr>
+                                                                                    <td>
+                                                                                        {ban.user_name}
+                                                                                    </td>
+                                                                                    <td>
+                                                                                        {ban.is_approved === 'Y' ? <Checkbox disabled checked/> : <Checkbox onChange={() => this.handleCheck(ban.user_name, index)}/>}
+                                                                                    </td>
+                                                                                    <td>
+                                                                                        <Button style={{ borderRadius: '14px' }} variant="contained" color="secondary" onClick={() => this.handleDelete(ban.user_name, index)}>Delete</Button>
+                                                                                    </td>
+                                                                                </tr>
+                                                                            )
+                                                                        })}
+                                                                </table>
+                                                            </div>
+                                                        </Paper>
                                                     </Stack>
                                                 </Box>
+                                            </Item>
+                                            <div style={{ backgroundColor: this.state.info.colour, height: '35px', borderRadius: '5px', paddingTop: '10px', textIndent: '16px' }}>
+                                                <div className={'sideBoxHeader'}>Community Description:</div>
+                                            </div>
+                                            <Item>
+                                                <Paper component="form" sx={{ p: '2px 4px', display: 'flex', justifyContent: 'left' }}>
+                                                    <TextField multiline maxRow={5} fullWidth value={this.state.description}
+                                                         onChange={(e) => {
+                                                                    this.setState({
+                                                                        description: e.target.value,
+                                                                    });
+                                                                }}
+                                                    />
+                                                    <input type="button" value = "Update" onClick={() => this.handleDescChange(this.state.description)}/>
+                                                </Paper>
+                                            </Item>
+                                            <div style={{ backgroundColor: this.state.info.colour, height: '35px', borderRadius: '5px', paddingTop: '10px', textIndent: '16px' }}>
+                                                <div className={'sideBoxHeader'}>Community Moderators:</div>
+                                            </div>
+
+                                            <Item>
+                                                <Paper component="form" sx={{ p: '2px 4px', display: 'flex', justifyContent: 'center' }}>   
+                                                        <Stack>   
+                                                            <table>
+                                                                <tr>
+                                                                    <th>Add New Moderator</th>
+                                                                    <th>Admin? </th>
+                                                                    <th>Add</th>
+                                                                </tr>
+                                                                <tr>
+                                                                    <td>
+                                                                        <TextField sx={{m:'2px'}} label="User Name"
+                                                                                onChange={(e) => {
+                                                                                        this.setState({
+                                                                                            newMod: e.target.value,
+                                                                                        });
+                                                                                }}
+                                                                        />
+                                                                    </td>
+                                                                    <td>
+                                                                        {this.state.newModAdmin ? <Checkbox checked onChange={() => this.handleAdminCheck()}/> : <Checkbox onChange={() =>this.handleAdminCheck()}/>}
+                                                                    </td>
+                                                                    <td>
+                                                                        <input type="button" value = " Add " onClick={() => this.handleNewMods(this.state.newMod, this.state.newModAdmin)}/>           
+                                                                    </td>
+                                                                </tr>
+                                                            </table>
+                                                            <br></br>
+                                                            <table>
+                                                                <tr>
+                                                                    <th>Moderator</th>
+                                                                    <th>Is Admin?</th>
+                                                                    <th>Remove</th>
+                                                                </tr>              
+                                                                {this.state.mod.map(mods =>{
+                                                                    return(
+                                                                        <tr>
+                                                                            <td>{mods.user_name}</td>
+                                                                            <td>{mods.is_admin === 'Y' ? "Yes" : "No"} </td>
+                                                                            <td> <Button style={{ borderRadius: '14px' }} variant="contained" color="secondary" onClick={() => this.handleDeleteMod(mods.user_name)}>Remove</Button></td>
+                                                                        </tr>
+                                                                    )
+                                                                })}
+                                                            </table>
+                                                        </Stack>
+                                                </Paper>
                                             </Item>
                                             <div style={{ backgroundColor: this.state.info.colour, height: '35px', borderRadius: '5px', paddingTop: '10px', textIndent: '16px' }}>
                                                 <div className={'sideBoxHeader'}>Community Colour:</div>
                                             </div>
                                             <Item>
-                                                <SketchPicker
-                                                // color = {comColour}
-                                                color = {this.state.info.colour}
-                                                onChangeComplete={this.handleComColourChange}
-                                                />
+                                                <Paper component="form" sx={{ p: '2px 4px', display: 'flex', justifyContent: 'center' }}>                            
+                                                    <SketchPicker
+                                                    // color = {comColour}
+                                                    color = {this.state.info.colour}
+                                                    onChangeComplete={this.handleComColourChange}
+                                                    />
+                                                </Paper>
                                             </Item>
                                         </Grid>
                                     </Grid>
@@ -596,7 +691,6 @@ class CommunityComponent extends React.Component {
 
 
     render() {
-        console.log(this.state.bans);
         return (
             <div>
                 <div style={{ display: 'block', backgroundColor:this.state.info.colour, height: 175 }}></div>
@@ -612,9 +706,6 @@ class CommunityComponent extends React.Component {
                                 <PostModButton handleChange={this.handleModeChange} value={this.state.mode} params={this.props.params} navigate={this.props.navigate}/>
                             </div>
                             <div style={{ margin: '15px' }}>
-                                {console.log("here")}
-                            {console.log(this.state.following)}
-                            {console.log(this.state.followStatus)}
                             <Button style={{ borderRadius: '14px' }} variant="contained" onClick={this.changeFollow} color={this.state.following !== '0' ? "primary":"secondary"}>{this.state.followStatus}</Button>
                         </div>
                     </div>

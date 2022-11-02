@@ -194,12 +194,38 @@ const retrieveCommunityPostsDB = (community, currentUser) => {
             ],
     );
 };
+
 const approveBanDB = (community,username) => {
     return POOL.query(
         `UPDATE banlist SET is_approved = 'Y'  WHERE community_name = $1 AND user_name = $2;`,
          [
              escapeQuotes(community),
              escapeQuotes(username)
+         ],
+     );
+};
+
+const updateCommunityDescDB = (community,newDesc) => {
+    return POOL.query(
+        `UPDATE community SET description = $2  WHERE community_name = $1;`,
+         [
+             escapeQuotes(community),
+             escapeQuotes(newDesc)
+         ],
+     );
+};
+
+const addModsDB = (community,username,isadmin) => {
+    return POOL.query(
+        `INSERT INTO moderators VALUES(
+            $1,
+            $2,
+            $3
+        );`,
+         [
+             escapeQuotes(community),
+             escapeQuotes(username),
+             escapeQuotes(isadmin)
          ],
      );
 };
@@ -324,6 +350,7 @@ const isFollowingCommunityDB = (community,username) => {
 };
 
 
+
 const retrieveCommunityInfoDB = (community) => {
     return POOL.query(
            `SELECT *
@@ -333,6 +360,15 @@ const retrieveCommunityInfoDB = (community) => {
                 escapeQuotes(community),
             ],
 
+    );
+};
+
+const deleteFromModsDB = (community,username) => {
+    return POOL.query(`DELETE FROM moderators WHERE community_name = $1 AND user_name = $2 ;`,
+        [
+            escapeQuotes(community),
+            escapeQuotes(username),
+        ]
     );
 };
 
@@ -430,6 +466,8 @@ module.exports = {
     uploadToDigitalOcean,
     retrieveUserInfo,
     approveBanDB,
+    addModsDB,
+    updateCommunityDescDB,
     updateCommunityColourDB,
     updateUserProfile,
     retrieveFollowerStatsDB,
@@ -441,6 +479,7 @@ module.exports = {
     isFollowingCommunityDB,
     retrieveCommunityInfoDB,
     retrieveCommunityPostsDB,
+    deleteFromModsDB,
     deleteFromBanlistDB,
     updateFollowDB,
     getAllFollowedCommunities,

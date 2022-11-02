@@ -29,8 +29,11 @@ const {
     uploadToDigitalOcean,
     retrieveUserInfo,
     updateUserProfile,
+    deleteFromModsDB,
     deleteFromBanlistDB,
     approveBanDB,
+    addModsDB,
+    updateCommunityDescDB,
     updateCommunityColourDB,
     updateFollowDB,
     retrieveFollowerStatsDB,
@@ -368,13 +371,62 @@ app.get('/api/search', async (req, resp) => {
     }
 });
 
+app.post('/api/deleteFromMods', async (req, resp) => {
+    try {
+        await deleteFromModsDB(req.body.params.communityName, req.body.params.username);
+        resp.status(200);
+        resp.type('application/json');
+        resp.json({ message: 'delete ok' });
+        return;
+    } catch (e) {
+        console.info(e);
+		resp.status(404);
+		resp.type('application/json');
+        resp.json({ message: 'An error has occured.'});
+        return;
+    }
+});
+
+
 app.post('/api/deleteFromBanlist', async (req, resp) => {
     try {
-        console.log(req.body.params.username + "this")
         await deleteFromBanlistDB(req.body.params.communityName, req.body.params.username);
         resp.status(200);
         resp.type('application/json');
         resp.json({ message: 'delete ok' });
+        return;
+    } catch (e) {
+        console.info(e);
+		resp.status(404);
+		resp.type('application/json');
+        resp.json({ message: 'An error has occured.'});
+        return;
+    }
+});
+
+app.post('/api/addMods', async (req, resp) => {
+    try {
+        await addModsDB(req.body.params.communityName, req.body.params.userName, req.body.params.isAdmin);
+        const result = await retrieveCommunityModsDB(req.body.params.communityName)
+        resp.status(200);
+        resp.type('application/json');
+        resp.json({ modRows: result.rows });
+        return;
+    } catch (e) {
+        console.info(e);
+		resp.status(404);
+		resp.type('application/json');
+        resp.json({ message: 'An error has occured.'});
+        return;
+    }
+});
+
+app.post('/api/updateComDesc', async (req, resp) => {
+    try {
+        await updateCommunityDescDB(req.body.params.communityName, req.body.params.newDesc);
+        resp.status(200);
+        resp.type('application/json');
+        resp.json({ message: 'desc updated ok' });
         return;
     } catch (e) {
         console.info(e);
@@ -435,15 +487,15 @@ app.post('/api/updateFollow', async (req, resp) => {
 
 app.get('/api/moderator', async (req, resp) => {
     const community = req.query.community_name;
-    const username = req.token.username
     const results1 = await retrieveFollowerStatsDB(community);
     const results2 = await retrievePostStatsDB(community);
     const results3 = await retrieveFavStatsDB(community);
-    const results4 = await retrieveCommunityStatsDB(community)
+    const results4 = await retrieveCommunityStatsDB(community);
     if ((results1.rows && results1.rows.length == 0) &&
         (results2.rows && results2.rows.length == 0) &&
         (results3.rows && results3.rows.length == 0) &&
-        (results4.rows && results4.rows.length == 0) 
+        (results4.rows && results4.rows.length == 0) &&
+        (results5.rows && results5.rows.length == 0)
     ) {
         resp.status(204);
         resp.type('application/json');
@@ -452,7 +504,7 @@ app.get('/api/moderator', async (req, resp) => {
     }
     resp.status(200);
     resp.type('application/json');
-    resp.json({folRows: results1.rows, posRows: results2.rows, favRows: results3.rows, statsRows: results4.rows }); 
+    resp.json({folRows: results1.rows, posRows: results2.rows, favRows: results3.rows, statsRows: results4.rows}); 
     return;
 });
 

@@ -19,11 +19,21 @@ table, th, td {
     border-collapse: collapse;
     padding: 15px;
     text-align: center;
-  }
+}
 
-  .sideBoxHeader{
-    font-weight:bold;
-    font-size:large;
-    color:white;
-    -webkit-text-stroke: 0.2px black;
-  }
+.inputBox {
+    width: 100%;
+    padding: 12px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    box-sizing: border-box;
+    resize: vertical;
+}
+
+
+.sideBoxHeader{
+font-weight:bold;
+font-size:large;
+color:white;
+-webkit-text-stroke: 0.2px black;
+}
