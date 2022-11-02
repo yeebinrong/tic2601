@@ -56,7 +56,7 @@ async function queryReplyComments(comment, currentUser) {
     }
 
     for (const cmt of replyComments) {
-        await queryReplyComments(currentUser, cmt);
+        await queryReplyComments(cmt, currentUser);
     }
 
     comment['reply_comments'] = replyComments;
