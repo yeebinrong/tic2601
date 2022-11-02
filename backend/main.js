@@ -347,7 +347,13 @@ app.post('/api/update_favour', async (req, resp) => {
 
 app.post('/api/delete_post', async (req, resp) => {
     try {
-        await deletePost(req.body.params.communityName, req.body.params.postOwner, req.body.params.title, req.token.username);
+        if (req.body.params.postOwner !== req.token.username) {
+            resp.status(401);
+            resp.type('application/json');
+            resp.json({ message: `User [${req.token.username}] not allowed to delete the post.` });
+            return;
+        }
+        await deletePost(req.body.params.communityName, req.body.params.postId, req.token.username);
         resp.status(200);
         resp.type('application/json');
         resp.json({ message: 'delete ok' });

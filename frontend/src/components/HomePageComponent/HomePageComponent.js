@@ -19,7 +19,7 @@ import CommentIcon from '@mui/icons-material/Comment';
 import ForwardIcon from '@mui/icons-material/Forward';
 import CreateCommunityComponent from '../CreateCommunityComponent/CreateCommunityComponent';
 
-export const renderPostLists = (posts, params, handleChange, onFavourChange) => {
+export const renderPostLists = (posts, params, handleChange, onFavourChange, onDeletePostCallBack, currentUser) => {
     return (
     <>
         <Item>
@@ -190,9 +190,11 @@ export const renderPostLists = (posts, params, handleChange, onFavourChange) => 
                             </Box>
                             <MenuButton
                                 communityName={post.community_name}
+                                postId={post.post_id}
                                 postOwner={post.user_name}
-                                postTitle={post.title}
-                                url={post.url}
+                                href={`/community/${post.community_name}/view/${post.post_id}`}
+                                deleteCallback={onDeletePostCallBack}
+                                canDelete={post.user_name === currentUser}
                             />
                         </Stack>
                     </Stack>
@@ -338,13 +340,22 @@ class HomePageComponent extends React.Component {
         })
     };
 
+    onDeletePostCallBack = (name, id) => {
+        let tempPosts = this.state.posts;
+        tempPosts = tempPosts.filter(p => !(p.community_name === name && p.post_id === id));
+        this.setState({
+            posts: tempPosts,
+        });
+    }
+
     render() {
+        console.log(this.props);
         return (
             <Grid container spacing={6} style={{ margin: '16px 160px' }}>
                 <Grid xs={9}>
                     <Box sx={{ width: '100%' }}>
                         <Stack spacing={2}>
-                            {renderPostLists(this.state.posts, this.props.params, this.handleChange, this.onFavourChange)}
+                            {renderPostLists(this.state.posts, this.props.params, this.handleChange, this.onFavourChange, this.onDeletePostCallBack, this.props.userInfo?.username)}
                         </Stack>
                     </Box>
                 </Grid>

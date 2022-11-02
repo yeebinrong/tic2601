@@ -17,21 +17,19 @@ const MenuButton = (props) => {
     const handleClose = () => {
         setAnchorEl(null);
     };
-    function handleDelete(communityName, postOwner, title) {
-        deleteAPost({communityName:communityName,postOwner:postOwner,title:title})
+    function handleDelete(communityName, postId, postOwner) {
+        deleteAPost({ communityName, postId, postOwner })
             .then(res => {
+                console.log(res);
                 if (!res.error) {
-                    const post = {};
-                    this.setState({
-                        posts: post,
-                    });
+                    props.deleteCallback(communityName, postId);
                     props.enqueueSnackbar(
                         `Post has been deleted successfully.`,
                         snackBarProps('success'),
                     );
                 } else {
                     props.enqueueSnackbar(
-                        `An error has occurred`,
+                        res.data.message ? res.data.message : `Failed to delete post.`,
                         snackBarProps('error'),
                     );
                 }
@@ -83,12 +81,27 @@ const MenuButton = (props) => {
                     },
                 }}
             >
-                <MenuItem onClick={() => {navigator.clipboard.writeText(props.url)}}>
+                <MenuItem
+                    onClick={() => {
+                        navigator.clipboard.writeText(`https://readit-xxtqn.ondigitalocean.app/${props.href}`);
+                        props.enqueueSnackbar(
+                            `Link copied!`,
+                            snackBarProps('success'),
+                        );
+                        handleClose();
+                    }}
+                >
                     <ContentCopyIcon style={{ marginRight: '8px' }} /> Copy Link
                 </MenuItem>
-                <MenuItem onClick={() => handleDelete(props.communityName, props.postOwner, props.title, props.isDeleted)}>
+                {props.canDelete &&
+                <MenuItem
+                    onClick={() => {
+                        handleDelete(props.communityName, props.postId, props.postOwner);
+                        handleClose();
+                    }}
+                >
                     <DeleteIcon style={{ marginRight: '8px' }} /> Delete
-                </MenuItem>
+                </MenuItem>}
                 <MenuItem
                     onClick={()=> {
                         reportUserInCommunity(props.postOwner, props.communityName)
@@ -104,6 +117,7 @@ const MenuButton = (props) => {
                                         snackBarProps('error'),
                                     );
                                 }
+                                handleClose();
                             })
                     }}
                 >

@@ -274,7 +274,7 @@ INSERT INTO post_contents (community_name, post_id, content)
 	VALUES ('test_community', 2, 'This is post content for hello world two.');
 --
 INSERT INTO posts (post_id, community_name, title, user_name, flair)
-	VALUES (3, 'test_community', 'This post is by testaccount user!', 'anotheraccount', 'Text');
+	VALUES (3, 'test_community', 'This post is by anotheraccount user!', 'anotheraccount', 'Text');
 INSERT INTO post_contents (community_name, post_id, content)
 	VALUES ('test_community', 3, 'testaccount user should not be able to view this post!');
 --
