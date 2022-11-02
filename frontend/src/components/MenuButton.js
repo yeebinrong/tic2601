@@ -21,9 +21,9 @@ const MenuButton = (props) => {
         deleteAPost({communityName:communityName,postOwner:postOwner,title:title})
             .then(res => {
                 if (!res.error) {
-                    const tempPosts = communityName;
+                    const post = {};
                     this.setState({
-                        posts: tempPosts,
+                        posts: post,
                     });
                     props.enqueueSnackbar(
                         `Post has been deleted successfully.`,
