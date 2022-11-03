@@ -46,10 +46,11 @@ const {
     retrieveCommunityInfoDB,
     isFollowingCommunityDB,
     retrieveCommunityPostsDB,
+    isModAdminDB,
     getAllFollowedCommunities,
     insertTextPost,
     insertUrlPost,
-    insertUserIntoBanList
+    insertUserIntoBanList,
 } = require('./db_utils.js')
 
 /* -------------------------------------------------------------------------- */
@@ -533,20 +534,29 @@ app.get('/api/moderator', async (req, resp) => {
 
 
 app.get('/api/community', async (req, resp) => {
-    const community = req.query.community_name;
+    const community = req.query.communityName;
+    const currentTab = req.query.currentTab;
+    let sortBy = 'fav_point DESC';
+    if (currentTab == 'hot') {
+        sortBy = 'view_count DESC';
+    } else if (currentTab == 'new') {
+        sortBy = 'age ASC';
+    }
     const username = req.token.username
-    const results1 = await retrieveCommunityPostsDB(community, req.token.username);
+    const results1 = await retrieveCommunityPostsDB(community, sortBy, req.token.username);
     const results2 = await retrieveCommunityInfoDB(community);
     const results3 = await retrieveCommunityModsDB(community);
     const results4 = await retrieveCommunityStatsDB(community);
     const results5 = await retrieveCommunityBansDB(community);
     const results6 = await isFollowingCommunityDB(community,username);
+    const results7 = await isModAdminDB(community,username);
     if ((results1.rows && results1.rows.length == 0) &&
         (results2.rows && results2.rows.length == 0) &&
         (results3.rows && results3.rows.length == 0) &&
         (results4.rows && results4.rows.length == 0) &&
         (results5.rows && results5.rows.length == 0)
         && (results6.rows && results6.rows.length == 0)
+        && (results7.rows && results7.rows.length == 0)
     ) {
         resp.status(204);
         resp.type('application/json');
@@ -556,7 +566,7 @@ app.get('/api/community', async (req, resp) => {
     resp.status(200);
     resp.type('application/json');
     resp.json({postsRows: results1.rows, infoRows: { ...results2.rows[0] }, modRows: results3.rows, statsRows: results4.rows,
-    banRows: results5.rows,isFollowing: results6.rows[0].count }); 
+    banRows: results5.rows,isFollowing: results6.rows[0].count, isModAdmin: results7.rows[0].authority}); 
     return;
 });
 

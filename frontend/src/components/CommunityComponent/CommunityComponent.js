@@ -150,9 +150,11 @@ class CommunityComponent extends React.Component {
         };
 
         if (props.isVerifyDone) {
-            this.props.setIsLoading(true);  
-            retrieveCommunityPosts(this.props.params.community_name)
-            .then(res => {
+            this.props.setIsLoading(true);
+            retrieveCommunityPosts({
+                communityName: this.props.params.community_name,
+                currentTab: this.props.params.currentTab,
+            }).then(res => {
                 this.props.setIsLoading(false);
                 this.setState({
                     posts: res.data.postsRows,
@@ -161,8 +163,9 @@ class CommunityComponent extends React.Component {
                     stats: res.data.statsRows,
                     bans: res.data.banRows,
                     url: this.props.location.pathname,
-                   following: res.data.isFollowing,
-                   followStatus: res.data.isFollowing === '0' ? 'follow' : 'following',
+                    following: res.data.isFollowing,
+                    followStatus: res.data.isFollowing === '0' ? 'follow' : 'following',
+                    isModAdmin: res.data.isModAdmin,
                 });
             });
             retrieveModPageStats(this.props.params.community_name).then(res => {
@@ -182,11 +185,15 @@ class CommunityComponent extends React.Component {
 
     shouldComponentUpdate (nextProps) {
         if ((nextProps.isVerifyDone && !this.props.isVerifyDone) ||
-        (nextProps.location.community !== this.props.location.community)||
+        (nextProps.location.community !== this.props.location.community) ||
+        (nextProps.params.currentTab !== this.props.params.currentTab) ||
         (nextProps.params.mode !== this.props.params.mode)
         ) {
             this.props.setIsLoading(true);
-            retrieveCommunityPosts(nextProps.params.community_name).then(res => {
+            retrieveCommunityPosts({
+                communityName: nextProps.params.community_name,
+                currentTab: nextProps.params.currentTab,
+            }).then(res => {
                 this.props.setIsLoading(false);
                 this.setState({
                     posts: res.data.postsRows,
@@ -198,6 +205,7 @@ class CommunityComponent extends React.Component {
                     following: res.data.isFollowing,
                     url: this.props.location.pathname,
                     followStatus: res.data.isFollowing === '0' ? 'follow' : 'following',
+                    isModAdmin: res.data.isModAdmin,
                 });
             });
             retrieveModPageStats(nextProps.params.community_name).then(res => {
@@ -286,6 +294,20 @@ class CommunityComponent extends React.Component {
     handleDescChange = (inputDesc) => {
         console.log(inputDesc)
         updateComDesc({communityName:this.props.params.community_name,newDesc:inputDesc})
+        .then(res => {
+            if (!res.error) {
+                this.props.enqueueSnackbar(
+                    `Community Description Updated`,
+                    snackBarProps('success'),
+                );
+            }
+            else {
+                this.props.enqueueSnackbar(
+                    `An error has occurred`,
+                    snackBarProps('error'),
+                );
+            }
+        })
     }
 
     //Adding New Mods
@@ -466,7 +488,7 @@ class CommunityComponent extends React.Component {
                     <Grid xs={9}>
                         <Box sx={{ width: '100%' }}>
                             <Stack spacing={2}>
-                            {renderPostLists(this.state.posts, this.props.params, this.handleChange, this.onFavourChange, this.onDeletePostCallBack, this.props.userInfo?.username)}
+                            {renderPostLists(this.state.posts, this.props.params, this.handleChange, this.onFavourChange)}
                             </Stack>
                         </Box>
                     </Grid>
@@ -630,7 +652,7 @@ class CommunityComponent extends React.Component {
                                             <Item>
                                                 <Paper component="form" sx={{ p: '2px 4px', display: 'flex', justifyContent: 'center' }}>   
                                                         <Stack>   
-                                                            <table>
+                                                            {this.state.isModAdmin === true && <table>
                                                                 <tr>
                                                                     <th>Add New Moderator</th>
                                                                     <th>Admin? </th>
@@ -653,7 +675,7 @@ class CommunityComponent extends React.Component {
                                                                         <input type="button" value = " Add " onClick={() => this.handleNewMods(this.state.newMod, this.state.newModAdmin)}/>           
                                                                     </td>
                                                                 </tr>
-                                                            </table>
+                                                            </table>}
                                                             <br></br>
                                                             <table>
                                                                 <tr>
@@ -711,7 +733,7 @@ class CommunityComponent extends React.Component {
                             <div style={{ marginRight: '25px' }}>
                                 <b style={{ fontSize: '30px', marginLeft: '10%' }}>{this.state.info.community_name}</b>
                                 <p style={{ marginLeft: '10%', marginTop: '0px' }}>r/{this.state.info.community_name}</p>
-                                <PostModButton handleChange={this.handleModeChange} value={this.state.mode} params={this.props.params} navigate={this.props.navigate}/>
+                                <PostModButton handleChange={this.handleModeChange} value={this.state.mode} isModAdmin={this.state.isModAdmin} params={this.props.params} navigate={this.props.navigate}/>
                             </div>
                             <div style={{ margin: '15px' }}>
                             <Button style={{ borderRadius: '14px' }} variant="contained" onClick={this.changeFollow} color={this.state.following !== '0' ? "primary":"secondary"}>{this.state.followStatus}</Button>

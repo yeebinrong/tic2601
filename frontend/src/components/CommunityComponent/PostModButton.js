@@ -2,7 +2,7 @@ import React from 'react';
 import { Tabs, Tab } from '@mui/material';
 
 const PostModButton = (props) => {
-
+    const isModAdmin = props.isModAdmin != null ? true : false;
     return (
         <Tabs
             value={props.value}
@@ -13,11 +13,11 @@ const PostModButton = (props) => {
                 label="Posts"
                 value="posts"              
             />
-            <Tab
+            {isModAdmin && <Tab
                 label="Mod Access"
                 value="mod"
-            />
-        </Tabs>
+            />}
+        </Tabs> 
     );
 };
 
