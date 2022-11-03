@@ -282,7 +282,7 @@ class BasePage extends React.Component {
                                     <MenuItem
                                         onClick={() => {
                                             this.props.navigate({
-                                                pathname: `/user/${this.props.userInfo.username}/view`,
+                                                pathname: `/user/${this.props.userInfo.username}/profile/overview`,
                                                 replace: true,
                                             })
                                         }}

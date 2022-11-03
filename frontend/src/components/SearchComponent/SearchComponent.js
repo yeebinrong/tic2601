@@ -98,11 +98,18 @@ class SearchComponent extends React.Component {
         if (queryParams.q !== '') {
             searchParams += `q=${queryParams.q}&`;
         }
-        this.props.navigate({
-            pathname: `/search/${this.props.params.currentTab}`,
-            search: searchParams !== '' ? `?${searchParams.slice(0, -1)}` : '',
-            replace: true,
-        });
+        if (searchParams === '') {
+            this.props.navigate({
+                pathname: `/home/best`,
+                replace: true,
+            });
+        } else {
+            this.props.navigate({
+                pathname: `/search/${this.props.params.currentTab}`,
+                search: searchParams !== '' ? `?${searchParams.slice(0, -1)}` : '',
+                replace: true,
+            });
+        }
     }
 
     parseSearchToChips = () => {
@@ -192,25 +199,27 @@ class SearchComponent extends React.Component {
     render() {
         return (
             <>
-                <div style={{ fontSize: '30px', margin: '32px 184px 0px 184px' }}>
+                <div style={{ fontSize: '30px', margin: '32px 184px 0px 304px' }}>
                     <div>
                         {this.props.location.search === '' ? 'All posts' : 'Search Results'}
                     </div>
                     {this.parseSearchToChips()}
                 </div>
-                <Grid container spacing={6} style={{ margin: '0px 160px' }}>
-                    <Grid xs={9}>
+                <Grid container spacing={6} style={{ margin: '16px 280px' }}>
+                    <Grid xs={8}>
                         <Box sx={{ width: '100%' }}>
                             <Stack spacing={2}>
-                                {renderPostLists(this.state.posts, this.props.params, this.handleChange, this.onFavourChange, this.onDeletePostCallBack, this.props.userInfo.username)}
+                                {renderPostLists(this.state.posts, this.props.params, this.handleChange, this.onFavourChange, this.onDeletePostCallBack, this.props.userInfo.username, 'rgb(0, 178, 210)')}
                             </Stack>
                         </Box>
                     </Grid>
-                    <Grid xs={3} style={{ position: 'relative' }}>
+                    <Grid xs style={{ position: 'relative' }}>
+                        <div style={{ color: 'white', backgroundColor: 'rgb(0, 178, 210)', height: '35px', borderRadius: '5px', padding: '16px 6px 6px 6px', textIndent: '16px' }}>
+                            <b>Communities</b>
+                        </div>
                         <Item key={'community_panel'} style={{ padding: '16px' }}>
                             <Stack spacing={2} direction="column">
                                 <Box style={{ textAlign: 'left' }}>
-                                    <b>Communities</b>
                                     {Object.keys(this.state.users).length === 0 && (
                                         <p>No communities found!</p>
                                     )}
@@ -219,7 +228,7 @@ class SearchComponent extends React.Component {
                                             <Box key={community} style={{ marginLeft: '16px', marginTop: '8px', display: 'flex' }}>
                                                 r/{community}
                                                 <Button
-                                                    style={{ marginLeft: '16px' }}
+                                                    style={{ marginLeft: 'auto', textTransform: 'none' }}
                                                     variant='outlined'
                                                     size='small'
                                                     onClick={() => {
@@ -237,10 +246,12 @@ class SearchComponent extends React.Component {
                                 </Box>
                             </Stack>
                         </Item>
-                        <Item key={'user_panel'} style={{ padding: '16px', marginTop: '16px' }}>
-                            <Stack spacing={2} direction="column">
+                        <Item key={'user_panel'} style={{ marginTop: '16px' }}>
+                            <div style={{ color: 'white', backgroundColor: 'rgb(0, 178, 210)', height: '35px', borderRadius: '5px', padding: '16px 6px 6px 6px', textIndent: '16px' }}>
+                                <b>Users</b>
+                            </div>
+                            <Stack spacing={2} direction="column" style={{ padding: '16px' }}>
                                 <Box style={{ textAlign: 'left' }}>
-                                    <b>Users</b>
                                     {Object.keys(this.state.users).length === 0 && (
                                         <p>No users found!</p>
                                     )}
@@ -249,12 +260,12 @@ class SearchComponent extends React.Component {
                                             <Box key={user} style={{ marginLeft: '16px', marginTop: '8px', display: 'flex' }}>
                                                 u/{user}
                                                 <Button
-                                                    style={{ marginLeft: '16px' }}
+                                                    style={{ marginLeft: 'auto' }}
                                                     variant='outlined'
                                                     size='small'
                                                     onClick={() => {
                                                         this.props.navigate({
-                                                            pathname: `/user/${user}/view`,
+                                                            pathname: `/user/${user}/profile/overview`,
                                                             replace: true,
                                                         })
                                                     }}

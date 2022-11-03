@@ -13,23 +13,27 @@ import {
     Avatar,
     Divider,
     Chip,
+    Button,
+    Tooltip,
 } from '@mui/material';
 import Grid from '@mui/material/Unstable_Grid2';
 import CommentIcon from '@mui/icons-material/Comment';
 import ForwardIcon from '@mui/icons-material/Forward';
 import CreateCommunityComponent from '../CreateCommunityComponent/CreateCommunityComponent';
+import moment from 'moment'
 
-export const renderPostLists = (posts, params, handleChange, onFavourChange, onDeletePostCallBack, currentUser) => {
+export const renderPostLists = (posts, params, handleChange, onFavourChange, onDeletePostCallBack, currentUser, mainColour) => {
     return (
     <>
         <Item>
             <TabButton
                 value={params.currentTab}
                 handleChange={handleChange}
+                indicatorColor={mainColour}
             />
         </Item>
         {!posts && (
-            <Item key={'no_post_found'} style={{ height: '64px', textAlign: 'center' }}>
+            <Item key={'no_post_found'} style={{ height: '64px', padding: '32px', textAlign: 'center' }}>
                 <p>No posts found!</p>
             </Item>
         )}
@@ -63,11 +67,17 @@ export const renderPostLists = (posts, params, handleChange, onFavourChange, onD
                                     // TODO add community profile picture?
                                     src={`/static/user-avatar-default.png`}>
                                 </Avatar>
-                                <a href={`/community/${post.community_name}/posts/best`}
+                                <a  href={`/community/${post.community_name}/posts/best`}
                                 style={{
                                     margin: 'auto',
+                                    color: 'inherit',
+                                    textDecoration: 'none',
                                 }}>
-                                    r/{post.community_name}
+                                    <Button
+                                        style={{ textTransform: 'none' }}
+                                    >
+                                        r/{post.community_name}
+                                    </Button>
                                 </a>
                             </Box>
                             <Box
@@ -82,33 +92,41 @@ export const renderPostLists = (posts, params, handleChange, onFavourChange, onD
                                         post.profile_picture:
                                         `/static/user-avatar-default.png`}>
                                 </Avatar>
-                                <a style={{ margin: 'auto' }} href={`/user/${post.user_name}/view`}>
-                                    Posted by u/{post.user_name}
+                                <a style={{ margin: 'auto', color: 'inherit', textDecoration: 'none' }} href={`/user/${post.user_name}/profile/overview`}>
+                                    <Button
+                                        style={{ textTransform: 'none' }}
+                                    >
+                                        Posted by u/{post.user_name}
+                                    </Button>
                                 </a>
                             </Box>
                             <Box
                                 style={{
-                                    margin: 'auto 0 auto 8px',
+                                    margin: 'auto 0 auto 16px',
                                 }}
                             >
-                                {(post.age.years &&
-                                    post.age.years +
-                                        ' years ago') ||
-                                    (post.age.months &&
-                                        post.age.months +
-                                            ' months ago') ||
-                                    (post.age.days &&
-                                        post.age.days +
-                                            ' days ago') ||
-                                    (post.age.hours &&
-                                        post.age.hours +
-                                            ' hours ago') ||
-                                    (post.age.minutes &&
-                                        post.age.minutes +
-                                            ' minutes ago') ||
-                                    (post.age.seconds &&
-                                        post.age.seconds +
-                                            ' seconds ago')}
+                                <Tooltip title={moment(post.datetime_created).format('DD-MM-YYYY hh:mmA')}>
+                                    <div>
+                                        {(post.age.years &&
+                                            post.age.years +
+                                                ' years ago') ||
+                                            (post.age.months &&
+                                                post.age.months +
+                                                    ' months ago') ||
+                                            (post.age.days &&
+                                                post.age.days +
+                                                    ' days ago') ||
+                                            (post.age.hours &&
+                                                post.age.hours +
+                                                    ' hours ago') ||
+                                            (post.age.minutes &&
+                                                post.age.minutes +
+                                                    ' minutes ago') ||
+                                            (post.age.seconds &&
+                                                post.age.seconds +
+                                                    ' seconds ago')}
+                                    </div>
+                                </Tooltip>
                             </Box>
                         </Stack>
                         <Stack
@@ -136,6 +154,7 @@ export const renderPostLists = (posts, params, handleChange, onFavourChange, onD
                                 height="315"
                                 src={post.url}
                                 title={`embedUrl-${index}`}
+                                className={'post-image'}
                                 frameBorder="0"
                                 allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
                                 allowFullScreen
@@ -148,7 +167,8 @@ export const renderPostLists = (posts, params, handleChange, onFavourChange, onD
                                 width="560"
                                 height="315"
                                 src={post.url}
-                                title={`embedUrl-${index}`}
+                                title={post.url}
+                                className={'post-image'}
                                 frameBorder="0"
                             />
                         </Stack>}
@@ -177,15 +197,14 @@ export const renderPostLists = (posts, params, handleChange, onFavourChange, onD
                                 </IconButton>
                             </Box>
                             <Box>
-                                <a href={`/community/${post.community_name}/view/${post.post_id}`}>
-                                    <IconButton
-                                        sx={{ p: '10px' }}
-                                        aria-label="comment"
+                                <a style={{ color: 'inherit', textDecoration: 'none' }} href={`/community/${post.community_name}/view/${post.post_id}`}>
+                                    <Button
+                                            style={{ textTransform: 'none', height: '100%' }}
                                     >
-                                        <CommentIcon />
-                                    </IconButton>
-                                    {post.comment_count}{' '}
-                                    Comments
+                                        <CommentIcon sx={{ color:'rgba(0, 0, 0, 0.54)', marginRight: '8px' }} />
+                                        {post.comment_count}{' '}
+                                        Comments
+                                    </Button>
                                 </a>
                             </Box>
                             <MenuButton
@@ -233,6 +252,7 @@ export const renderBackToTopChip = () => {
                     style={{
                         position: 'fixed',
                         bottom: '23px',
+                        backgroundColor: 'rgb(0, 178, 210)',
                     }}
                     onClick={() => scrollToTop()}
                 />
@@ -349,21 +369,22 @@ class HomePageComponent extends React.Component {
     }
 
     render() {
-        console.log(this.props);
         return (
-            <Grid container spacing={6} style={{ margin: '16px 160px' }}>
-                <Grid xs={9}>
+            <Grid container spacing={6} style={{ margin: '16px 280px' }}>
+                <Grid xs={8} >
                     <Box sx={{ width: '100%' }}>
                         <Stack spacing={2}>
-                            {renderPostLists(this.state.posts, this.props.params, this.handleChange, this.onFavourChange, this.onDeletePostCallBack, this.props.userInfo?.username)}
+                            {renderPostLists(this.state.posts, this.props.params, this.handleChange, this.onFavourChange, this.onDeletePostCallBack, this.props.userInfo?.username, 'rgb(0, 178, 210)')}
                         </Stack>
                     </Box>
                 </Grid>
                 <Grid xs style={{ position: 'relative' }}>
-                    <Item style={{ padding: '16px' }}>
+                    <div style={{ color: 'white', backgroundColor: 'rgb(0, 178, 210)', height: '35px', borderRadius: '5px', padding: '16px 6px 6px 6px', textIndent: '16px' }}>
+                        <b>Home</b>
+                    </div>
+                    <Item style={{ padding: '12px 32px 32px 32px' }}>
                         <Stack spacing={2} direction="column">
                             <Box style={{ textAlign: 'left' }}>
-                                <b>Home</b>
                                 <p>Your personal Readit homepage.</p>
                                 <p>
                                     Come here to check in with your favourite
@@ -371,6 +392,7 @@ class HomePageComponent extends React.Component {
                                 </p>
                             </Box>
                             <Chip
+                                style={{ backgroundColor: 'rgb(0, 178, 210)' }}
                                 label="Create Post"
                                 color="primary"
                                 clickable={true}

@@ -28,7 +28,22 @@ const retrieveUserInfoWithCredentials = (username, password) => {
 
 const retrieveUserInfo = (username) => {
     return POOL.query(
-        `SELECT user_name, profile_picture, user_description, datetime_created FROM users WHERE user_name = $1`,
+        `SELECT user_name,
+            profile_picture,
+            user_description,
+            datetime_created,
+        COALESCE((SELECT SUM(fp.favour_point)
+        FROM
+            (SELECT favour_point
+                FROM post_favours
+                WHERE receiver = $1
+                UNION ALL SELECT favour_point
+                FROM comment_favours
+                WHERE receiver = $1) AS fp), 0) as total_favours,
+        (SELECT COUNT(*) FROM posts WHERE user_name = $1) as total_posts,
+        (SELECT COUNT(*) FROM comments WHERE commenter = $1) as total_comments
+        FROM users
+        WHERE user_name = $1`,
         [escapeQuotes(username)],
     )
 }
@@ -46,16 +61,16 @@ const getAllFollowedCommunities = (username) => {
 const getHomePagePosts = (currentUser, sortBy) => {
     return POOL.query(
         `WITH following_communities AS
-            (SELECT fc.community_name, p.user_name, AGE(CURRENT_TIMESTAMP, p.date_created), p.title, p.flair, p.url, p.post_id, p.view_count,
+            (SELECT fc.community_name, p.user_name, AGE(CURRENT_TIMESTAMP, p.datetime_created), p.datetime_created, p.title, p.flair, p.url, p.post_id, p.view_count,
             COALESCE((SELECT SUM(favour_point) FROM post_favours WHERE post_id = p.post_id AND community_name = p.community_name), 0) AS fav_point, fp.favour_point AS is_favour,
             (SELECT count(*) FROM comments WHERE post_id = p.post_id AND community_name = p.community_name) AS comment_count, u.profile_picture
             FROM followed_communities fc
             INNER JOIN posts p ON p.community_name = fc.community_name AND p.date_deleted IS NULL
             LEFT JOIN post_favours fp ON fp.post_id = p.post_id AND fp.community_name = p.community_name AND fp.giver = $1
             LEFT JOIN users u ON u.user_name = p.user_name
-            GROUP BY fc.community_name, p.user_name, p.date_created, p.title, p.flair, p.url, p.post_id, p.view_count, p.community_name, fp.favour_point, u.profile_picture, fc.user_name
+            GROUP BY fc.community_name, p.user_name, p.datetime_created, p.title, p.flair, p.url, p.post_id, p.view_count, p.community_name, fp.favour_point, u.profile_picture, fc.user_name
             HAVING fc.user_name = $1)
-        SELECT DISTINCT post_id, community_name, user_name, age, title, flair, fav_point, is_favour, comment_count, view_count, url, profile_picture
+        SELECT DISTINCT post_id, community_name, user_name, age, datetime_created, title, flair, fav_point, is_favour, comment_count, view_count, url, profile_picture
         FROM following_communities
         ORDER BY ` + sortBy,
         [
@@ -191,16 +206,16 @@ const searchPostWithParams = (currentUser, order, user, flair, community, q) => 
 const retrieveCommunityPostsDB = (community, currentUser) => {
     return POOL.query(
         `WITH one_community AS
-            (SELECT oc.community_name, p.user_name, AGE(CURRENT_TIMESTAMP, p.date_created), p.title, p.flair, p.url, p.post_id, p.view_count,
+            (SELECT oc.community_name, p.user_name, AGE(CURRENT_TIMESTAMP, p.datetime_created), p.datetime_created, p.title, p.flair, p.url, p.post_id, p.view_count,
             COALESCE((SELECT SUM(favour_point) FROM post_favours WHERE post_id = p.post_id AND community_name = p.community_name), 0) AS fav_point, fp.favour_point AS is_favour,
             (SELECT count(*) FROM comments WHERE post_id = p.post_id AND community_name = p.community_name) AS comment_count, u.profile_picture
             FROM community oc
             INNER JOIN posts p ON p.community_name = oc.community_name AND p.date_deleted IS NULL
             LEFT JOIN post_favours fp ON fp.post_id = p.post_id AND fp.community_name = p.community_name AND fp.giver = $2
             LEFT JOIN users u ON u.user_name = p.user_name
-            GROUP BY oc.community_name, p.user_name, p.date_created, p.title, p.flair, p.url, p.post_id, p.view_count, p.community_name, fp.favour_point, u.profile_picture
+            GROUP BY oc.community_name, p.user_name, p.datetime_created, p.title, p.flair, p.url, p.post_id, p.view_count, p.community_name, fp.favour_point, u.profile_picture
             HAVING oc.community_name = $1)
-        SELECT DISTINCT post_id, community_name, user_name, age, title, flair, fav_point, is_favour, comment_count, view_count, url, profile_picture
+        SELECT DISTINCT post_id, community_name, user_name, age, datetime_created, title, flair, fav_point, is_favour, comment_count, view_count, url, profile_picture
         FROM one_community
         ORDER BY age DESC;`,
         [
@@ -249,13 +264,13 @@ const retrieveFollowerStatsDB = (community) => {
 
 const retrievePostStatsDB = (community) => {
     return POOL.query(
-        `SELECT COUNT(post_id) AS post_total, 0 AS days_ago FROM posts WHERE community_name = $1 AND date_created <= (CURRENT_DATE)
+        `SELECT COUNT(post_id) AS post_total, 0 AS days_ago FROM posts WHERE community_name = $1 AND datetime_created <= (CURRENT_DATE)
         UNION
-        SELECT COUNT(post_id) AS post_total, 7 AS days_ago FROM posts WHERE community_name = $1 AND date_created <= (CURRENT_DATE-7)
+        SELECT COUNT(post_id) AS post_total, 7 AS days_ago FROM posts WHERE community_name = $1 AND datetime_created <= (CURRENT_DATE-7)
         UNION
-        SELECT COUNT(post_id) AS post_total, 14 AS days_ago FROM posts WHERE community_name = $1 AND date_created <= (CURRENT_DATE-14)
+        SELECT COUNT(post_id) AS post_total, 14 AS days_ago FROM posts WHERE community_name = $1 AND datetime_created <= (CURRENT_DATE-14)
         UNION
-        SELECT COUNT(post_id) AS post_total, 21 AS days_ago FROM posts WHERE community_name = $1 AND date_created <= (CURRENT_DATE-28)
+        SELECT COUNT(post_id) AS post_total, 21 AS days_ago FROM posts WHERE community_name = $1 AND datetime_created <= (CURRENT_DATE-28)
         ORDER BY days_ago desc;`,
          [
              escapeQuotes(community),
@@ -269,13 +284,13 @@ const retrieveFavStatsDB = (community) => {
             FROM post_favours f WHERE f.post_id IN (SELECT p.post_id FROM posts p WHERE community_name = $1)
         UNION
         SELECT SUM(f.favour_point) AS favour_total, 7 AS days_ago
-            FROM post_favours f WHERE f.post_id IN (SELECT p.post_id FROM posts p WHERE community_name = $1 AND date_created <= (CURRENT_DATE-7))
+            FROM post_favours f WHERE f.post_id IN (SELECT p.post_id FROM posts p WHERE community_name = $1 AND datetime_created <= (CURRENT_DATE-7))
         UNION
         SELECT SUM(f.favour_point) AS favour_total, 14 AS days_ago
-            FROM post_favours f WHERE f.post_id IN (SELECT p.post_id FROM posts p WHERE community_name = $1 AND date_created <= (CURRENT_DATE-14))
+            FROM post_favours f WHERE f.post_id IN (SELECT p.post_id FROM posts p WHERE community_name = $1 AND datetime_created <= (CURRENT_DATE-14))
         UNION
         SELECT SUM(f.favour_point) AS favour_total, 21 AS days_ago
-            FROM post_favours f WHERE f.post_id IN (SELECT p.post_id FROM posts p WHERE community_name = $1 AND date_created <= (CURRENT_DATE-21))
+            FROM post_favours f WHERE f.post_id IN (SELECT p.post_id FROM posts p WHERE community_name = $1 AND datetime_created <= (CURRENT_DATE-21))
         ORDER BY days_ago desc;`,
          [
              escapeQuotes(community),
@@ -402,6 +417,55 @@ const insertUserIntoBanList = (userName, communityName) => {
     );
 }
 
+const getFollowingCommunities = (userName) => {
+    return POOL.query('SELECT * FROM followed_communities WHERE user_name = $1',
+        [
+            escapeQuotes(userName),
+        ]
+    );
+}
+
+const getModeratorCommunities = (userName) => {
+    return POOL.query('SELECT * FROM moderators WHERE user_name = $1',
+        [
+            escapeQuotes(userName),
+        ]
+    );
+}
+
+const getUserPosts = (userName) => {
+    return POOL.query('SELECT * FROM posts WHERE user_name = $1',
+        [
+            escapeQuotes(userName),
+        ]
+    );
+}
+
+const getUserComments = (userName) => {
+    return POOL.query('SELECT * FROM comments WHERE commenter = $1',
+        [
+            escapeQuotes(userName),
+        ]
+    );
+}
+
+const getUserFavouredPostsOrComments = (userName) => {
+    return POOL.query(`
+        SELECT pc.* FROM (
+            SELECT community_name, post_id, NULL as comment_id, user_name, flair, datetime_created, title, NULL as content, TRUE as is_favour,
+            COALESCE((SELECT SUM(favour_point) FROM post_favours WHERE post_id = p.post_id AND community_name = p.community_name), 0) as favour_points,
+            (SELECT count(*) FROM comments WHERE post_id = p.post_id AND community_name = p.community_name) AS comment_count
+        FROM posts p WHERE date_deleted IS NULL AND user_name = $1 UNION
+            SELECT community_name, post_id, comment_id, commenter as user_name, NULL as flair, datetime_created, NULL as title, content, TRUE as is_favour,
+            COALESCE((SELECT SUM(favour_point) FROM comment_favours WHERE post_id = c.post_id AND community_name = c.community_name AND comment_id = c.comment_id), 0) as favour_points,
+            NULL as comment_count
+        FROM comments c WHERE is_deleted = 'N' AND commenter = $1) AS pc ORDER BY datetime_created DESC;`,
+        [
+            escapeQuotes(userName),
+        ]
+    );
+}
+
 /* -------------------------------------------------------------------------- */
 //                        ######## DIGITALOCEAN METHODS ########
 /* -------------------------------------------------------------------------- */
@@ -434,6 +498,11 @@ const uploadToDigitalOcean = (buffer, req, key) => new Promise((resolve, reject)
 /* -------------------------------------------------------------------------- */
 
 module.exports = {
+    getUserFavouredPostsOrComments,
+    getUserComments,
+    getUserPosts,
+    getFollowingCommunities,
+    getModeratorCommunities,
     retrieveUserInfoWithCredentials,
     checkUserNameAlreadyExists,
     insertToUser,

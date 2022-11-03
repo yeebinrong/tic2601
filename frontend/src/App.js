@@ -118,7 +118,7 @@ const App = (props) => {
                 element={<CreatePostPage {...mainProps} />}
             />
             <Route
-                path="/user/:userName/view"
+                path="/user/:userName/profile/:currentTab"
                 exact
                 element={<ProfilePage {...mainProps} />}
             />

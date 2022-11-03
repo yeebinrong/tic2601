@@ -22,6 +22,7 @@ class CreatePostComponent extends React.Component {
             selectedFlair: 'Text',
             followedCommunties: null,
             currentTab: 'text',
+            srcImage: null,
         };
         if (props.isVerifyDone) {
             this.props.setIsLoading(true);
@@ -38,6 +39,7 @@ class CreatePostComponent extends React.Component {
                 }
             });
         }
+        this.fileRef = React.createRef(null);
     }
 
     shouldComponentUpdate (nextProps) {
@@ -61,17 +63,23 @@ class CreatePostComponent extends React.Component {
 
     renderDefaultPanel = () => {
         return (
-            <Grid xs={3} style={{ position: 'relative' }}>
-                <div style={{ backgroundColor: 'lightblue', height: '35px', borderRadius: '5px', paddingTop: '10px', textIndent: '16px' }}>
+            <Grid xs style={{ position: 'relative' }}>
+                <div style={{ color: 'white', backgroundColor: 'rgb(0, 178, 210)', height: '35px', borderRadius: '5px', padding: '16px 6px 6px 6px', textIndent: '16px' }}>
                     <b>Posting to Readit</b>
                 </div>
                 <Item>
                     <div style={{ textAlign: 'left', padding: 10 }}>
-                        <b>1. Behave like you would in real life </b>
+                        <div style={{ padding: '8px' }}>
+                            <b>1. Behave like you would in real life </b>
+                        </div>
                         <Divider style={{margin:'16px 0'}}></Divider>
-                        <b>2. Look for the original source of content </b>
+                        <div style={{ padding: '8px' }}>
+                            <b>2. Look for the original source of content </b>
+                        </div>
                         <Divider style={{margin:'16px 0'}}></Divider>
-                        <b>3. Search for duplicates before posting </b>
+                        <div style={{ padding: '8px' }}>
+                            <b>3. Search for duplicates before posting </b>
+                        </div>
                         <Divider style={{margin:'16px 0'}}></Divider>
                     </div>
                 </Item>
@@ -87,7 +95,10 @@ class CreatePostComponent extends React.Component {
             );
             e.target.value = null;
         } else {
-            this.setState({ content: e.target.files[0] });
+            this.setState({
+                content: e.target.files[0],
+                srcImage: URL.createObjectURL(e.target.files[0]),
+            });
         }
     }
 
@@ -112,10 +123,10 @@ class CreatePostComponent extends React.Component {
     render() {
         return (
             <div>
-                <h2 style={{ marginLeft: '184px', marginBottom: '0' }}>Create a Post</h2>
-                <Grid container spacing={6} style={{ margin: '0px 160px' }}>
-                    <Grid xs={9}>
-                        <Box sx={{ width: '100%' }}>
+                <h2 style={{ margin: '32px 0 0 320px' }}>Create a Post</h2>
+                <Grid container spacing={6} style={{ margin: '16px 280px' }}>
+                    <Grid xs={8}>
+                        <Box>
                             <Stack spacing={2}>
                                 <Item>
                                     <div style={{ padding: '24px' }}>
@@ -146,24 +157,32 @@ class CreatePostComponent extends React.Component {
                                     <Tabs
                                         value={this.state.currentTab}
                                         onChange={(e, v) => this.setState({ currentTab: v, content: '' })}
+                                        TabIndicatorProps={{
+                                            style: {
+                                                backgroundColor: 'rgb(0, 178, 210)'
+                                            }
+                                        }}
                                     >
                                         <Tab
                                             label="text"
                                             value="text"
                                             icon={<TextSnippetIcon />}
                                             iconPosition="start"
+                                            style={{ color: this.state.currentTab === 'text' ? 'rgb(0, 178, 210)' : 'rgba(0, 0, 0, 0.54)' }}
                                         />
                                         <Tab
                                             label="image"
                                             value="image"
                                             icon={<ImageIcon />}
                                             iconPosition="start"
+                                            style={{ color: this.state.currentTab === 'image' ? 'rgb(0, 178, 210)' : 'rgba(0, 0, 0, 0.54)' }}
                                         />
                                         <Tab
                                             label="link"
                                             value="link"
                                             icon={<LinkIcon />}
                                             iconPosition="start"
+                                            style={{ color: this.state.currentTab === 'link' ? 'rgb(0, 178, 210)' : 'rgba(0, 0, 0, 0.54)' }}
                                         />
                                     </Tabs>
                                     <div style={{ padding: '24px' }}>
@@ -186,12 +205,42 @@ class CreatePostComponent extends React.Component {
                                             label='Text'
                                         />}
                                         {this.state.currentTab === 'image' &&
-                                        <input
-                                                type="file"
-                                                style={{ marginTop: '32px' }}
-                                                onChange={this.onFileChange}
-                                                accept="image/png, image/gif, image/jpeg, image/jpg"
-                                        />}
+                                        <div style={{ display: 'flex', flexDirection: 'row' }}>
+                                            <div style={{ display: 'flex', margin: '16px' }}>
+                                                <img
+                                                    draggable={false}
+                                                    width="560"
+                                                    height="315"
+                                                    src={this.state.srcImage ?
+                                                        this.state.srcImage:
+                                                        `/static/user-avatar-default.png`}
+                                                    className={'upload-post-image'}
+                                                    alt="image to upload"
+                                                    style={{ backgroundColor: this.state.srcImage ? 'initial' : '#d8dfe2' }}
+                                                />
+                                            </div>
+                                            <div style={{ display: 'flex', flexDirection: 'column', margin: 'auto 0' }}>
+                                                <div style={{ margin: '0 auto', display: 'flex' }}>
+                                                    <Button
+                                                        style={{ width: '300px', margin: 'auto', marginTop: '16px', textTransform: 'none', backgroundColor: 'rgb(0, 178, 210)' }}
+                                                        onClick={() => { this.fileRef.current.click() }}
+                                                        variant='contained'
+                                                    >
+                                                        <input
+                                                            ref={this.fileRef}
+                                                            type="file"
+                                                            style={{ display: 'none' }}
+                                                            onChange={this.onFileChange}
+                                                            accept="image/png, image/gif, image/jpeg, image/jpg"
+                                                        />
+                                                        Select Image to upload
+                                                    </Button>
+                                                </div>
+                                                <div style={{ width: '200px', margin: '16px auto', padding: '8px', textAlign: 'center', border: 'solid 1px rgb(0, 178, 210)', borderRadius: '5px' }}>
+                                                    {this.state.content ? this.state.content.name : 'No file is selected!'}
+                                                </div>
+                                            </div>
+                                        </div>}
                                         {this.state.currentTab === 'link' &&
                                         <TextField
                                             style={{ marginTop: '32px' }}
