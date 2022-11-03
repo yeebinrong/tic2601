@@ -214,10 +214,12 @@ class SearchComponent extends React.Component {
                         </Box>
                     </Grid>
                     <Grid xs style={{ position: 'relative' }}>
+                        <div style={{ color: 'white', backgroundColor: '#1565c0', height: '35px', borderRadius: '5px', padding: '16px 6px 6px 6px', textIndent: '16px' }}>
+                            <b>Communities</b>
+                        </div>
                         <Item key={'community_panel'} style={{ padding: '16px' }}>
                             <Stack spacing={2} direction="column">
                                 <Box style={{ textAlign: 'left' }}>
-                                    <b>Communities</b>
                                     {Object.keys(this.state.users).length === 0 && (
                                         <p>No communities found!</p>
                                     )}
@@ -244,10 +246,12 @@ class SearchComponent extends React.Component {
                                 </Box>
                             </Stack>
                         </Item>
-                        <Item key={'user_panel'} style={{ padding: '16px', marginTop: '16px' }}>
-                            <Stack spacing={2} direction="column">
+                        <Item key={'user_panel'} style={{ marginTop: '16px' }}>
+                            <div style={{ color: 'white', backgroundColor: '#1565c0', height: '35px', borderRadius: '5px', padding: '16px 6px 6px 6px', textIndent: '16px' }}>
+                                <b>Users</b>
+                            </div>
+                            <Stack spacing={2} direction="column" style={{ padding: '16px' }}>
                                 <Box style={{ textAlign: 'left' }}>
-                                    <b>Users</b>
                                     {Object.keys(this.state.users).length === 0 && (
                                         <p>No users found!</p>
                                     )}
