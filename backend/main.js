@@ -46,7 +46,12 @@ const {
     getAllFollowedCommunities,
     insertTextPost,
     insertUrlPost,
-    insertUserIntoBanList
+    insertUserIntoBanList,
+    getFollowingCommunities,
+    getModeratorCommunities,
+    getUserPosts,
+    getUserComments,
+    getUserFavouredPostsOrComments
 } = require('./db_utils.js')
 
 /* -------------------------------------------------------------------------- */
@@ -513,6 +518,11 @@ app.get('/api/users/:userName', async (req, resp) => {
     // Parse the json string sent from client into json object
     const userName = req.params.userName;
     const results = await retrieveUserInfo(userName);
+    const results2 = await getFollowingCommunities(userName);
+    const results3 = await getModeratorCommunities(userName);
+    const results4 = await getUserPosts(userName);
+    const results5 = await getUserComments(userName);
+    const results6 = await getUserFavouredPostsOrComments(userName);
     if (results.rows && results.rows.length == 0) {
         resp.status(404);
         resp.type('application/json');
@@ -521,7 +531,14 @@ app.get('/api/users/:userName', async (req, resp) => {
     }
     resp.status(200);
     resp.type('application/json');
-    resp.json({ userInfo: results.rows[0] });
+    resp.json({
+        userInfo: results.rows[0],
+        followedCommunities: results2.rows,
+        userModeratorCommunities: results3.rows,
+        userPosts: results4.rows,
+        userComments: results5.rows,
+        userFavoured: results6.rows,
+    });
     return;
 });
 

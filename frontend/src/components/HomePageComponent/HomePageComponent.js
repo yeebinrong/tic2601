@@ -14,11 +14,13 @@ import {
     Divider,
     Chip,
     Button,
+    Tooltip,
 } from '@mui/material';
 import Grid from '@mui/material/Unstable_Grid2';
 import CommentIcon from '@mui/icons-material/Comment';
 import ForwardIcon from '@mui/icons-material/Forward';
 import CreateCommunityComponent from '../CreateCommunityComponent/CreateCommunityComponent';
+import moment from 'moment'
 
 export const renderPostLists = (posts, params, handleChange, onFavourChange, onDeletePostCallBack, currentUser) => {
     return (
@@ -102,24 +104,28 @@ export const renderPostLists = (posts, params, handleChange, onFavourChange, onD
                                     margin: 'auto 0 auto 16px',
                                 }}
                             >
-                                {(post.age.years &&
-                                    post.age.years +
-                                        ' years ago') ||
-                                    (post.age.months &&
-                                        post.age.months +
-                                            ' months ago') ||
-                                    (post.age.days &&
-                                        post.age.days +
-                                            ' days ago') ||
-                                    (post.age.hours &&
-                                        post.age.hours +
-                                            ' hours ago') ||
-                                    (post.age.minutes &&
-                                        post.age.minutes +
-                                            ' minutes ago') ||
-                                    (post.age.seconds &&
-                                        post.age.seconds +
-                                            ' seconds ago')}
+                                <Tooltip title={moment(post.datetime_created).format('DD-MM-YYYY hh:mmA')}>
+                                    <div>
+                                        {(post.age.years &&
+                                            post.age.years +
+                                                ' years ago') ||
+                                            (post.age.months &&
+                                                post.age.months +
+                                                    ' months ago') ||
+                                            (post.age.days &&
+                                                post.age.days +
+                                                    ' days ago') ||
+                                            (post.age.hours &&
+                                                post.age.hours +
+                                                    ' hours ago') ||
+                                            (post.age.minutes &&
+                                                post.age.minutes +
+                                                    ' minutes ago') ||
+                                            (post.age.seconds &&
+                                                post.age.seconds +
+                                                    ' seconds ago')}
+                                    </div>
+                                </Tooltip>
                             </Box>
                         </Stack>
                         <Stack
@@ -359,10 +365,9 @@ class HomePageComponent extends React.Component {
     }
 
     render() {
-        console.log(this.props);
         return (
-            <Grid container spacing={6} style={{ margin: '16px 160px' }}>
-                <Grid xs={9}>
+            <Grid container spacing={6} style={{ margin: '16px 280px' }}>
+                <Grid xs={8} >
                     <Box sx={{ width: '100%' }}>
                         <Stack spacing={2}>
                             {renderPostLists(this.state.posts, this.props.params, this.handleChange, this.onFavourChange, this.onDeletePostCallBack, this.props.userInfo?.username)}
@@ -370,10 +375,12 @@ class HomePageComponent extends React.Component {
                     </Box>
                 </Grid>
                 <Grid xs style={{ position: 'relative' }}>
-                    <Item style={{ padding: '16px' }}>
+                    <div style={{ color: 'white', backgroundColor: '#1565c0', height: '35px', borderRadius: '5px', padding: '16px 6px 6px 6px', textIndent: '16px' }}>
+                        <b>Home</b>
+                    </div>
+                    <Item style={{ padding: '12px 32px 32px 32px' }}>
                         <Stack spacing={2} direction="column">
                             <Box style={{ textAlign: 'left' }}>
-                                <b>Home</b>
                                 <p>Your personal Readit homepage.</p>
                                 <p>
                                     Come here to check in with your favourite

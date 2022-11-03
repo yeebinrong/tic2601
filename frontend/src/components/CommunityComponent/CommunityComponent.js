@@ -16,6 +16,7 @@ import {snackBarProps, withParams } from '../../constants/constants';
 import { renderPostLists } from '../HomePageComponent/HomePageComponent';
 import { LineChart,Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend } from 'recharts';
 import { withSnackbar } from 'notistack';
+import moment from 'moment';
 
 const Item = styled(Paper)(({ theme }) => ({
     backgroundColor: theme.palette.mode === 'dark' ? '#1A2027' : '#fff',
@@ -435,15 +436,15 @@ class CommunityComponent extends React.Component {
     renderNorm = () => {
         return (
             <>
-                <Grid container spacing={6} style={{ margin: '0px 160px' }}>
-                    <Grid xs={9}>
+                <Grid container spacing={6} style={{ margin: '16px 280px' }}>
+                    <Grid xs={8}>
                         <Box sx={{ width: '100%' }}>
                             <Stack spacing={2}>
                             {renderPostLists(this.state.posts, this.props.params, this.handleChange, this.onFavourChange, this.onDeletePostCallBack, this.props.userInfo?.username)}
                             </Stack>
                         </Box>
                     </Grid>
-                    <Grid xs={3} style={{ position: 'relative' }}>
+                    <Grid xs style={{ position: 'relative' }}>
                         <div style={{ backgroundColor:this.state.info.colour, height: '35px', borderRadius: '5px', paddingTop: '10px', textIndent: '16px' }}>
                             
                             <b className={'sideBoxHeader'}>About Community</b>
@@ -453,13 +454,13 @@ class CommunityComponent extends React.Component {
                                 <b>Welcome to r/{this.state.info.community_name}</b>
                                 <p>{this.state.info.description}</p>
                                 <Divider style={{margin:'16px 0'}}></Divider>
-                                <b>Creation Date:{this.state.info.datetime_created}</b>
+                                <b>Creation Date: {moment(this.state.info.datetime_created).format('DD-MM-YYYY hh:mmA')}</b>
                                 <Divider style={{margin:'16px 0'}}></Divider>
                                 <div style={{ marginTop: '16px' }}>
                                     <Chip
-                                        style={{ display: 'flex' }}
+                                        style={{ display: 'flex', backgroundColor: this.state.info.colour }}
                                         label="Create Post"
-                                        color="primary"
+                                        color='primary'
                                         clickable={true}
                                         onClick={() =>
                                             this.props.navigate({
@@ -608,19 +609,19 @@ class CommunityComponent extends React.Component {
         return (
             <div>
                 <div style={{ display: 'block', backgroundColor:this.state.info.colour, height: 175 }}></div>
-                    <div style={{ backgroundColor: 'white', height: 135 }}>
-                        <div style={{ display: 'flex', marginLeft: '20%', paddingTop: '10px' }}>
-                            <div>
-                                <Avatar alt="Community Logo" sx={{ width: 55, height: 55 }} src={this.state.info.profile_picture ?
-                                    this.state.info.profile_picture: `/static/readit_logo.png`} />
-                            </div>
-                            <div style={{ marginRight: '25px' }}>
-                                <b style={{ fontSize: '30px', marginLeft: '10%' }}>{this.state.info.community_name}</b>
-                                <p style={{ marginLeft: '10%', marginTop: '0px' }}>r/{this.state.info.community_name}</p>
-                                <PostModButton handleChange={this.handleModeChange} value={this.state.mode} params={this.props.params} navigate={this.props.navigate}/>
-                            </div>
-                            <div style={{ margin: '15px' }}>
-                                {console.log("here")}
+                <div style={{ backgroundColor: 'white' }}>
+                    <div style={{ display: 'flex', marginLeft: '20%', paddingTop: '10px' }}>
+                        <div>
+                            <Avatar alt="Community Logo" sx={{ width: 55, height: 55 }} src={this.state.info.profile_picture ?
+                                this.state.info.profile_picture: `/static/readit_logo.png`} />
+                        </div>
+                        <div style={{ marginRight: '25px' }}>
+                            <b style={{ fontSize: '30px', marginLeft: '10%' }}>{this.state.info.community_name}</b>
+                            <p style={{ marginLeft: '10%', marginTop: '0px' }}>r/{this.state.info.community_name}</p>
+                            <PostModButton handleChange={this.handleModeChange} value={this.state.mode} params={this.props.params} navigate={this.props.navigate}/>
+                        </div>
+                        <div style={{ margin: '15px' }}>
+                            {console.log("here")}
                             {console.log(this.state.following)}
                             {console.log(this.state.followStatus)}
                             <Button style={{ borderRadius: '14px' }} variant="contained" onClick={this.changeFollow} color={this.state.following !== '0' ? "primary":"secondary"}>{this.state.followStatus}</Button>

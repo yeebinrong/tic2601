@@ -9,7 +9,7 @@ const { getReplyComments, getCommentsByPostId } = require('../db/comment');
 //   "community_name": "test_community",
 //   "url": null,
 //   "title": "Hello World One!",
-//   "date_created": "2022-09-26T12:38:45.614Z",
+//   "datetime_created": "2022-09-26T12:38:45.614Z",
 //   "date_deleted": null
 // }
 exports.getPost = async (req, resp) => {

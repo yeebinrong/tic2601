@@ -61,17 +61,23 @@ class CreatePostComponent extends React.Component {
 
     renderDefaultPanel = () => {
         return (
-            <Grid xs={3} style={{ position: 'relative' }}>
-                <div style={{ color: 'white', backgroundColor: '#1565c0', height: '35px', borderRadius: '5px', paddingTop: '10px', textIndent: '16px' }}>
+            <Grid xs style={{ position: 'relative' }}>
+                <div style={{ color: 'white', backgroundColor: '#1565c0', height: '35px', borderRadius: '5px', padding: '16px 6px 6px 6px', textIndent: '16px' }}>
                     <b>Posting to Readit</b>
                 </div>
                 <Item>
                     <div style={{ textAlign: 'left', padding: 10 }}>
-                        <b>1. Behave like you would in real life </b>
+                        <div style={{ padding: '8px' }}>
+                            <b>1. Behave like you would in real life </b>
+                        </div>
                         <Divider style={{margin:'16px 0'}}></Divider>
-                        <b>2. Look for the original source of content </b>
+                        <div style={{ padding: '8px' }}>
+                            <b>2. Look for the original source of content </b>
+                        </div>
                         <Divider style={{margin:'16px 0'}}></Divider>
-                        <b>3. Search for duplicates before posting </b>
+                        <div style={{ padding: '8px' }}>
+                            <b>3. Search for duplicates before posting </b>
+                        </div>
                         <Divider style={{margin:'16px 0'}}></Divider>
                     </div>
                 </Item>
@@ -112,10 +118,10 @@ class CreatePostComponent extends React.Component {
     render() {
         return (
             <div>
-                <h2 style={{ marginLeft: '184px', marginBottom: '0' }}>Create a Post</h2>
-                <Grid container spacing={6} style={{ margin: '0px 160px' }}>
-                    <Grid xs={9}>
-                        <Box sx={{ width: '100%' }}>
+                <h2 style={{ margin: '32px 0 0 320px' }}>Create a Post</h2>
+                <Grid container spacing={6} style={{ margin: '16px 280px' }}>
+                    <Grid xs={8}>
+                        <Box>
                             <Stack spacing={2}>
                                 <Item>
                                     <div style={{ padding: '24px' }}>

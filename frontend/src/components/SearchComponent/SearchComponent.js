@@ -199,21 +199,21 @@ class SearchComponent extends React.Component {
     render() {
         return (
             <>
-                <div style={{ fontSize: '30px', margin: '32px 184px 0px 184px' }}>
+                <div style={{ fontSize: '30px', margin: '32px 184px 0px 304px' }}>
                     <div>
                         {this.props.location.search === '' ? 'All posts' : 'Search Results'}
                     </div>
                     {this.parseSearchToChips()}
                 </div>
-                <Grid container spacing={6} style={{ margin: '0px 160px' }}>
-                    <Grid xs={9}>
+                <Grid container spacing={6} style={{ margin: '16px 280px' }}>
+                    <Grid xs={8}>
                         <Box sx={{ width: '100%' }}>
                             <Stack spacing={2}>
                                 {renderPostLists(this.state.posts, this.props.params, this.handleChange, this.onFavourChange, this.onDeletePostCallBack, this.props.userInfo.username)}
                             </Stack>
                         </Box>
                     </Grid>
-                    <Grid xs={3} style={{ position: 'relative' }}>
+                    <Grid xs style={{ position: 'relative' }}>
                         <Item key={'community_panel'} style={{ padding: '16px' }}>
                             <Stack spacing={2} direction="column">
                                 <Box style={{ textAlign: 'left' }}>
@@ -226,7 +226,7 @@ class SearchComponent extends React.Component {
                                             <Box key={community} style={{ marginLeft: '16px', marginTop: '8px', display: 'flex' }}>
                                                 r/{community}
                                                 <Button
-                                                    style={{ marginLeft: '16px' }}
+                                                    style={{ marginLeft: 'auto' }}
                                                     variant='outlined'
                                                     size='small'
                                                     onClick={() => {
@@ -256,7 +256,7 @@ class SearchComponent extends React.Component {
                                             <Box key={user} style={{ marginLeft: '16px', marginTop: '8px', display: 'flex' }}>
                                                 u/{user}
                                                 <Button
-                                                    style={{ marginLeft: '16px' }}
+                                                    style={{ marginLeft: 'auto' }}
                                                     variant='outlined'
                                                     size='small'
                                                     onClick={() => {

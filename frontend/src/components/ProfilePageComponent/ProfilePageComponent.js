@@ -42,6 +42,11 @@ class ProfilePageComponent extends React.Component {
                 this.props.setIsLoading(false);
                 this.setState({
                     ...res.data.userInfo,
+                    followedCommunities: res.data.followedCommunities,
+                    userComments: res.data.userComments,
+                    userFavoured: res.data.userFavoured,
+                    userModeratorCommunities: res.data.userModeratorCommunities,
+                    userPosts: res.data.userPosts,
                     selectedFile: null,
                     profileLoaded: true,
                 });
@@ -180,7 +185,7 @@ class ProfilePageComponent extends React.Component {
                                         </>}
                                     </div>
                                     <div style={{ marginLeft: '16px' }}>
-                                        <b>{this.state.username}</b>
+                                        <b>{this.state.user_name}</b>
                                         <div>u/{this.state.user_name}</div>
                                         {this.props.userInfo.username !== '' &&
                                         this.state.user_name === this.props.userInfo.username &&
