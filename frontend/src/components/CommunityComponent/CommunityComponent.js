@@ -150,9 +150,11 @@ class CommunityComponent extends React.Component {
         };
 
         if (props.isVerifyDone) {
-            this.props.setIsLoading(true);  
-            retrieveCommunityPosts(this.props.params.community_name)
-            .then(res => {
+            this.props.setIsLoading(true);
+            retrieveCommunityPosts({
+                communityName: this.props.params.community_name,
+                currentTab: this.props.params.currentTab,
+            }).then(res => {
                 this.props.setIsLoading(false);
                 this.setState({
                     posts: res.data.postsRows,
@@ -182,11 +184,15 @@ class CommunityComponent extends React.Component {
 
     shouldComponentUpdate (nextProps) {
         if ((nextProps.isVerifyDone && !this.props.isVerifyDone) ||
-        (nextProps.location.community !== this.props.location.community)||
+        (nextProps.location.community !== this.props.location.community) ||
+        (nextProps.params.currentTab !== this.props.params.currentTab) ||
         (nextProps.params.mode !== this.props.params.mode)
         ) {
             this.props.setIsLoading(true);
-            retrieveCommunityPosts(nextProps.params.community_name).then(res => {
+            retrieveCommunityPosts({
+                communityName: nextProps.params.community_name,
+                currentTab: nextProps.params.currentTab,
+            }).then(res => {
                 this.props.setIsLoading(false);
                 this.setState({
                     posts: res.data.postsRows,
@@ -450,6 +456,14 @@ class CommunityComponent extends React.Component {
         })
     };
 
+    onDeletePostCallBack = (name, id) => {
+        let tempPosts = this.state.posts;
+        tempPosts = tempPosts.filter(p => !(p.community_name === name && p.post_id === id));
+        this.setState({
+            posts: tempPosts,
+        });
+    }
+
     //Posts UI
     renderNorm = () => {
         return (
@@ -458,7 +472,7 @@ class CommunityComponent extends React.Component {
                     <Grid xs={9}>
                         <Box sx={{ width: '100%' }}>
                             <Stack spacing={2}>
-                            {renderPostLists(this.state.posts, this.props.params, this.handleChange, this.onFavourChange)}
+                            {renderPostLists(this.state.posts, this.props.params, this.handleChange, this.onFavourChange, this.onDeletePostCallBack, this.props.userInfo.username)}
                             </Stack>
                         </Box>
                     </Grid>

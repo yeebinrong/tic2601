@@ -264,12 +264,10 @@ export function retrieveModPageStats(community_name) {
         }));
 }
 
-export function retrieveCommunityPosts(community_name) {
+export function retrieveCommunityPosts(params) {
     return axios
         .get(`${HOST}/api/community`, {
-            params: {
-                community_name,
-            },
+            params,
             headers: {
                 Accept: CONTENT_TYPE_JSON,
             },

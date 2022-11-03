@@ -510,9 +510,16 @@ app.get('/api/moderator', async (req, resp) => {
 
 
 app.get('/api/community', async (req, resp) => {
-    const community = req.query.community_name;
+    const community = req.query.communityName;
+    const currentTab = req.query.currentTab;
+    let sortBy = 'fav_point DESC';
+    if (currentTab == 'hot') {
+        sortBy = 'view_count DESC';
+    } else if (currentTab == 'new') {
+        sortBy = 'age ASC';
+    }
     const username = req.token.username
-    const results1 = await retrieveCommunityPostsDB(community, req.token.username);
+    const results1 = await retrieveCommunityPostsDB(community, sortBy, req.token.username);
     const results2 = await retrieveCommunityInfoDB(community);
     const results3 = await retrieveCommunityModsDB(community);
     const results4 = await retrieveCommunityStatsDB(community);

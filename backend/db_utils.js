@@ -174,7 +174,7 @@ const searchPostWithParams = (currentUser, order, user, flair, community, q) => 
     );
 };
 
-const retrieveCommunityPostsDB = (community, currentUser) => {
+const retrieveCommunityPostsDB = (community, sortBy, currentUser) => {
     return POOL.query(
            `WITH one_community AS
            (SELECT oc.community_name, p.user_name, AGE(CURRENT_TIMESTAMP, p.date_created), p.title, p.flair, p.post_id, p.date_deleted, p.view_count,
@@ -187,7 +187,7 @@ const retrieveCommunityPostsDB = (community, currentUser) => {
                GROUP BY oc.community_name, p.user_name, p.post_id, p.date_created, p.date_deleted, p.title, p.flair, p.url, p.view_count, fp.favour_point, c.comment_id
                HAVING oc.community_name = $1)
             SELECT DISTINCT post_id, community_name, user_name, age, title, flair, fav_point, is_favour, comment_count, date_deleted, view_count, url
-            FROM one_community ORDER BY age DESC;`,
+            FROM one_community ORDER BY ` + sortBy,
             [
                 escapeQuotes(community),
                 escapeQuotes(currentUser),
