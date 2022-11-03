@@ -445,9 +445,8 @@ class CommunityComponent extends React.Component {
                         </Box>
                     </Grid>
                     <Grid xs style={{ position: 'relative' }}>
-                        <div style={{ backgroundColor:this.state.info.colour, height: '35px', borderRadius: '5px', paddingTop: '10px', textIndent: '16px' }}>
-                            
-                            <b className={'sideBoxHeader'}>About Community</b>
+                        <div style={{ color: 'white', backgroundColor: this.state.info.colour ? this.state.info.colour : 'rgb(0, 178, 210)', height: '35px', borderRadius: '5px', padding: '16px 6px 6px 6px', textIndent: '16px' }}>
+                            <b>About Community</b>
                         </div>
                         <Item>
                             <div style={{ textAlign: 'left', padding: 10 }}>
@@ -500,102 +499,96 @@ class CommunityComponent extends React.Component {
                         {favData[3].Value=stat.fav_total ? stat.fav_total : "0"}
                         {modStats[3].Value=stat.mod_count ? stat.mod_count : "0"}
                         return(
-                            <div className={'modPage'}>
-                                <Box sx={{ flexGrow: 1 }}>
-                                    <Grid  container spacing={10}>
-                                        <Grid item xs={6}>
+                            <Grid container spacing={6} style={{ margin: '16px 280px' }}>
+                                <Grid item xs={8}>
+                                    <Box sx={{ width: '100%' }}>
+                                        <Stack spacing={2}>
                                             <div>
-                                                <Box sx={{ width: '100%' }}>
-                                                    <Stack spacing={3}>
-                                                        <div>
-                                                            <Paper component="form" sx={{ p: '2px 4px', display: 'flex', justifyContent: 'center' }}>
-                                                                <table>
+                                                <Paper component="form" sx={{ p: '2px 4px', display: 'flex', justifyContent: 'center' }}>
+                                                    <table>
+                                                        <tr>
+                                                            <th>Follower Count</th>
+                                                            <th>Post Count</th>
+                                                            <th>Total Favours</th>
+                                                            <th>Moderator Count</th>
+                                                        </tr>
+                                                        <tr> {console.log(stat.follower_count)}
+                                                            <td>{followerData[3].Value}</td>
+                                                            <td>{postData[3].Value}</td>
+                                                            <td>{favData[3].Value}</td>
+                                                            <td>{modStats[3].Value}</td>
+                                                        </tr>
+                                                    </table>
+                                                </Paper>
+                                            </div>
+                                            <div>
+                                            <b>Followers</b>
+                                                <Paper component="form" sx={{ p: '2px 4px', display: 'flex', justifyContent: 'center' }}>
+                                                    <FollowerChart/>
+                                                </Paper>
+                                            </div>
+                                            <div>
+                                            <b>Posts</b>
+                                                <Paper component="form" sx={{ p: '2px 4px', display: 'flex', justifyContent: 'center' }}>
+                                                    <PostChart/>
+                                                </Paper>
+                                            </div>
+                                            <div>
+                                            <b>Favours</b>
+                                                <Paper component="form" sx={{ p: '2px 4px', display: 'flex', justifyContent: 'center' }}>
+                                                    <FavChart/>
+                                                </Paper>
+                                            </div>
+                                        </Stack>
+                                    </Box>
+                                </Grid>
+                                <Grid xs style={{ position: 'relative' }}>
+                                    <div style={{ color: 'white', backgroundColor: this.state.info.colour ? this.state.info.colour : 'rgb(0, 178, 210)', height: '35px', borderRadius: '5px', padding: '16px 6px 6px 6px', textIndent: '16px' }}>
+                                        <b>Community Banlist:</b>
+                                    </div>
+                                    <Item style={{ padding: '12px 32px 32px 32px' }}>
+                                        <Stack spacing={2} direction="column">
+                                            <Box style={{ textAlign: 'left' }}>
+                                                <div>
+                                                    <table>
+                                                        <tr>
+                                                            <th>Username</th>
+                                                            <th>Approve?</th>
+                                                            <th>Delete</th>
+                                                        </tr>
+                                                        {this.state.bans?.map((ban, index) => {
+                                                                return(
                                                                     <tr>
-                                                                        <th>Follower Count</th>
-                                                                        <th>Post Count</th>
-                                                                        <th>Total Favours</th>
-                                                                        <th>Moderator Count</th>
+                                                                        <td>
+                                                                            {ban.user_name}
+                                                                        </td>
+                                                                        <td>
+                                                                            {ban.is_approved === 'Y' ? <Checkbox disabled checked/> : <Checkbox onChange={() => this.handleCheck(ban.user_name, index)}/>}
+                                                                        </td>
+                                                                        <td>
+                                                                            <Button style={{ borderRadius: '14px' }} variant="contained" color="secondary" onClick={() => this.handleDelete(ban.user_name, index)}>Delete</Button>
+                                                                        </td>
                                                                     </tr>
-                                                                    <tr> {console.log(stat.follower_count)}
-                                                                        <td>{followerData[3].Value}</td>
-                                                                        <td>{postData[3].Value}</td>
-                                                                        <td>{favData[3].Value}</td>
-                                                                        <td>{modStats[3].Value}</td>
-                                                                    </tr>
-                                                                </table>
-                                                            </Paper>
-                                                        </div>
-                                                        <div>
-                                                        <b>Followers</b>
-                                                            <Paper component="form" sx={{ p: '2px 4px', display: 'flex', justifyContent: 'center' }}>
-                                                                <FollowerChart/>
-                                                            </Paper>
-                                                        </div>
-                                                        <div>
-                                                        <b>Posts</b>
-                                                            <Paper component="form" sx={{ p: '2px 4px', display: 'flex', justifyContent: 'center' }}>
-                                                                <PostChart/>
-                                                            </Paper>
-                                                        </div>
-                                                        <div>
-                                                        <b>Favours</b>
-                                                            <Paper component="form" sx={{ p: '2px 4px', display: 'flex', justifyContent: 'center' }}>
-                                                                <FavChart/>
-                                                            </Paper>
-                                                        </div>
-                                                    </Stack>
-                                                </Box>
-                                            </div>
-                                        </Grid>
-                                        <Grid item xs={4}>
-                                            <div style={{ backgroundColor: this.state.info.colour, height: '35px', borderRadius: '5px', paddingTop: '10px', textIndent: '16px' }}>
-                                                <div className={'sideBoxHeader'}>Community Banlist:</div>
-                                            </div>
-                                            <Item>
-                                                <Box>
-                                                    <Stack spacing={1} direction={'column'}>
-                                                        <div>
-                                                            <table>
-                                                                <tr>
-                                                                    <th>Username</th>
-                                                                    <th>Approve?</th>
-                                                                    <th>Delete</th>
-                                                                </tr>
-                                                                {this.state.bans?.map((ban, index) => {
-                                                                        return(
-                                                                            <tr>
-                                                                                <td>
-                                                                                    {ban.user_name}
-                                                                                </td>
-                                                                                <td>
-                                                                                    {ban.is_approved === 'Y' ? <Checkbox disabled checked/> : <Checkbox onChange={() => this.handleCheck(ban.user_name, index)}/>}
-                                                                                </td>
-                                                                                <td>
-                                                                                    <Button style={{ borderRadius: '14px' }} variant="contained" color="secondary" onClick={() => this.handleDelete(ban.user_name, index)}>Delete</Button>
-                                                                                </td>
-                                                                            </tr>
-                                                                        )
-                                                                    })}
-                                                            </table>
-                                                        </div>
-                                                        {/* <div><b>Allow Favours: </b><Checkbox></Checkbox></div> */}
-                                                    </Stack>
-                                                </Box>
-                                            </Item>
-                                            <div style={{ backgroundColor: this.state.info.colour, height: '35px', borderRadius: '5px', paddingTop: '10px', textIndent: '16px' }}>
-                                                <div className={'sideBoxHeader'}>Community Colour:</div>
-                                            </div>
-                                            <Item>
-                                                <SketchPicker
-                                                // color = {comColour}
-                                                color = {this.state.info.colour}
-                                                onChangeComplete={this.handleComColourChange}
-                                                />
-                                            </Item>
-                                        </Grid>
-                                    </Grid>
-                                </Box>
-                            </div>
+                                                                )
+                                                            })}
+                                                    </table>
+                                                </div>
+                                                {/* <div><b>Allow Favours: </b><Checkbox></Checkbox></div> */}
+                                            </Box>
+                                        </Stack>
+                                    </Item>
+                                    <div style={{ color: 'white', backgroundColor: this.state.info.colour ? this.state.info.colour : 'rgb(0, 178, 210)', height: '35px', borderRadius: '5px', padding: '16px 6px 6px 6px', textIndent: '16px' }}>
+                                        <b>Community Colour:</b>
+                                    </div>
+                                    <Item>
+                                        <SketchPicker
+                                            width={'auto'}
+                                            color = {this.state.info.colour}
+                                            onChangeComplete={this.handleComColourChange}
+                                        />
+                                    </Item>
+                                </Grid>
+                            </Grid>
                      );
                 })}
             </>
@@ -629,7 +622,6 @@ class CommunityComponent extends React.Component {
                     </div>
                 </div>
                 { this.state.mode === "mod" ? this.renderMod() : this.renderNorm() }
-            
             </div>
         );
     }
