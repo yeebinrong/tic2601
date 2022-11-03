@@ -13,6 +13,7 @@ import {
     Avatar,
     Divider,
     Chip,
+    Button,
 } from '@mui/material';
 import Grid from '@mui/material/Unstable_Grid2';
 import CommentIcon from '@mui/icons-material/Comment';
@@ -63,11 +64,17 @@ export const renderPostLists = (posts, params, handleChange, onFavourChange, onD
                                     // TODO add community profile picture?
                                     src={`/static/user-avatar-default.png`}>
                                 </Avatar>
-                                <a href={`/community/${post.community_name}/posts/best`}
+                                <a  href={`/community/${post.community_name}/posts/best`}
                                 style={{
                                     margin: 'auto',
+                                    color: 'inherit',
+                                    textDecoration: 'none',
                                 }}>
-                                    r/{post.community_name}
+                                    <Button
+                                        style={{ textTransform: 'none' }}
+                                    >
+                                        r/{post.community_name}
+                                    </Button>
                                 </a>
                             </Box>
                             <Box
@@ -82,13 +89,17 @@ export const renderPostLists = (posts, params, handleChange, onFavourChange, onD
                                         post.profile_picture:
                                         `/static/user-avatar-default.png`}>
                                 </Avatar>
-                                <a style={{ margin: 'auto' }} href={`/user/${post.user_name}/view`}>
-                                    Posted by u/{post.user_name}
+                                <a style={{ margin: 'auto', color: 'inherit', textDecoration: 'none' }} href={`/user/${post.user_name}/view`}>
+                                    <Button
+                                        style={{ textTransform: 'none' }}
+                                    >
+                                        Posted by u/{post.user_name}
+                                    </Button>
                                 </a>
                             </Box>
                             <Box
                                 style={{
-                                    margin: 'auto 0 auto 8px',
+                                    margin: 'auto 0 auto 16px',
                                 }}
                             >
                                 {(post.age.years &&
@@ -177,15 +188,14 @@ export const renderPostLists = (posts, params, handleChange, onFavourChange, onD
                                 </IconButton>
                             </Box>
                             <Box>
-                                <a href={`/community/${post.community_name}/view/${post.post_id}`}>
-                                    <IconButton
-                                        sx={{ p: '10px' }}
-                                        aria-label="comment"
+                                <a style={{ color: 'inherit', textDecoration: 'none' }} href={`/community/${post.community_name}/view/${post.post_id}`}>
+                                    <Button
+                                            style={{ textTransform: 'none', height: '100%' }}
                                     >
-                                        <CommentIcon />
-                                    </IconButton>
-                                    {post.comment_count}{' '}
-                                    Comments
+                                        <CommentIcon sx={{ color:'rgba(0, 0, 0, 0.54)', marginRight: '8px' }} />
+                                        {post.comment_count}{' '}
+                                        Comments
+                                    </Button>
                                 </a>
                             </Box>
                             <MenuButton

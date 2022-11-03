@@ -62,7 +62,7 @@ class CreatePostComponent extends React.Component {
     renderDefaultPanel = () => {
         return (
             <Grid xs={3} style={{ position: 'relative' }}>
-                <div style={{ backgroundColor: 'lightblue', height: '35px', borderRadius: '5px', paddingTop: '10px', textIndent: '16px' }}>
+                <div style={{ color: 'white', backgroundColor: '#1565c0', height: '35px', borderRadius: '5px', paddingTop: '10px', textIndent: '16px' }}>
                     <b>Posting to Readit</b>
                 </div>
                 <Item>
