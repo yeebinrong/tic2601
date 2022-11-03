@@ -98,11 +98,18 @@ class SearchComponent extends React.Component {
         if (queryParams.q !== '') {
             searchParams += `q=${queryParams.q}&`;
         }
-        this.props.navigate({
-            pathname: `/search/${this.props.params.currentTab}`,
-            search: searchParams !== '' ? `?${searchParams.slice(0, -1)}` : '',
-            replace: true,
-        });
+        if (searchParams === '') {
+            this.props.navigate({
+                pathname: `/home/best`,
+                replace: true,
+            });
+        } else {
+            this.props.navigate({
+                pathname: `/search/${this.props.params.currentTab}`,
+                search: searchParams !== '' ? `?${searchParams.slice(0, -1)}` : '',
+                replace: true,
+            });
+        }
     }
 
     parseSearchToChips = () => {
