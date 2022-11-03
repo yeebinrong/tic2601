@@ -4,7 +4,7 @@ import MoreHorizIcon from '@mui/icons-material/MoreHoriz';
 import ContentCopyIcon from '@mui/icons-material/ContentCopy';
 import DeleteIcon from '@mui/icons-material/Delete';
 import FlagIcon from '@mui/icons-material/Flag';
-import { reportUserInCommunity } from '../apis/app-api';
+import { deleteAPost, reportUserInCommunity } from '../apis/app-api';
 import { withSnackbar } from 'notistack';
 import { snackBarProps } from '../constants/constants';
 
@@ -16,6 +16,24 @@ const MenuButton = (props) => {
     };
     const handleClose = () => {
         setAnchorEl(null);
+    };
+    function handleDelete(communityName, postId, postOwner) {
+        deleteAPost({ communityName, postId, postOwner })
+            .then(res => {
+                console.log(res);
+                if (!res.error) {
+                    props.deleteCallback(communityName, postId);
+                    props.enqueueSnackbar(
+                        `Post has been deleted successfully.`,
+                        snackBarProps('success'),
+                    );
+                } else {
+                    props.enqueueSnackbar(
+                        res.data.message ? res.data.message : `Failed to delete post.`,
+                        snackBarProps('error'),
+                    );
+                }
+            });
     };
 
     return (
@@ -63,12 +81,27 @@ const MenuButton = (props) => {
                     },
                 }}
             >
-                <MenuItem>
+                <MenuItem
+                    onClick={() => {
+                        navigator.clipboard.writeText(`https://readit-xxtqn.ondigitalocean.app${props.href}`);
+                        props.enqueueSnackbar(
+                            `Link copied!`,
+                            snackBarProps('success'),
+                        );
+                        handleClose();
+                    }}
+                >
                     <ContentCopyIcon style={{ marginRight: '8px' }} /> Copy Link
                 </MenuItem>
-                <MenuItem>
+                {props.canDelete &&
+                <MenuItem
+                    onClick={() => {
+                        handleDelete(props.communityName, props.postId, props.postOwner);
+                        handleClose();
+                    }}
+                >
                     <DeleteIcon style={{ marginRight: '8px' }} /> Delete
-                </MenuItem>
+                </MenuItem>}
                 <MenuItem
                     onClick={()=> {
                         reportUserInCommunity(props.postOwner, props.communityName)
@@ -84,6 +117,7 @@ const MenuButton = (props) => {
                                         snackBarProps('error'),
                                     );
                                 }
+                                handleClose();
                             })
                     }}
                 >

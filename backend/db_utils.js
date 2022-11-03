@@ -94,6 +94,16 @@ const updatePostFavour = (postId, favour, value, currentUser, receiver, communit
     }
 }
 
+const deletePost = (community,post_id,currentUser) => {
+    return POOL.query(`UPDATE posts SET date_deleted = CURRENT_TIMESTAMP WHERE community_name = $1 AND post_id = $2 AND user_name = $3;`,
+        [
+            escapeQuotes(community),
+            escapeQuotes(post_id),
+            escapeQuotes(currentUser),
+        ]
+    );
+};
+
 // This sql inserts a row into community table with the specified communityName,
 // using the autoincrement id returned from inserting that row,
 // the community_name and user_name is inserted into moderator tables.
@@ -461,6 +471,7 @@ module.exports = {
     getAllPosts,
     getHomePagePosts,
     updatePostFavour,
+    deletePost,
     insertOneCommunityAndReturnName,
     searchPostWithParams,
     uploadToDigitalOcean,
