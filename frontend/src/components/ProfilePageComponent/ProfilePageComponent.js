@@ -78,7 +78,6 @@ class ProfilePageComponent extends React.Component {
                 this.setState({
                     profile_picture: profile_pic_url,
                 });
-                this.props.setIsLoading(false);
                 this.props.enqueueSnackbar(
                     "Successfully changed profile picture!",
                     snackBarProps('success'),
@@ -89,6 +88,7 @@ class ProfilePageComponent extends React.Component {
                     snackBarProps('error'),
                 );
             }
+            this.props.setIsLoading(false);
         })
         e.target.value = null;
     }

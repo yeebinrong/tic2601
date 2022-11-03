@@ -13,7 +13,12 @@ const { getReplyComments, getCommentsByPostId } = require('../db/comment');
 //   "date_deleted": null
 // }
 exports.getPost = async (req, resp) => {
-    const results = await getPostByIdAndCommunityName(req.params.postId, req.params.communityName);
+    const currentUser = req.token.username;
+    const results = await getPostByIdAndCommunityName(
+        req.params.postId,
+        req.params.communityName,
+        currentUser,
+    );
     if (results.rows.length === 0) {
         resp.status(404);
         resp.type('application/json');
@@ -21,13 +26,12 @@ exports.getPost = async (req, resp) => {
         return;
     }
     const post = results.rows[0];
-    const currentUser = req.token.username;
 
-    const commentsResult = await getCommentsByPostId(post.post_id, post.community_name);
+    const commentsResult = await getCommentsByPostId(currentUser, post.post_id, post.community_name);
     let comments = commentsResult.rows;
 
     for (const cmt of comments) {
-        await queryReplyComments(cmt);
+        await queryReplyComments(cmt, currentUser);
     }
     comments = addIsCommenter(comments, currentUser);
 
@@ -44,15 +48,15 @@ exports.getPost = async (req, resp) => {
     );
 };
 
-async function queryReplyComments(comment) {
-    let rs = await getReplyComments(comment.comment_id, comment.community_name, comment.post_id);
+async function queryReplyComments(comment, currentUser) {
+    let rs = await getReplyComments(currentUser, comment.comment_id, comment.community_name, comment.post_id);
     let replyComments = rs.rows;
     if (replyComments.length === 0) {
         return;
     }
 
     for (const cmt of replyComments) {
-        await queryReplyComments(cmt);
+        await queryReplyComments(cmt, currentUser);
     }
 
     comment['reply_comments'] = replyComments;

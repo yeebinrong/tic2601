@@ -17,13 +17,14 @@ const { localStrategy, mkAuth, verifyToken } = require('./passport_strategy.js')
 const { getCommunity } = require('./apis/community');
 const { getPost } = require('./apis/post');
 const { SIGN_SECRET, CHECK_DIGITAL_OCEAN_KEYS, CHECK_POSTGRES_CONN, READ_FILE, UNLINK_ALL_FILES } = require('./server_config.js')
-const { createComment, updateComment } = require('./apis/comment');
+const { createComment, updateComment, insertOrUpdateFavour } = require('./apis/comment');
 const {
     checkUserNameAlreadyExists,
     insertToUser,
     getAllPosts,
     getHomePagePosts,
     updatePostFavour,
+    deletePost,
     insertOneCommunityAndReturnName,
     searchPostWithParams,
     uploadToDigitalOcean,
@@ -347,6 +348,28 @@ app.post('/api/update_favour', async (req, resp) => {
     }
 });
 
+app.post('/api/delete_post', async (req, resp) => {
+    try {
+        if (req.body.params.postOwner !== req.token.username) {
+            resp.status(401);
+            resp.type('application/json');
+            resp.json({ message: `User [${req.token.username}] not allowed to delete the post.` });
+            return;
+        }
+        await deletePost(req.body.params.communityName, req.body.params.postId, req.token.username);
+        resp.status(200);
+        resp.type('application/json');
+        resp.json({ message: 'delete ok' });
+        return;
+    } catch (e) {
+        console.info(e);
+		resp.status(404);
+		resp.type('application/json');
+        resp.json({ message: 'An error has occurred.' });
+        return;
+    }
+});
+
 // TODO catch / handle errors
 app.get('/api/search', async (req, resp) => {
     const { order, user, flair, community, q } = req.query;
@@ -471,10 +494,10 @@ app.post('/api/updateColour', async (req, resp) => {
 
 app.post('/api/updateFollow', async (req, resp) => {
     try {
-        await updateFollowDB(req.body.params.communityName, req.body.params.isFollowing, req.token.username);
+        await updateFollowDB(req.body.communityName, req.body.isFollowing, req.token.username);
         resp.status(200);
         resp.type('application/json');
-        resp.json({ isFollowing: req.body.params.isFollowing === '0' ? '1' : '0' });
+        resp.json({ isFollowing: req.body.isFollowing === '0' ? '1' : '0' });
         return;
     } catch (e) {
         console.info(e);
@@ -633,6 +656,7 @@ app.get('/api/community/:communityName', getCommunity)
 app.get('/api/community/:communityName/posts/:postId', getPost)
 app.post('/api/community/:communityName/posts/:postId/comments', createComment)
 app.put('/api/community/:communityName/posts/:postId/comments/:commentId', updateComment)
+app.post('/api/community/:communityName/posts/:postId/comments/:commentId/favour', insertOrUpdateFavour)
 
 Promise.all([CHECK_POSTGRES_CONN(), CHECK_DIGITAL_OCEAN_KEYS()])
 .then(() => {

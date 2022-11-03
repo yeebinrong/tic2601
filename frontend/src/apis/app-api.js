@@ -117,6 +117,22 @@ export function modifyFavour(params) {
         }));
 }
 
+export function deleteAPost(params) {
+    return axios
+        .post(`${HOST}/api/delete_post`, {
+            params,
+            headers: {
+                Accept: CONTENT_TYPE_JSON,
+            },
+        })
+        .then((resp) => ({ data: resp.data, error: false }))
+        .catch((err) => ({
+            data: err && err.response ? err.response.data : '',
+            error: true,
+            status: err && err.response ? err.response.status : '',
+        }));
+}
+
 export function searchForPostWithParams(params) {
     return axios
         .get(`${HOST}/api/search`, {
@@ -232,8 +248,9 @@ export function updateColour(params) {
 
 export function updateFollow(params) {
     return axios
-        .post(`${HOST}/api/updateFollow`, {
+        .post(`${HOST}/api/updateFollow`, 
             params,
+            {
             headers: {
                 Accept: CONTENT_TYPE_JSON,
             },
@@ -469,6 +486,26 @@ export function updateComment(communityName, postId, commentId, content) {
             `${HOST}/api/community/${communityName}/posts/${postId}/comments/${commentId}`,
             {
                 content,
+            },
+            {
+                headers: {
+                    Accept: CONTENT_TYPE_JSON,
+                },
+            })
+        .then((resp) => ({ data: resp.data, error: false }))
+        .catch((err) => ({
+            data: err && err.response ? err.response.data : '',
+            error: true,
+            status: err && err.response ? err.response.status : '',
+        }));
+}
+
+export function updateCommentFavour(communityName, postId, commentId, favourPoint) {
+    return axios
+        .post(
+            `${HOST}/api/community/${communityName}/posts/${postId}/comments/${commentId}/favour`,
+            {
+                favourPoint,
             },
             {
                 headers: {
