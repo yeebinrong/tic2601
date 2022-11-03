@@ -488,7 +488,7 @@ class CommunityComponent extends React.Component {
                     <Grid xs={9}>
                         <Box sx={{ width: '100%' }}>
                             <Stack spacing={2}>
-                            {renderPostLists(this.state.posts, this.props.params, this.handleChange, this.onFavourChange)}
+                            {renderPostLists(this.state.posts, this.props.params, this.handleChange, this.onFavourChange, this.onDeletePostCallBack, this.props.userInfo.username)}
                             </Stack>
                         </Box>
                     </Grid>
