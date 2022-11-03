@@ -154,6 +154,7 @@ export const renderPostLists = (posts, params, handleChange, onFavourChange, onD
                                 height="315"
                                 src={post.url}
                                 title={`embedUrl-${index}`}
+                                className={'post-image'}
                                 frameBorder="0"
                                 allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
                                 allowFullScreen
@@ -166,7 +167,8 @@ export const renderPostLists = (posts, params, handleChange, onFavourChange, onD
                                 width="560"
                                 height="315"
                                 src={post.url}
-                                title={`embedUrl-${index}`}
+                                title={post.url}
+                                className={'post-image'}
                                 frameBorder="0"
                             />
                         </Stack>}

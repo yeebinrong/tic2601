@@ -74,7 +74,7 @@ class ProfilePageComponent extends React.Component {
         } else {
             this.setState({
                 selectedFile: e.target.files[0],
-                profile_picture: URL.createObjectURL(e.target.files[0])
+                profile_picture: URL.createObjectURL(e.target.files[0]),
             });
         }
     }

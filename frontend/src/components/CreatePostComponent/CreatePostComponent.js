@@ -22,6 +22,7 @@ class CreatePostComponent extends React.Component {
             selectedFlair: 'Text',
             followedCommunties: null,
             currentTab: 'text',
+            srcImage: null,
         };
         if (props.isVerifyDone) {
             this.props.setIsLoading(true);
@@ -38,6 +39,7 @@ class CreatePostComponent extends React.Component {
                 }
             });
         }
+        this.fileRef = React.createRef(null);
     }
 
     shouldComponentUpdate (nextProps) {
@@ -93,7 +95,10 @@ class CreatePostComponent extends React.Component {
             );
             e.target.value = null;
         } else {
-            this.setState({ content: e.target.files[0] });
+            this.setState({
+                content: e.target.files[0],
+                srcImage: URL.createObjectURL(e.target.files[0]),
+            });
         }
     }
 
@@ -200,12 +205,42 @@ class CreatePostComponent extends React.Component {
                                             label='Text'
                                         />}
                                         {this.state.currentTab === 'image' &&
-                                        <input
-                                                type="file"
-                                                style={{ marginTop: '32px' }}
-                                                onChange={this.onFileChange}
-                                                accept="image/png, image/gif, image/jpeg, image/jpg"
-                                        />}
+                                        <div style={{ display: 'flex', flexDirection: 'row' }}>
+                                            <div style={{ display: 'flex', margin: '16px' }}>
+                                                <img
+                                                    draggable={false}
+                                                    width="560"
+                                                    height="315"
+                                                    src={this.state.srcImage ?
+                                                        this.state.srcImage:
+                                                        `/static/user-avatar-default.png`}
+                                                    className={'upload-post-image'}
+                                                    alt="image to upload"
+                                                    style={{ backgroundColor: this.state.srcImage ? 'initial' : '#d8dfe2' }}
+                                                />
+                                            </div>
+                                            <div style={{ display: 'flex', flexDirection: 'column', margin: 'auto 0' }}>
+                                                <div style={{ margin: '0 auto', display: 'flex' }}>
+                                                    <Button
+                                                        style={{ width: '300px', margin: 'auto', marginTop: '16px', textTransform: 'none', backgroundColor: 'rgb(0, 178, 210)' }}
+                                                        onClick={() => { this.fileRef.current.click() }}
+                                                        variant='contained'
+                                                    >
+                                                        <input
+                                                            ref={this.fileRef}
+                                                            type="file"
+                                                            style={{ display: 'none' }}
+                                                            onChange={this.onFileChange}
+                                                            accept="image/png, image/gif, image/jpeg, image/jpg"
+                                                        />
+                                                        Select Image to upload
+                                                    </Button>
+                                                </div>
+                                                <div style={{ width: '200px', margin: '16px auto', padding: '8px', textAlign: 'center', border: 'solid 1px rgb(0, 178, 210)', borderRadius: '5px' }}>
+                                                    {this.state.content ? this.state.content.name : 'No file is selected!'}
+                                                </div>
+                                            </div>
+                                        </div>}
                                         {this.state.currentTab === 'link' &&
                                         <TextField
                                             style={{ marginTop: '32px' }}
