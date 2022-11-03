@@ -440,7 +440,7 @@ class CommunityComponent extends React.Component {
                     <Grid xs={8}>
                         <Box sx={{ width: '100%' }}>
                             <Stack spacing={2}>
-                            {renderPostLists(this.state.posts, this.props.params, this.handleChange, this.onFavourChange, this.onDeletePostCallBack, this.props.userInfo?.username)}
+                            {renderPostLists(this.state.posts, this.props.params, this.handleChange, this.onFavourChange, this.onDeletePostCallBack, this.props.userInfo?.username, this.state.info?.colour)}
                             </Stack>
                         </Box>
                     </Grid>
@@ -458,7 +458,7 @@ class CommunityComponent extends React.Component {
                                 <Divider style={{margin:'16px 0'}}></Divider>
                                 <div style={{ marginTop: '16px' }}>
                                     <Chip
-                                        style={{ display: 'flex', backgroundColor: this.state.info.colour }}
+                                        style={{ display: 'flex', backgroundColor: this.state.info.colour ? this.state.info.colour : 'rgb(0, 178, 210)' }}
                                         label="Create Post"
                                         color='primary'
                                         clickable={true}
@@ -618,7 +618,7 @@ class CommunityComponent extends React.Component {
                         <div style={{ marginRight: '25px' }}>
                             <b style={{ fontSize: '30px', marginLeft: '10%' }}>{this.state.info.community_name}</b>
                             <p style={{ marginLeft: '10%', marginTop: '0px' }}>r/{this.state.info.community_name}</p>
-                            <PostModButton handleChange={this.handleModeChange} value={this.state.mode} params={this.props.params} navigate={this.props.navigate}/>
+                            <PostModButton indicatorColor={this.state.info?.colour} handleChange={this.handleModeChange} value={this.state.mode} params={this.props.params} navigate={this.props.navigate}/>
                         </div>
                         <div style={{ margin: '15px' }}>
                             {console.log("here")}

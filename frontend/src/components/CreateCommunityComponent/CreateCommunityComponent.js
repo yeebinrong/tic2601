@@ -31,7 +31,7 @@ class CreateCommunityComponent extends React.Component {
               open={this.props.open}
             >
               <div style={style}>
-                <div style={{ color: 'white', display: 'flex', backgroundColor: '#1565c0', height: '35px', borderRadius: '5px', padding: '12px', textIndent: '16px' }}>
+                <div style={{ color: 'white', display: 'flex', backgroundColor: 'rgb(0, 178, 210)', height: '35px', borderRadius: '5px', padding: '12px', textIndent: '16px' }}>
                     <div className='dialog-flex' style={{ width: '100%' }}>
                       <span style={{ marginTop: '6px' }}>
                         <b>Create Community</b>
@@ -54,9 +54,9 @@ class CreateCommunityComponent extends React.Component {
                 <div
                   style={{ padding: '8px 16px' }}
                 >
-                  <div className='margin-top' style={{ marginLeft: '32px', paddingTop: '16px' }}>Community Name</div>
-                  <div style={{fontSize:'10px', marginLeft: '32px' }}>Community names including capitalisation cannot be changed.</div>
-                  <div className='margin-top' style={{ marginLeft: '32px', paddingBottom: '16px' }}>
+                  <div className='margin-top' style={{ marginLeft: '16px', paddingTop: '16px' }}>Community Name</div>
+                  <div style={{fontSize:'10px', marginLeft: '16px' }}>Community names including capitalisation cannot be changed.</div>
+                  <div className='margin-top' style={{ marginLeft: '16px', paddingBottom: '16px' }}>
                     <TextField
                     size="small"
                       onChange={(e) =>  {
@@ -105,7 +105,7 @@ class CreateCommunityComponent extends React.Component {
                             }
                           })
                       }}
-                      style={{ margin: '8px', borderRadius:'14px'}}
+                      style={{ margin: '8px', borderRadius:'14px', backgroundColor: 'rgb(0, 178, 210)' }}
                       variant="contained"
                     >
                       Create Community

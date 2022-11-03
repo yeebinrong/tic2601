@@ -209,12 +209,12 @@ class SearchComponent extends React.Component {
                     <Grid xs={8}>
                         <Box sx={{ width: '100%' }}>
                             <Stack spacing={2}>
-                                {renderPostLists(this.state.posts, this.props.params, this.handleChange, this.onFavourChange, this.onDeletePostCallBack, this.props.userInfo.username)}
+                                {renderPostLists(this.state.posts, this.props.params, this.handleChange, this.onFavourChange, this.onDeletePostCallBack, this.props.userInfo.username, 'rgb(0, 178, 210)')}
                             </Stack>
                         </Box>
                     </Grid>
                     <Grid xs style={{ position: 'relative' }}>
-                        <div style={{ color: 'white', backgroundColor: '#1565c0', height: '35px', borderRadius: '5px', padding: '16px 6px 6px 6px', textIndent: '16px' }}>
+                        <div style={{ color: 'white', backgroundColor: 'rgb(0, 178, 210)', height: '35px', borderRadius: '5px', padding: '16px 6px 6px 6px', textIndent: '16px' }}>
                             <b>Communities</b>
                         </div>
                         <Item key={'community_panel'} style={{ padding: '16px' }}>
@@ -228,7 +228,7 @@ class SearchComponent extends React.Component {
                                             <Box key={community} style={{ marginLeft: '16px', marginTop: '8px', display: 'flex' }}>
                                                 r/{community}
                                                 <Button
-                                                    style={{ marginLeft: 'auto' }}
+                                                    style={{ marginLeft: 'auto', textTransform: 'none' }}
                                                     variant='outlined'
                                                     size='small'
                                                     onClick={() => {
@@ -247,7 +247,7 @@ class SearchComponent extends React.Component {
                             </Stack>
                         </Item>
                         <Item key={'user_panel'} style={{ marginTop: '16px' }}>
-                            <div style={{ color: 'white', backgroundColor: '#1565c0', height: '35px', borderRadius: '5px', padding: '16px 6px 6px 6px', textIndent: '16px' }}>
+                            <div style={{ color: 'white', backgroundColor: 'rgb(0, 178, 210)', height: '35px', borderRadius: '5px', padding: '16px 6px 6px 6px', textIndent: '16px' }}>
                                 <b>Users</b>
                             </div>
                             <Stack spacing={2} direction="column" style={{ padding: '16px' }}>
@@ -265,7 +265,7 @@ class SearchComponent extends React.Component {
                                                     size='small'
                                                     onClick={() => {
                                                         this.props.navigate({
-                                                            pathname: `/user/${user}/view`,
+                                                            pathname: `/user/${user}/profile/overview`,
                                                             replace: true,
                                                         })
                                                     }}

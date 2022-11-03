@@ -22,17 +22,18 @@ import ForwardIcon from '@mui/icons-material/Forward';
 import CreateCommunityComponent from '../CreateCommunityComponent/CreateCommunityComponent';
 import moment from 'moment'
 
-export const renderPostLists = (posts, params, handleChange, onFavourChange, onDeletePostCallBack, currentUser) => {
+export const renderPostLists = (posts, params, handleChange, onFavourChange, onDeletePostCallBack, currentUser, mainColour) => {
     return (
     <>
         <Item>
             <TabButton
                 value={params.currentTab}
                 handleChange={handleChange}
+                indicatorColor={mainColour}
             />
         </Item>
         {!posts && (
-            <Item key={'no_post_found'} style={{ height: '64px', textAlign: 'center' }}>
+            <Item key={'no_post_found'} style={{ height: '64px', padding: '32px', textAlign: 'center' }}>
                 <p>No posts found!</p>
             </Item>
         )}
@@ -91,7 +92,7 @@ export const renderPostLists = (posts, params, handleChange, onFavourChange, onD
                                         post.profile_picture:
                                         `/static/user-avatar-default.png`}>
                                 </Avatar>
-                                <a style={{ margin: 'auto', color: 'inherit', textDecoration: 'none' }} href={`/user/${post.user_name}/view`}>
+                                <a style={{ margin: 'auto', color: 'inherit', textDecoration: 'none' }} href={`/user/${post.user_name}/profile/overview`}>
                                     <Button
                                         style={{ textTransform: 'none' }}
                                     >
@@ -249,6 +250,7 @@ export const renderBackToTopChip = () => {
                     style={{
                         position: 'fixed',
                         bottom: '23px',
+                        backgroundColor: 'rgb(0, 178, 210)',
                     }}
                     onClick={() => scrollToTop()}
                 />
@@ -370,12 +372,12 @@ class HomePageComponent extends React.Component {
                 <Grid xs={8} >
                     <Box sx={{ width: '100%' }}>
                         <Stack spacing={2}>
-                            {renderPostLists(this.state.posts, this.props.params, this.handleChange, this.onFavourChange, this.onDeletePostCallBack, this.props.userInfo?.username)}
+                            {renderPostLists(this.state.posts, this.props.params, this.handleChange, this.onFavourChange, this.onDeletePostCallBack, this.props.userInfo?.username, 'rgb(0, 178, 210)')}
                         </Stack>
                     </Box>
                 </Grid>
                 <Grid xs style={{ position: 'relative' }}>
-                    <div style={{ color: 'white', backgroundColor: '#1565c0', height: '35px', borderRadius: '5px', padding: '16px 6px 6px 6px', textIndent: '16px' }}>
+                    <div style={{ color: 'white', backgroundColor: 'rgb(0, 178, 210)', height: '35px', borderRadius: '5px', padding: '16px 6px 6px 6px', textIndent: '16px' }}>
                         <b>Home</b>
                     </div>
                     <Item style={{ padding: '12px 32px 32px 32px' }}>
@@ -388,6 +390,7 @@ class HomePageComponent extends React.Component {
                                 </p>
                             </Box>
                             <Chip
+                                style={{ backgroundColor: 'rgb(0, 178, 210)' }}
                                 label="Create Post"
                                 color="primary"
                                 clickable={true}

@@ -62,7 +62,7 @@ class CreatePostComponent extends React.Component {
     renderDefaultPanel = () => {
         return (
             <Grid xs style={{ position: 'relative' }}>
-                <div style={{ color: 'white', backgroundColor: '#1565c0', height: '35px', borderRadius: '5px', padding: '16px 6px 6px 6px', textIndent: '16px' }}>
+                <div style={{ color: 'white', backgroundColor: 'rgb(0, 178, 210)', height: '35px', borderRadius: '5px', padding: '16px 6px 6px 6px', textIndent: '16px' }}>
                     <b>Posting to Readit</b>
                 </div>
                 <Item>
@@ -152,24 +152,32 @@ class CreatePostComponent extends React.Component {
                                     <Tabs
                                         value={this.state.currentTab}
                                         onChange={(e, v) => this.setState({ currentTab: v, content: '' })}
+                                        TabIndicatorProps={{
+                                            style: {
+                                                backgroundColor: 'rgb(0, 178, 210)'
+                                            }
+                                        }}
                                     >
                                         <Tab
                                             label="text"
                                             value="text"
                                             icon={<TextSnippetIcon />}
                                             iconPosition="start"
+                                            style={{ color: this.state.currentTab === 'text' ? 'rgb(0, 178, 210)' : 'rgba(0, 0, 0, 0.54)' }}
                                         />
                                         <Tab
                                             label="image"
                                             value="image"
                                             icon={<ImageIcon />}
                                             iconPosition="start"
+                                            style={{ color: this.state.currentTab === 'image' ? 'rgb(0, 178, 210)' : 'rgba(0, 0, 0, 0.54)' }}
                                         />
                                         <Tab
                                             label="link"
                                             value="link"
                                             icon={<LinkIcon />}
                                             iconPosition="start"
+                                            style={{ color: this.state.currentTab === 'link' ? 'rgb(0, 178, 210)' : 'rgba(0, 0, 0, 0.54)' }}
                                         />
                                     </Tabs>
                                     <div style={{ padding: '24px' }}>
