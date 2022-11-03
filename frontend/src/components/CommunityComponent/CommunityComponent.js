@@ -652,7 +652,8 @@ class CommunityComponent extends React.Component {
                                             <Item>
                                                 <Paper component="form" sx={{ p: '2px 4px', display: 'flex', justifyContent: 'center' }}>   
                                                         <Stack>   
-                                                            {this.state.isModAdmin === true && <table>
+                                                            {console.log(this.state.isModAdmin)}
+                                                            {this.state.isModAdmin === "Y" && <table>
                                                                 <tr>
                                                                     <th>Add New Moderator</th>
                                                                     <th>Admin? </th>
