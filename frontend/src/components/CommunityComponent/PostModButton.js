@@ -16,10 +16,12 @@ const PostModButton = (props) => {
             <Tab
                 label="Posts"
                 value="posts"
+                style={{ color: props.value === 'posts' && props.indicatorColor ? props.indicatorColor : 'rgba(0, 0, 0, 0.54)' }}
             />
             <Tab
                 label="Mod Access"
                 value="mod"
+                style={{ color: props.value === 'mod' && props.indicatorColor ? props.indicatorColor : 'rgba(0, 0, 0, 0.54)' }}
             />
         </Tabs>
     );

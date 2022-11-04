@@ -75,7 +75,7 @@ DECLARE
                 COALESCE((SELECT SUM(favour_point) FROM post_favours WHERE post_id = p.post_id AND community_name = p.community_name), 0) AS fav_point, fp.favour_point AS is_favour,
                 (SELECT count(*) FROM comments WHERE post_id = p.post_id AND community_name = p.community_name) AS comment_count, u.profile_picture
                 FROM community ac
-                INNER JOIN posts p ON p.community_name = ac.community_name AND p.date_deleted IS NULL
+                INNER JOIN posts p ON p.community_name = ac.community_name AND p.datetime_deleted IS NULL
                 LEFT JOIN post_favours fp ON fp.post_id = p.post_id AND fp.community_name = p.community_name AND fp.giver = $1
                 LEFT JOIN users u ON u.user_name = p.user_name
             GROUP BY ac.community_name, p.user_name, p.datetime_created, p.title, p.flair, p.url, p.post_id, p.view_count, p.community_name, fp.favour_point, u.profile_picture)
@@ -122,7 +122,7 @@ CREATE TABLE posts (
 	url VARCHAR(2048),
 	title VARCHAR(300) NOT NULL,
 	datetime_created TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-	date_deleted TIMESTAMP DEFAULT NULL,
+	datetime_deleted TIMESTAMP DEFAULT NULL,
 	view_count INTEGER NOT NULL DEFAULT 0,
 	PRIMARY KEY (post_id, community_name)
 );
@@ -134,7 +134,7 @@ CREATE TABLE post_contents (
 	post_id INTEGER NOT NULL,
 	content VARCHAR(1000) NOT NULL,
 	is_edited TrueOrFalse NOT NULL DEFAULT 'N',
-	date_edited TIMESTAMP DEFAULT NULL,
+	datetime_edited TIMESTAMP DEFAULT NULL,
 	PRIMARY KEY (post_id, community_name),
 	CONSTRAINT PFK
 	FOREIGN KEY (community_name, post_id)

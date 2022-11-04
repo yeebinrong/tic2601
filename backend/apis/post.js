@@ -10,7 +10,7 @@ const { getReplyComments, getCommentsByPostId } = require('../db/comment');
 //   "url": null,
 //   "title": "Hello World One!",
 //   "datetime_created": "2022-09-26T12:38:45.614Z",
-//   "date_deleted": null
+//   "datetime_deleted": null
 // }
 exports.getPost = async (req, resp) => {
     const currentUser = req.token.username;

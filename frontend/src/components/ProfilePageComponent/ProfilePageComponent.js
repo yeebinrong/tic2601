@@ -208,13 +208,13 @@ class ProfilePageComponent extends React.Component {
                                     </div>
                                     <div style={{ display: 'flex', flexDirection: 'row', margin: '16px' }}>
                                         <Box style={{ marginLeft: '16px' }}>
-                                            <div>Username: {this.state.user_name}</div>
-                                            <div>Date created: {moment(this.state.datetime_created).format('DD-MM-YYYY hh:mmA')} </div>
+                                            <div style={{ margin: '16px 0' }}>Username: {this.state.user_name}</div>
+                                            <div style={{ margin: '16px 0' }}>Date created: {moment(this.state.datetime_created).format('DD-MM-YYYY hh:mmA')} </div>
                                         </Box>
                                         <Box style={{ margin: '0 auto' }}>
-                                            <div>Total posts posted: {this.state.total_posts ? this.state.total_posts : 0} </div>
-                                            <div>Total comments posted: {this.state.total_comments ? this.state.total_comments : 0} </div>
-                                            <div>Total favours received: {this.state.total_favours ? this.state.total_favours : 0}</div>
+                                            <div style={{ margin: '16px 0' }}>Total posts posted: {this.state.total_posts ? this.state.total_posts : 0} </div>
+                                            <div style={{ margin: '16px 0' }}>Total comments posted: {this.state.total_comments ? this.state.total_comments : 0} </div>
+                                            <div style={{ margin: '16px 0' }}>Total favours received: {this.state.total_favours ? this.state.total_favours : 0}</div>
                                         </Box>
                                     </div>
                                     <div style={{ width: '100%', color: 'white', backgroundColor: 'rgb(0, 178, 210)', height: '35px', borderRadius: '5px', padding: '16px 6px 6px 6px', textIndent: '16px' }}>
@@ -227,36 +227,39 @@ class ProfilePageComponent extends React.Component {
                                             )}
                                             {this.state.followedCommunities?.map(fc => {
                                                 return (
-                                                    <Box key={fc.community_name} style={{ marginLeft: '16px', marginTop: '8px', display: 'flex' }}>
-                                                        <span style={{ margin: 'auto auto auto 0' }}>
-                                                            r/{fc.community_name}
-                                                        </span>
-                                                        <span style={{ margin: 'auto 0 auto auto' }}>
-                                                            Followed on {moment(fc.followedDate).format('DD-MM-YYYY hh:mmA')}
-                                                        </span>
-                                                        <Button
-                                                            style={{ marginLeft: '16px', textTransform: 'none' }}
-                                                            variant='outlined'
-                                                            size='small'
-                                                            onClick={() => {
-                                                                this.props.navigate({
-                                                                    pathname: `/community/${fc.community_name}/posts/best`,
-                                                                    replace: true,
-                                                                })
-                                                            }}
-                                                        >
-                                                            View
-                                                        </Button>
-                                                        {this.props.params?.userName === this.props.userInfo?.username &&
-                                                        <Button
-                                                            variant="contained"
-                                                            style={{ marginLeft: '16px', textTransform: 'none' }}
-                                                            onClick={() => this.changeFollow(fc.community_name)}
-                                                            color={"primary"}
-                                                        >
-                                                            Unfollow
-                                                        </Button>}
-                                                    </Box>
+                                                    <>
+                                                        <Box key={fc.community_name} style={{ marginLeft: '16px', marginTop: '8px', display: 'flex' }}>
+                                                            <span style={{ margin: 'auto auto auto 0' }}>
+                                                                r/{fc.community_name}
+                                                            </span>
+                                                            <span style={{ margin: 'auto 0 auto auto' }}>
+                                                                Followed on {moment(fc.followedDate).format('DD-MM-YYYY hh:mmA')}
+                                                            </span>
+                                                            <Button
+                                                                style={{ marginLeft: '16px', textTransform: 'none' }}
+                                                                variant='outlined'
+                                                                size='small'
+                                                                onClick={() => {
+                                                                    this.props.navigate({
+                                                                        pathname: `/community/${fc.community_name}/posts/best`,
+                                                                        replace: true,
+                                                                    })
+                                                                }}
+                                                            >
+                                                                View
+                                                            </Button>
+                                                            {this.props.params?.userName === this.props.userInfo?.username &&
+                                                            <Button
+                                                                variant="contained"
+                                                                style={{ marginLeft: '16px', textTransform: 'none' }}
+                                                                onClick={() => this.changeFollow(fc.community_name)}
+                                                                color={"primary"}
+                                                            >
+                                                                Unfollow
+                                                            </Button>}
+                                                        </Box>
+                                                        <Divider style={{ margin: '16px 0' }} />
+                                                    </>
                                                 );
                                             })}
                                         </Box>
