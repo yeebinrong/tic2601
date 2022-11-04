@@ -689,7 +689,10 @@ class CommunityComponent extends React.Component {
                                                                         <tr>
                                                                             <td>{mods.user_name}</td>
                                                                             <td>{mods.is_admin === 'Y' ? "Yes" : "No"} </td>
-                                                                            <td> <Button style={{ borderRadius: '14px' }} variant="contained" color="secondary" onClick={() => this.handleDeleteMod(mods.user_name)}>Remove</Button></td>
+                                                                            <td> 
+                                                                                {this.state.isModAdmin === "Y" &&<Button style={{ borderRadius: '14px' }} variant="contained" color="secondary" onClick={() => this.handleDeleteMod(mods.user_name)}>Remove</Button>}
+                                                                                {this.state.isModAdmin !== "Y" &&<Button style={{ borderRadius: '14px' }} disabled variant="contained"  color="secondary">Remove</Button>}
+                                                                            </td>
                                                                         </tr>
                                                                     )
                                                                 })}
