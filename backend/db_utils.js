@@ -65,7 +65,7 @@ const getHomePagePosts = (currentUser, sortBy) => {
             COALESCE((SELECT SUM(favour_point) FROM post_favours WHERE post_id = p.post_id AND community_name = p.community_name), 0) AS fav_point, fp.favour_point AS is_favour,
             (SELECT count(*) FROM comments WHERE post_id = p.post_id AND community_name = p.community_name) AS comment_count, u.profile_picture
             FROM followed_communities fc
-            INNER JOIN posts p ON p.community_name = fc.community_name AND p.date_deleted IS NULL
+            INNER JOIN posts p ON p.community_name = fc.community_name AND p.datetime_deleted IS NULL
             LEFT JOIN post_favours fp ON fp.post_id = p.post_id AND fp.community_name = p.community_name AND fp.giver = $1
             LEFT JOIN users u ON u.user_name = p.user_name
             GROUP BY fc.community_name, p.user_name, p.datetime_created, p.title, p.flair, p.url, p.post_id, p.view_count, p.community_name, fp.favour_point, u.profile_picture, fc.user_name
@@ -114,7 +114,7 @@ const updatePostFavour = (postId, favour, value, currentUser, receiver, communit
 }
 
 const deletePost = (community,post_id,currentUser) => {
-    return POOL.query(`UPDATE posts SET date_deleted = CURRENT_TIMESTAMP WHERE community_name = $1 AND post_id = $2 AND user_name = $3;`,
+    return POOL.query(`UPDATE posts SET datetime_deleted = CURRENT_TIMESTAMP WHERE community_name = $1 AND post_id = $2 AND user_name = $3;`,
         [
             escapeQuotes(community),
             escapeQuotes(post_id),
@@ -210,7 +210,7 @@ const retrieveCommunityPostsDB = (community, currentUser) => {
             COALESCE((SELECT SUM(favour_point) FROM post_favours WHERE post_id = p.post_id AND community_name = p.community_name), 0) AS fav_point, fp.favour_point AS is_favour,
             (SELECT count(*) FROM comments WHERE post_id = p.post_id AND community_name = p.community_name) AS comment_count, u.profile_picture
             FROM community oc
-            INNER JOIN posts p ON p.community_name = oc.community_name AND p.date_deleted IS NULL
+            INNER JOIN posts p ON p.community_name = oc.community_name AND p.datetime_deleted IS NULL
             LEFT JOIN post_favours fp ON fp.post_id = p.post_id AND fp.community_name = p.community_name AND fp.giver = $2
             LEFT JOIN users u ON u.user_name = p.user_name
             GROUP BY oc.community_name, p.user_name, p.datetime_created, p.title, p.flair, p.url, p.post_id, p.view_count, p.community_name, fp.favour_point, u.profile_picture
@@ -455,7 +455,7 @@ const getUserFavouredPostsOrComments = (userName) => {
             SELECT community_name, post_id, NULL as comment_id, user_name, flair, datetime_created, title, NULL as content, TRUE as is_favour,
             COALESCE((SELECT SUM(favour_point) FROM post_favours WHERE post_id = p.post_id AND community_name = p.community_name), 0) as favour_points,
             (SELECT count(*) FROM comments WHERE post_id = p.post_id AND community_name = p.community_name) AS comment_count
-        FROM posts p WHERE date_deleted IS NULL AND user_name = $1 UNION
+        FROM posts p WHERE datetime_deleted IS NULL AND user_name = $1 UNION
             SELECT community_name, post_id, comment_id, commenter as user_name, NULL as flair, datetime_created, NULL as title, content, TRUE as is_favour,
             COALESCE((SELECT SUM(favour_point) FROM comment_favours WHERE post_id = c.post_id AND community_name = c.community_name AND comment_id = c.comment_id), 0) as favour_points,
             NULL as comment_count
