@@ -60,6 +60,28 @@ body {
 }
 
 .profile-page-picture {
-    width: 160px;
+    border: solid 1px  rgb(0, 178, 210);
+    border-radius: 5px;
+    width: 200px;
+    height: 200px;
     margin: auto;
+    object-fit: cover;
+}
+
+.upload-post-image {
+    border: solid 1px  rgb(0, 178, 210);
+    border-radius: 5px;
+    width: 480px;
+    height: 270px;
+    margin: auto;
+    object-fit: contain;
+}
+
+.post-image {
+    border: solid 1px  rgb(0, 178, 210);
+    border-radius: 5px;
+    width: 560;
+    height: 315px;
+    margin: auto;
+    object-fit: contain;
 }

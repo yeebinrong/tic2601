@@ -8,16 +8,24 @@ const PostModButton = (props) => {
             value={props.value}
             onChange={props.handleChange}
             aria-label="Mode Change"
+            TabIndicatorProps={{
+                style: {
+                    backgroundColor: props.indicatorColor ? props.indicatorColor : 'rgb(0, 178, 210)'
+                }
+            }}
         >
             <Tab
                 label="Posts"
-                value="posts"              
+                value="posts"
+                style={{ color: props.value === 'posts' && props.indicatorColor ? props.indicatorColor : 'rgba(0, 0, 0, 0.54)' }}
             />
-            {isModAdmin && <Tab
+            {isModAdmin &&
+            <Tab
                 label="Mod Access"
                 value="mod"
+                style={{ color: props.value === 'mod' && props.indicatorColor ? props.indicatorColor : 'rgba(0, 0, 0, 0.54)' }}
             />}
-        </Tabs> 
+        </Tabs>
     );
 };
 

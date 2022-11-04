@@ -17,6 +17,7 @@ import { timeSince } from '../../utils/time';
 import './Post.scss';
 import { createComment, modifyFavour, retrieveCommunityByName, retrievePostByIdAndCommunityName, updateComment, updateCommentFavour, updateFollow } from '../../apis/app-api';
 import { useParams } from 'react-router-dom';
+import moment from 'moment';
 
 const Item = styled(Paper)(({ theme }) => ({
     backgroundColor: theme.palette.mode === 'dark' ? '#1A2027' : '#fff',
@@ -226,7 +227,7 @@ const Community = ({ community, reloadPostFunc }) => {
                     <b>Welcome to r/{community.community_name}</b>
                     <p>{community.description}</p>
                     <Divider style={{ margin: '16px 0' }}></Divider>
-                    <b>Creation Date:{community.datetime_created}</b>
+                    <b>Creation Date: {moment(community.datetime_created).format('DD-MM-YYYY hh:mmA')}</b>
                     <Divider style={{ margin: '16px 0' }}></Divider>
                     <Button
                         style={{ borderRadius: '14px' }}
@@ -300,7 +301,7 @@ const Post = (props) => {
                             </Typography>
                             <Typography variant='caption' display='block' gutterBottom>
                                 <div> + Posted
-                                    by {post.user_name} {timeSince(post.date_created)}</div>
+                                    by {post.user_name} {timeSince(post.datetime_created)}</div>
                             </Typography>
                         </Box>
                         <h2>{post.title}</h2>
