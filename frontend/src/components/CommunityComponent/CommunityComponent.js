@@ -17,6 +17,8 @@ import {snackBarProps, withParams } from '../../constants/constants';
 import { renderPostLists } from '../HomePageComponent/HomePageComponent';
 import { LineChart,Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend } from 'recharts';
 import { withSnackbar } from 'notistack';
+import ShieldIcon from '@mui/icons-material/Shield';
+import LocalPoliceIcon from '@mui/icons-material/LocalPolice';
 
 const Item = styled(Paper)(({ theme }) => ({
     backgroundColor: theme.palette.mode === 'dark' ? '#1A2027' : '#fff',
@@ -519,15 +521,26 @@ class CommunityComponent extends React.Component {
                                 </div>
                                 <Divider style={{margin:'16px 0'}}></Divider>
                                 <b>Moderators:</b>
-                                <ul style={{listStylePosition: 'inside'}}>
-                                    {this.state.mod.map(mods => {
+                                <Box style={{ textAlign: 'left', verticalAlign: 'middle' }}>
+                                    {this.state.mod?.sort().map(mods => {
                                         return (
-                                            <li style={{listStyleType:'circle'}}>
-                                                {mods.user_name}
-                                            </li>
+                                            <>
+                                                <Box key={mods.user_name} style={{margin: '8px 0', display: 'flex' }}>
+                                                    <span style={{ margin: '8px 0 auto 16px' }}>
+                                                        {mods.is_admin === 'Y' ? <LocalPoliceIcon /> : <ShieldIcon />}
+                                                    </span>
+                                                    <span style={{ margin: 'auto 0 auto 4px' }}>
+                                                        <b>{mods.is_admin === 'Y' ? 'Super Moderator' : 'Moderator'}</b>
+                                                    </span>
+                                                    <span style={{ margin: 'auto 0 auto 8px' }}>
+                                                        {mods.user_name}
+                                                    </span>
+                                                </Box>
+                                                <Divider/>
+                                            </>
                                         )
                                     })}
-                                </ul>
+                                </Box>
                             </div>
                         </Item>
 
@@ -604,37 +617,15 @@ class CommunityComponent extends React.Component {
                                             <input type="button" value = "Update" onClick={() => this.handleDescChange(this.state.description)}/>
                                         </Paper>
                                     </Item>
+                                    <div style={{ color: 'white', backgroundColor: this.state.info.colour ? this.state.info.colour : 'rgb(0, 178, 210)', height: '35px', borderRadius: '5px', padding: '16px 6px 6px 6px', textIndent: '16px' }}>
+                                        <b>Community Colour:</b>
+                                    </div>
                                     <Item>
-                                        <Box>
-                                            <Stack spacing={1} direction={'column'}>
-                                                <Paper component="form" sx={{ p: '2px 4px', display: 'flex', justifyContent: 'center' }}>    
-                                                    <div>
-                                                        <table>
-                                                            <tr>
-                                                                <th>Username</th>
-                                                                <th>Approve?</th>
-                                                                <th>Delete</th>
-                                                            </tr>
-                                                            {this.state.bans?.map((ban, index) => {
-                                                                    return(
-                                                                        <tr>
-                                                                            <td>
-                                                                                {ban.user_name}
-                                                                            </td>
-                                                                            <td>
-                                                                                {ban.is_approved === 'Y' ? <Checkbox disabled checked/> : <Checkbox onChange={() => this.handleCheck(ban.user_name, index)}/>}
-                                                                            </td>
-                                                                            <td>
-                                                                                <Button style={{ borderRadius: '14px' }} variant="contained" color="secondary" onClick={() => this.handleDelete(ban.user_name, index)}>Delete</Button>
-                                                                            </td>
-                                                                        </tr>
-                                                                    )
-                                                                })}
-                                                        </table>
-                                                    </div>
-                                                </Paper>
-                                            </Stack>
-                                        </Box>
+                                        <SketchPicker
+                                            width={'auto'}
+                                            color = {this.state.info.colour}
+                                            onChangeComplete={this.handleComColourChange}
+                                        />
                                     </Item>
                                     <div style={{ backgroundColor: this.state.info.colour, height: '35px', borderRadius: '5px', paddingTop: '10px', textIndent: '16px' }}>
                                         <div className={'sideBoxHeader'}>Community Moderators:</div>
@@ -722,16 +713,6 @@ class CommunityComponent extends React.Component {
                                                 {/* <div><b>Allow Favours: </b><Checkbox></Checkbox></div> */}
                                             </Box>
                                         </Stack>
-                                    </Item>
-                                    <div style={{ color: 'white', backgroundColor: this.state.info.colour ? this.state.info.colour : 'rgb(0, 178, 210)', height: '35px', borderRadius: '5px', padding: '16px 6px 6px 6px', textIndent: '16px' }}>
-                                        <b>Community Colour:</b>
-                                    </div>
-                                    <Item>
-                                        <SketchPicker
-                                            width={'auto'}
-                                            color = {this.state.info.colour}
-                                            onChangeComplete={this.handleComColourChange}
-                                        />
                                     </Item>
                                 </Grid>
                             </Grid>

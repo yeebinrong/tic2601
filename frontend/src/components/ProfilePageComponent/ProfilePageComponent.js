@@ -228,7 +228,7 @@ class ProfilePageComponent extends React.Component {
                                             {this.state.followedCommunities?.map(fc => {
                                                 return (
                                                     <>
-                                                        <Box key={fc.community_name} style={{ marginLeft: '16px', marginTop: '8px', display: 'flex' }}>
+                                                        <Box key={fc.community_name} style={{ marginTop: '8px', display: 'flex' }}>
                                                             <span style={{ margin: 'auto auto auto 0' }}>
                                                                 r/{fc.community_name}
                                                             </span>
@@ -274,15 +274,15 @@ class ProfilePageComponent extends React.Component {
                                             )}
                                             {this.state.userModeratorCommunities?.map(mc => {
                                                 return (
-                                                    <Box key={mc.community_name} style={{ marginLeft: '16px', marginTop: '8px', display: 'flex' }}>
-                                                        <span style={{ margin: 'auto 0 auto 0' }}>
-                                                            r/{mc.community_name}
-                                                        </span>
-                                                        <span style={{ margin: '8px 0 auto 16px' }}>
-                                                            {mc.is_admin ? <LocalPoliceIcon /> : <ShieldIcon />}
+                                                    <Box key={mc.community_name} style={{ marginTop: '8px', display: 'flex' }}>
+                                                        <span style={{ margin: '8px 0 auto 0' }}>
+                                                            {mc.is_admin === 'Y' ? <LocalPoliceIcon /> : <ShieldIcon />}
                                                         </span>
                                                         <span style={{ margin: 'auto 0 auto 4px' }}>
-                                                            <b>{mc.is_admin ? 'Super Moderator' : 'Moderator'}</b>
+                                                            <b>{mc.is_admin === 'Y' ? 'Super Moderator' : 'Moderator'}</b>
+                                                        </span>
+                                                        <span style={{ margin: 'auto 0 auto 8px' }}>
+                                                            r/{mc.community_name}
                                                         </span>
                                                         <Button
                                                             style={{ margin: 'auto 0 auto auto', textTransform: 'none' }}

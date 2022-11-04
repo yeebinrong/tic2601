@@ -224,7 +224,7 @@ const retrieveCommunityPostsDB = (community, sortBy, currentUser) => {
 const isModAdminDB = (community,username) => {
     return POOL.query(
         `SELECT
-        COALESCE((SELECT is_admin FROM moderators WHERE user_name = $2 AND community_name = $1), NULL) AS authority;`,
+        COALESCE((SELECT is_admin FROM moderators WHERE user_name = $2 AND community_name = $1 ORDER BY is_admin), NULL) AS authority;`,
          [
              escapeQuotes(community),
              escapeQuotes(username)
@@ -364,8 +364,8 @@ const retrieveCommunityModsDB = (community) => {
            `SELECT com.* , m.user_name, m.is_admin
            FROM community com
            LEFT JOIN moderators m ON m.community_name = com.community_name
-           GROUP BY com.community_name,m.user_name,m.is_admin
-           HAVING com.community_name =  $1;`,
+           GROUP BY com.community_name, m.user_name, m.is_admin
+           HAVING com.community_name = $1 ORDER BY m.is_admin;`,
             [
                 escapeQuotes(community),
             ],
@@ -385,8 +385,6 @@ const isFollowingCommunityDB = (community,username) => {
             ],
     );
 };
-
-
 
 const retrieveCommunityInfoDB = (community) => {
     return POOL.query(
@@ -417,7 +415,6 @@ const deleteFromBanlistDB = (community,username) => {
             ]
         );
 };
-
 
 const updateFollowDB = (community,isFollowing,username) => {
 
@@ -469,7 +466,7 @@ const getFollowingCommunities = (userName) => {
 }
 
 const getModeratorCommunities = (userName) => {
-    return POOL.query('SELECT * FROM moderators WHERE user_name = $1',
+    return POOL.query('SELECT * FROM moderators WHERE user_name = $1 ORDER BY is_admin',
         [
             escapeQuotes(userName),
         ]
@@ -494,8 +491,8 @@ const getUserComments = (userName) => {
 
 const getUserFavouredPostsOrComments = (userName) => {
     return POOL.query(`
-        SELECT pc.* FROM (
-            SELECT community_name, post_id, NULL as comment_id, user_name, flair, datetime_created, title, NULL as content, TRUE as is_favour,
+        SELECT pc.community_name, pc.post_id, pc.comment_id, pc.user_name, pc.flair, pc.datetime_created, pc.title, pc.content, pc.is_favour, pc.favour_points, pc.comment_count
+        FROM (SELECT community_name, post_id, NULL as comment_id, user_name, flair, datetime_created, title, NULL as content, TRUE as is_favour,
             COALESCE((SELECT SUM(favour_point) FROM post_favours WHERE post_id = p.post_id AND community_name = p.community_name), 0) as favour_points,
             (SELECT count(*) FROM comments WHERE post_id = p.post_id AND community_name = p.community_name) AS comment_count
         FROM posts p WHERE datetime_deleted IS NULL AND user_name = $1 UNION
