@@ -176,11 +176,18 @@ export const renderPostLists = (posts, params, handleChange, onFavourChange, onD
                                 <IconButton
                                     sx={{ p: '10px' }}
                                     aria-label="upfavour"
+                                    onClick={() => {
+                                        if (post.is_favour === null || post.is_favour === -1) {
+                                            onFavourChange(post.post_id, post.is_favour, 1, post.user_name, index, post.community_name);
+                                        } else if (post.is_favour === 1) {
+                                            onFavourChange(post.post_id, post.is_favour, 0, post.user_name, index, post.community_name);
+                                        }
+                                    }}
                                 >
                                     {(post.is_favour === null || post.is_favour === -1) &&
-                                    <ForwardIcon className='upFavourStyle' onClick={() => onFavourChange(post.post_id, post.is_favour, 1, post.user_name, index, post.community_name)} />}
+                                    <ForwardIcon className='upFavourStyle' />}
                                     {post.is_favour === 1 &&
-                                        <ForwardIcon className='upFavourColorStyle' onClick={() => onFavourChange(post.post_id, post.is_favour, 0, post.user_name, index, post.community_name)} />}
+                                        <ForwardIcon className='upFavourColorStyle' />}
                                 </IconButton>
                                 {post.fav_point
                                     ? post.fav_point
@@ -188,11 +195,18 @@ export const renderPostLists = (posts, params, handleChange, onFavourChange, onD
                                 <IconButton
                                     sx={{ p: '10px' }}
                                     aria-label="downfavour"
+                                    onClick={() => {
+                                        if (post.is_favour === null || post.is_favour === 1) {
+                                            onFavourChange(post.post_id, post.is_favour, -1, post.user_name, index, post.community_name);
+                                        } else if (post.is_favour === -1) {
+                                            onFavourChange(post.post_id, post.is_favour, 0, post.user_name, index, post.community_name);
+                                        }
+                                    }}
                                 >
                                     {(post.is_favour === null || post.is_favour === 1) &&
-                                    <ForwardIcon className='downFavourStyle' onClick={() => onFavourChange(post.post_id, post.is_favour, -1, post.user_name, index, post.community_name)} />}
+                                    <ForwardIcon className='downFavourStyle' />}
                                     {post.is_favour === -1 &&
-                                    <ForwardIcon className='downFavourColorStyle' onClick={() => onFavourChange(post.post_id, post.is_favour, 0, post.user_name, index, post.community_name)} />}
+                                    <ForwardIcon className='downFavourColorStyle' />}
                                 </IconButton>
                             </Box>
                             <Box>

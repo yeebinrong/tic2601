@@ -547,7 +547,7 @@ class CommunityComponent extends React.Component {
                                 <Box style={{ textAlign: 'left', verticalAlign: 'middle' }}>
                                     {this.state.mod?.map(mods => {
                                         return (
-                                            <>
+                                            <div key={`mods_${mods.user_name}`}>
                                                 <Box key={mods.user_name} style={{margin: '8px 0', display: 'flex' }}>
                                                     <span style={{ margin: '8px 0 auto 16px' }}>
                                                         {mods.is_admin === true ? <LocalPoliceIcon /> : <ShieldIcon />}
@@ -560,7 +560,7 @@ class CommunityComponent extends React.Component {
                                                     </span>
                                                 </Box>
                                                 <Divider/>
-                                            </>
+                                            </div>
                                         )
                                     })}
                                 </Box>
@@ -643,8 +643,8 @@ class CommunityComponent extends React.Component {
                                 <Item style={{ display: 'flex', flexDirection: 'column', padding: '32px' }}>
                                     {this.state.mod.map(mods => {
                                         return (
-                                            <>
-                                                <Box key={mods.user_name} style={{ marginTop: '8px', display: 'flex' }}>
+                                            <div key={`mods_${mods.user_name}`}>
+                                                <Box style={{ marginTop: '8px', display: 'flex' }}>
                                                     <span style={{ margin: '8px 0 auto 0' }}>
                                                         {mods.is_admin === true ? <LocalPoliceIcon /> : <ShieldIcon />}
                                                     </span>
@@ -692,7 +692,7 @@ class CommunityComponent extends React.Component {
                                                     </Button>}
                                                 </Box>
                                                 <Divider style={{margin:'16px 0'}}></Divider>
-                                            </>
+                                            </div>
                                         )}
                                     )}
                                     <Box style={{ marginTop: '8px', display: 'flex' }}>
@@ -832,8 +832,8 @@ class CommunityComponent extends React.Component {
                                     </div>}
                                     {this.state.bans?.map((ban, index) => {
                                         return(
-                                        <>
-                                            <Box key={ban.user_name} style={{ marginTop: '8px', display: 'flex' }}>
+                                        <div key={`bans_${ban.user_name}`}>
+                                            <Box style={{ marginTop: '8px', display: 'flex' }}>
                                                 <span style={{ margin: 'auto', display: 'flex', flexGrow: '1' }}>
                                                     u/{ban.user_name}
                                                 </span>
@@ -862,7 +862,7 @@ class CommunityComponent extends React.Component {
                                                 </Button>
                                             </Box>
                                             <Divider style={{margin:'16px 0'}}></Divider>
-                                        </>
+                                        </div>
                                         )
                                     })}
                                 </div>
