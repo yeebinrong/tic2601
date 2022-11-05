@@ -130,8 +130,12 @@ const insertOneCommunityAndReturnName = (userName, communityName) => {
             (INSERT INTO community (community_name)
                 VALUES ($1) RETURNING community_name),
             M_ROWS AS
-            (INSERT INTO MODERATORS (community_name, user_name, is_admin)
+            (INSERT INTO moderators (community_name, user_name, is_admin)
             SELECT community_name, $2, TRUE
+                FROM C_ROWS),
+            FC_ROWS AS
+            (INSERT INTO followed_communities (community_name, user_name)
+            SELECT community_name, $2
                 FROM C_ROWS)
         SELECT community_name
         FROM C_ROWS;`,
@@ -234,14 +238,29 @@ const isModAdminDB = (community,username) => {
      );
 };
 
-const approveBanDB = (community,username) => {
-    return POOL.query(
-        `UPDATE banlist SET is_approved = TRUE WHERE community_name = $1 AND user_name = $2;`,
-         [
-             escapeQuotes(community),
-             escapeQuotes(username)
-         ],
-     );
+const approveBanDB = async (community,username) => {
+    try {
+        await POOL.query('BEGIN');
+        await POOL.query(
+            `UPDATE banlist SET is_approved = TRUE WHERE community_name = $1 AND user_name = $2;`,
+             [
+                 escapeQuotes(community),
+                 escapeQuotes(username)
+             ],
+        );
+        await POOL.query(
+            `DELETE FROM followed_communities WHERE community_name = $1 AND user_name = $2;`,
+             [
+                 escapeQuotes(community),
+                 escapeQuotes(username)
+             ],
+        );
+        await POOL.query('COMMIT');
+        return Promise.resolve();
+      } catch (e) {
+        await POOL.query('ROLLBACK');
+        return Promise.reject(e);
+    }
 };
 
 const updateCommunity = (columnName, value, communityName) => {
