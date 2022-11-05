@@ -17,20 +17,10 @@ END$$;
 CREATE OR REPLACE FUNCTION searchPostWithParamsFunc(
 	currentUser text, orderParam text, userFilter text, flairFilter text, communityFilter text, queryFilter text)
   RETURNS TABLE(
-	post_id INTEGER,
-	community_name VARCHAR(21),
-	user_name VARCHAR(30),
-	age INTERVAL,
-	datetime_created TIMESTAMP,
-	title VARCHAR(300),
-	flair FlairEnum,
-	fav_point BIGINT,
-	is_favour INTEGER,
-	comment_count BIGINT,
-	view_count INTEGER,
-	url VARCHAR(2048),
-	profile_picture VARCHAR(256),
-	post_profile_picture VARCHAR(256)
+	post_id INTEGER, community_name VARCHAR(21), user_name VARCHAR(30),
+	age INTERVAL, datetime_created TIMESTAMP, title VARCHAR(300), flair FlairEnum,
+	fav_point BIGINT, is_favour INTEGER, comment_count BIGINT, view_count INTEGER,
+	url VARCHAR(2048), profile_picture VARCHAR(256), post_profile_picture VARCHAR(256)
   )
   LANGUAGE plpgsql AS
 $func$
@@ -38,7 +28,6 @@ DECLARE
         paramQuery text := ' WHERE ';
 		appendParam text := ' ';
 		BEGIN
-		raise notice 'userFilter: %', userFilter;
         IF userFilter != '' THEN
             paramQuery = paramQuery || appendParam || 'user_name = ' || '''' || userFilter || '''';
 			appendParam = ' AND ';
@@ -64,7 +53,6 @@ DECLARE
 				paramQuery = paramQuery || ' ORDER BY fav_point DESC';
 			ELSE
 		END CASE;
-		RAISE NOTICE 'Value: %', 'SELECT * FROM posts' || paramQuery;
         RETURN QUERY EXECUTE
         'WITH all_communities AS
 			(SELECT ac.community_name, p.user_name, AGE(CURRENT_TIMESTAMP, p.datetime_created), p.datetime_created, p.title, p.flair, p.url, p.post_id, p.view_count,
