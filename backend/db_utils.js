@@ -130,7 +130,7 @@ const insertOneCommunityAndReturnName = (userName, communityName) => {
                 VALUES ($1) RETURNING community_name),
             M_ROWS AS
             (INSERT INTO MODERATORS (community_name, user_name, is_admin)
-            SELECT community_name, $2, 'Y'
+            SELECT community_name, $2, TRUE
                 FROM C_ROWS)
         SELECT community_name
         FROM C_ROWS;`,
@@ -224,7 +224,7 @@ const retrieveCommunityPostsDB = (community, sortBy, currentUser) => {
 const isModAdminDB = (community,username) => {
     return POOL.query(
         `SELECT
-        COALESCE((SELECT is_admin FROM moderators WHERE user_name = $2 AND community_name = $1 ORDER BY is_admin), NULL) AS authority;`,
+        COALESCE((SELECT is_admin FROM moderators WHERE user_name = $2 AND community_name = $1), NULL) AS authority;`,
          [
              escapeQuotes(community),
              escapeQuotes(username)
@@ -234,7 +234,7 @@ const isModAdminDB = (community,username) => {
 
 const approveBanDB = (community,username) => {
     return POOL.query(
-        `UPDATE banlist SET is_approved = 'Y'  WHERE community_name = $1 AND user_name = $2;`,
+        `UPDATE banlist SET is_approved IS TRUE  WHERE community_name = $1 AND user_name = $2;`,
          [
              escapeQuotes(community),
              escapeQuotes(username)
@@ -365,7 +365,7 @@ const retrieveCommunityModsDB = (community) => {
            FROM community com
            LEFT JOIN moderators m ON m.community_name = com.community_name
            GROUP BY com.community_name, m.user_name, m.is_admin
-           HAVING com.community_name = $1 ORDER BY m.is_admin;`,
+           HAVING com.community_name = $1 ORDER BY m.is_admin DESC;`,
             [
                 escapeQuotes(community),
             ],
@@ -466,7 +466,7 @@ const getFollowingCommunities = (userName) => {
 }
 
 const getModeratorCommunities = (userName) => {
-    return POOL.query('SELECT * FROM moderators WHERE user_name = $1 ORDER BY is_admin',
+    return POOL.query('SELECT * FROM moderators WHERE user_name = $1 ORDER BY is_admin DESC',
         [
             escapeQuotes(userName),
         ]
@@ -499,7 +499,7 @@ const getUserFavouredPostsOrComments = (userName) => {
             SELECT community_name, post_id, comment_id, commenter as user_name, NULL as flair, datetime_created, NULL as title, content, TRUE as is_favour,
             COALESCE((SELECT SUM(favour_point) FROM comment_favours WHERE post_id = c.post_id AND community_name = c.community_name AND comment_id = c.comment_id), 0) as favour_points,
             NULL as comment_count
-        FROM comments c WHERE is_deleted = 'N' AND commenter = $1) AS pc ORDER BY datetime_created DESC;`,
+        FROM comments c WHERE is_deleted IS FALSE AND commenter = $1) AS pc ORDER BY datetime_created DESC;`,
         [
             escapeQuotes(userName),
         ]

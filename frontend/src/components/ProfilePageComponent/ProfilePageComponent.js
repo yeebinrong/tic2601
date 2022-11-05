@@ -276,10 +276,10 @@ class ProfilePageComponent extends React.Component {
                                                 return (
                                                     <Box key={mc.community_name} style={{ marginTop: '8px', display: 'flex' }}>
                                                         <span style={{ margin: '8px 0 auto 0' }}>
-                                                            {mc.is_admin === 'Y' ? <LocalPoliceIcon /> : <ShieldIcon />}
+                                                            {mc.is_admin === true ? <LocalPoliceIcon /> : <ShieldIcon />}
                                                         </span>
                                                         <span style={{ margin: 'auto 0 auto 4px' }}>
-                                                            <b>{mc.is_admin === 'Y' ? 'Super Moderator' : 'Moderator'}</b>
+                                                            <b>{mc.is_admin === true ? 'Super Moderator' : 'Moderator'}</b>
                                                         </span>
                                                         <span style={{ margin: 'auto 0 auto 8px' }}>
                                                             r/{mc.community_name}

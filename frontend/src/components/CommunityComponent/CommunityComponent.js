@@ -242,7 +242,7 @@ class CommunityComponent extends React.Component {
             .then(res => {
                 if (!res.error) {
                     const tempBans = this.state.bans;
-                    tempBans[index].is_approved = 'Y';
+                    tempBans[index].is_approved = true;
                     this.setState({
                         bans: tempBans,
                     });
@@ -527,10 +527,10 @@ class CommunityComponent extends React.Component {
                                             <>
                                                 <Box key={mods.user_name} style={{margin: '8px 0', display: 'flex' }}>
                                                     <span style={{ margin: '8px 0 auto 16px' }}>
-                                                        {mods.is_admin === 'Y' ? <LocalPoliceIcon /> : <ShieldIcon />}
+                                                        {mods.is_admin === true ? <LocalPoliceIcon /> : <ShieldIcon />}
                                                     </span>
                                                     <span style={{ margin: 'auto 0 auto 4px' }}>
-                                                        <b>{mods.is_admin === 'Y' ? 'Super Moderator' : 'Moderator'}</b>
+                                                        <b>{mods.is_admin === true ? 'Super Moderator' : 'Moderator'}</b>
                                                     </span>
                                                     <span style={{ margin: 'auto 0 auto 8px' }}>
                                                         {mods.user_name}
@@ -668,7 +668,7 @@ class CommunityComponent extends React.Component {
                                                             return(
                                                                 <tr>
                                                                     <td>{mods.user_name}</td>
-                                                                    <td>{mods.is_admin === 'Y' ? "Yes" : "No"} </td>
+                                                                    <td>{mods.is_admin === true ? "Yes" : "No"} </td>
                                                                     <td> 
                                                                         {this.state.isModAdmin === "Y" &&<Button style={{ borderRadius: '14px' }} variant="contained" color="secondary" onClick={() => this.handleDeleteMod(mods.user_name)}>Remove</Button>}
                                                                         {this.state.isModAdmin !== "Y" &&<Button style={{ borderRadius: '14px' }} disabled variant="contained"  color="secondary">Remove</Button>}
@@ -700,7 +700,7 @@ class CommunityComponent extends React.Component {
                                                                             {ban.user_name}
                                                                         </td>
                                                                         <td>
-                                                                            {ban.is_approved === 'Y' ? <Checkbox disabled checked/> : <Checkbox onChange={() => this.handleCheck(ban.user_name, index)}/>}
+                                                                            {ban.is_approved === true ? <Checkbox disabled checked/> : <Checkbox onChange={() => this.handleCheck(ban.user_name, index)}/>}
                                                                         </td>
                                                                         <td>
                                                                             <Button style={{ borderRadius: '14px' }} variant="contained" color="secondary" onClick={() => this.handleDelete(ban.user_name, index)}>Delete</Button>
