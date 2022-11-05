@@ -5,6 +5,9 @@
 const { POOL, DIGITAL_OCEAN_SPACE, GET_DIGITAL_IMAGE_URL, DIGITALOCEAN_BUCKET_NAME } = require('./server_config.js')
 
 const escapeQuotes = (str) => {
+    if (Number.isInteger(str)) {
+        return str;
+    }
     return `${str}`.replace(/'/g, "''");
 }
 
@@ -82,27 +85,32 @@ const getHomePagePosts = (currentUser, sortBy) => {
 
 const updatePostFavour = (postId, favour, value, currentUser, receiver, communityName) => {
     if (value == 0) {
-        return POOL.query(`DELETE FROM post_favours WHERE community_name = $1 AND post_id = ` + postId + ` AND giver = $2 AND receiver = $3`,
+        return POOL.query(`DELETE FROM post_favours WHERE community_name = $1 AND post_id = $2 AND giver = $3 AND receiver = $4`,
             [
                 escapeQuotes(communityName),
+                escapeQuotes(postId),
                 escapeQuotes(currentUser),
                 escapeQuotes(receiver)
             ]
         )
     } else if (favour == 0) {
         return POOL.query(`INSERT INTO post_favours (community_name, post_id, favour_point, giver, receiver)
-                            VALUES($1, ` + postId + `, ` + value + `, $2, $3)`,
+                            VALUES($1, $2, $3, $4, $5)`,
             [
                 escapeQuotes(communityName),
+                escapeQuotes(postId),
+                escapeQuotes(value),
                 escapeQuotes(currentUser),
                 escapeQuotes(receiver)
             ]
         )
     } else if (favour != 0) {
-        return POOL.query(`UPDATE post_favours SET favour_point = ` + value + `
-                            WHERE community_name = $1 AND post_id = ` + postId + ` AND giver = $2 AND receiver = $3`,
+        return POOL.query(`UPDATE post_favours SET favour_point = $1
+                            WHERE community_name = $2 AND post_id = $3 AND giver = $4 AND receiver = $5`,
             [
+                escapeQuotes(postId),
                 escapeQuotes(communityName),
+                escapeQuotes(value),
                 escapeQuotes(currentUser),
                 escapeQuotes(receiver)
             ]
