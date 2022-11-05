@@ -446,7 +446,7 @@ class CommunityComponent extends React.Component {
                     );
                 }
            })
-    }       
+    }
 
     onFavourChange = (postId, favour, value, receiver, index, communityName) => {
         modifyFavour({

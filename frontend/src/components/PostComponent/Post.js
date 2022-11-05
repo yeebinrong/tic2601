@@ -1,7 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import TextareaAutosize from '@mui/base/TextareaAutosize';
 import Button from '@mui/material/Button';
-import Container from '@mui/material/Container';
 import Avatar from '@mui/material/Avatar';
 import Typography from '@mui/material/Typography';
 import { styled } from '@mui/material/styles';
@@ -11,6 +9,8 @@ import {
     Stack,
     Box,
     IconButton,
+    TextField,
+    Tooltip,
 } from '@mui/material';
 import ForwardIcon from '@mui/icons-material/Forward';
 import { timeSince } from '../../utils/time';
@@ -18,6 +18,7 @@ import './Post.scss';
 import { createComment, modifyFavour, retrieveCommunityByName, retrievePostByIdAndCommunityName, updateComment, updateCommentFavour, updateFollow } from '../../apis/app-api';
 import { useParams } from 'react-router-dom';
 import moment from 'moment';
+import Grid from '@mui/material/Unstable_Grid2';
 
 const Item = styled(Paper)(({ theme }) => ({
     backgroundColor: theme.palette.mode === 'dark' ? '#1A2027' : '#fff',
@@ -47,13 +48,15 @@ const UpVote = ({ comment, onFavourChange }) => {
                 <IconButton
                     sx={{ p: '10px' }}
                     aria-label="upfavour"
+                    onClick={() => {
+                        callUpVoteAPI()
+                    }}
                 >
                     {(comment.is_favour === 0 || comment.is_favour === -1) &&
-                        <ForwardIcon className='upFavourStyle' onClick={() => { callUpVoteAPI() }} />}
+                        <ForwardIcon className='upFavourStyle' />}
                     {comment.is_favour === 1 &&
-                        <ForwardIcon className='upFavourColorStyle' onClick={() => { callUpVoteAPI() }} />}
+                        <ForwardIcon className='upFavourColorStyle' />}
                 </IconButton>
-                // <ArrowUpwardIcon onClick={callUpVoteAPI} />
             }
 
         </div>
@@ -92,8 +95,20 @@ const DownVote = ({ comment, onFavourChange }) => {
 const User = (props) => {
     return (
         <Box sx={{ display: 'flex', alignItems: 'center' }}>
-            <Avatar className='user-avatar'>{props.user[0].toUpperCase()}</Avatar>
-            <div>{props.user}</div>
+            <Avatar
+                style={{ margin: '0 8px 0 0' }}
+                sx={{ width: 32, height: 32 }}
+                src={props.profile_picture ?
+                    props.profile_picture :
+                    `/static/user-avatar-default.png`}>
+            </Avatar>
+            <a style={{ margin: 'auto', color: 'inherit', textDecoration: 'none' }} href={`/user/${props.user}/profile/overview`}>
+                <Button
+                    style={{ textTransform: 'none' }}
+                >
+                    {props.user}
+                </Button>
+            </a>
         </Box>
     );
 };
@@ -126,20 +141,32 @@ const CommentBox = (props) => {
     };
     return (
         <div>
-            {props.post && <div>Comment as <u>{props.userInfo?.username}</u></div>}
-            <TextareaAutosize
-                maxRows={4}
-                aria-label='maximum height'
-                placeholder='Add your comment here'
-                defaultValue={props.commentText || ''}
-                style={{ width: '100%', height: 70 }}
+            {props.post &&
+            <div style={{ margin: '12px 0 4px 0' }}>
+                Commenting as <u>{props.userInfo?.username}</u>
+            </div>}
+            <TextField
+                style={{ marginTop: '8px' }}
+                fullWidth
+                multiline
+                rows='5'
+                size="small"
                 onChange={(e) => {
                     setCommentText(e.target.value);
                 }}
+                defaultValue={props.commentText || ''}
             />
             <br />
             {!props.commentId &&
-                <Button variant='outlined' size='small' onClick={callCreateCommentApi}>Comment</Button>}
+                <Button
+                    style={{ margin: '16px 0' }}
+                    color='primary'
+                    variant='contained'
+                    size='small'
+                    onClick={callCreateCommentApi}
+                >
+                    Comment
+                </Button>}
             {props.commentId && <Button variant='outlined' size='small' onClick={callUpdateCommentApi}>Save</Button>}
         </div>
     );
@@ -163,13 +190,15 @@ const Comment = (props) => {
             <div>
                 <Box sx={{ display: 'flex', alignItems: 'center' }}>
 
-                    <User user={props.comment.commenter} />
-                    <div className='comment-time'><i>- {timeSince(props.comment.datetime_created)} ago</i></div>
+                    <User user={props.comment.commenter} profile_picture={props.comment?.profile_picture} />
+                    <Tooltip title={moment(props.comment.datetime_created).format('DD-MM-YYYY hh:mmA')}>
+                        <div className='comment-time'><i>{timeSince(props.comment.datetime_created)} ago</i></div>
+                    </Tooltip>
 
                 </Box>
             </div>
 
-            <div>{props.comment.content}</div>
+            <div style={{ margin: '12px 0 0 12px' }}>{props.comment.content}</div>
             <Stack direction="row" spacing={1}>
                 <UpVote type={'comment'} comment={props.comment} onFavourChange={onFavourChange}></UpVote>
                 <Box sx={{ display: 'flex', alignItems: 'center' }}>
@@ -264,8 +293,8 @@ const Post = (props) => {
     }
 
     useEffect(() => {
-        // eslint-disable-next-line react-hooks/exhaustive-deps
         reloadPostFunc()
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [props.isVerifyDone]);
 
 
@@ -289,101 +318,124 @@ const Post = (props) => {
     }
 
     return (
-        <Container maxWidth='lg'>
-            {post && <Box display='grid' gridTemplateColumns='repeat(12, 1fr)' gap={2}>
-                <Box gridColumn='span 8' className='post-container'>
-                    <div>
-                        <Box sx={{ display: 'flex', alignItems: 'center' }}>
-                            <Avatar
-                                sx={{ width: 40, height: 40 }}
-                            >H</Avatar>
-                            <Typography variant='caption' display='block' gutterBottom id='communityName'>
-                                <b>{post.community_name}</b>
-                            </Typography>
-                            <Typography variant='caption' display='block' gutterBottom>
-                                <div> + Posted
-                                    by {post.user_name} {timeSince(post.datetime_created)}</div>
-                            </Typography>
-                        </Box>
-                        <h2>{post.title}</h2>
-                        {post.url && !post.url.includes('digitaloceanspaces') &&
-                            <div>
-                                <iframe
-                                    width="560"
-                                    height="315"
-                                    src={post.url}
-                                    title={`embedUrl`}
-                                    frameBorder="0"
-                                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                                    allowFullScreen
-                                />
-                            </div>}
-                        {post.url && post.url.includes('digitaloceanspaces') &&
-                            <div>
-                                <img
-                                    alt={''}
-                                    width="560"
-                                    height="315"
-                                    src={post.url}
-                                    title={`embedUrl`}
-                                    frameBorder="0"
-                                />
-                            </div>}
-                        {!post.url &&
-                            <div>{post.content}</div>}
-                        <div id={'post-statusline'}>
-
-                            <Stack direction="row" spacing={1}>
-                                <Box>
-                                    <IconButton
-                                        sx={{ p: '10px' }}
-                                        aria-label="upfavour"
+        <Grid container spacing={6} style={{ margin: '16px 280px' }}>
+            {post &&
+            <Grid xs={8}>
+                <Box sx={{ width: '100%' }}>
+                    <Stack spacing={2} style={{ display: 'flex' }}>
+                        <Item style={{ textAlign: 'left', padding: '32px 64px' }}>
+                            <Box sx={{ display: 'flex', alignItems: 'center', marginTop: '16px' }}>
+                                <Avatar
+                                    sx={{ width: 64, height: 64 }}
+                                    src={post.post_profile_picture ? post.post_profile_picture : `/static/user-avatar-default.png`}>
+                                </Avatar>
+                                <div style={{ margin: '0 16px 0 8px' }}>
+                                    <a  href={`/community/${post.community_name}/posts/best`}
+                                        style={{
+                                            margin: 'auto',
+                                            color: 'inherit',
+                                            textDecoration: 'none',
+                                        }}
                                     >
-                                        {(post.is_favour === 0 || post.is_favour === -1) &&
-                                            <ForwardIcon className='upFavourStyle' onClick={() => onFavourChange(1)} />}
-                                        {post.is_favour === 1 &&
-                                            <ForwardIcon className='upFavourColorStyle' onClick={() => onFavourChange(0)} />}
-                                    </IconButton>
-                                    {post.fav_point
-                                        ? post.fav_point
-                                        : 0}
-                                    <IconButton
-                                        sx={{ p: '10px' }}
-                                        aria-label="downfavour"
-                                    >
-                                        {(post.is_favour === 0 || post.is_favour === 1) &&
-                                            <ForwardIcon className='downFavourStyle' onClick={() => onFavourChange(-1)} />}
-                                        {post.is_favour === -1 &&
-                                            <ForwardIcon className='downFavourColorStyle' onClick={() => onFavourChange(0)} />}
-                                    </IconButton>
-                                </Box>
-                            </Stack>
-
-                            <Button disabled>{post['comment_count']} comments</Button>
-                            <Button></Button>
-
-                        </div>
-                    </div>
-
-                    <hr />
-                    <div>
-                        <CommentBox userInfo={props.userInfo} communityName={post.community_name} post={post} postId={post.post_id}></CommentBox>
-                    </div>
-
-                    <hr />
-                    <br></br>
-                    <div>
-                        {commentComponents}
-                    </div>
+                                        <Button
+                                            style={{ textTransform: 'none' }}
+                                        >
+                                            r/{post.community_name}
+                                        </Button>
+                                    </a>
+                                </div>
+                                <Avatar
+                                    sx={{ width: 32, height: 32 }}
+                                    src={post.post_profile_picture ? post.post_profile_picture : `/static/user-avatar-default.png`}>
+                                </Avatar>
+                                <div style={{ marginLeft: '8px' }}>
+                                    {/* <Tooltip title={moment(post.datetime_created).format('DD-MM-YYYY hh:mmA')}> */}
+                                        <a style={{ margin: 'auto', color: 'inherit', textDecoration: 'none' }} href={`/user/${post.user_name}/profile/overview`}>
+                                            <Button
+                                                style={{ textTransform: 'none' }}
+                                            >
+                                                Posted by {post.user_name} - {timeSince(post.datetime_created)}
+                                            </Button>
+                                        </a>
+                                    {/* </Tooltip> */}
+                                </div>
+                            </Box>
+                            <h2>{post.title}</h2>
+                            <Divider style={{ margin: '8px 0' }} />
+                            {post.url && !post.url.includes('digitaloceanspaces') &&
+                                <div>
+                                    <iframe
+                                        width="560"
+                                        height="315"
+                                        src={post.url}
+                                        title={`embedUrl`}
+                                        frameBorder="0"
+                                        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                                        allowFullScreen
+                                    />
+                                </div>}
+                            {post.url && post.url.includes('digitaloceanspaces') &&
+                                <div>
+                                    <img
+                                        alt={''}
+                                        width="560"
+                                        height="315"
+                                        src={post.url}
+                                        title={`embedUrl`}
+                                        frameBorder="0"
+                                    />
+                                </div>}
+                            {!post.url &&
+                            <div style={{ margin: '32px 0' }}>
+                                {post.content}
+                            </div>}
+                            <Divider style={{ margin: '8px 0' }} />
+                            <div id={'post-statusline'}>
+                                <Stack direction="row" spacing={1}>
+                                    <Box>
+                                        <IconButton
+                                            sx={{ p: '10px' }}
+                                            aria-label="upfavour"
+                                        >
+                                            {(post.is_favour === 0 || post.is_favour === -1) &&
+                                                <ForwardIcon className='upFavourStyle' onClick={() => onFavourChange(1)} />}
+                                            {post.is_favour === 1 &&
+                                                <ForwardIcon className='upFavourColorStyle' onClick={() => onFavourChange(0)} />}
+                                        </IconButton>
+                                        {post.fav_point
+                                            ? post.fav_point
+                                            : 0}
+                                        <IconButton
+                                            sx={{ p: '10px' }}
+                                            aria-label="downfavour"
+                                        >
+                                            {(post.is_favour === 0 || post.is_favour === 1) &&
+                                                <ForwardIcon className='downFavourStyle' onClick={() => onFavourChange(-1)} />}
+                                            {post.is_favour === -1 &&
+                                                <ForwardIcon className='downFavourColorStyle' onClick={() => onFavourChange(0)} />}
+                                        </IconButton>
+                                    </Box>
+                                </Stack>
+                                <Button style={{ color: 'black' }} disabled>{post['comment_count']} comments</Button>
+                                <Button></Button>
+                            </div>
+                            <Divider style={{ margin: '8px 0' }} />
+                            <div>
+                                <CommentBox userInfo={props.userInfo} communityName={post.community_name} post={post} postId={post.post_id}></CommentBox>
+                            </div>
+                            <Divider style={{ margin: '8px 0 24px 0' }} />
+                            <div>
+                                {commentComponents}
+                            </div>
+                        </Item>
+                    </Stack>
                 </Box>
-                <Box gridColumn='span 4'>
-                    {community && <Community community={community} reloadPostFunc={reloadPostFunc} ></Community>}
-
-
-                </Box>
-            </Box>
-            }
-        </Container>
+            </Grid>}
+            {post &&
+            <Grid xs style={{ position: 'relative' }}>
+                {community && <Community community={community} reloadPostFunc={reloadPostFunc} ></Community>}
+            </Grid>}
+        </Grid>
     );
 };
 
