@@ -234,7 +234,7 @@ const isModAdminDB = (community,username) => {
 
 const approveBanDB = (community,username) => {
     return POOL.query(
-        `UPDATE banlist SET is_approved IS TRUE  WHERE community_name = $1 AND user_name = $2;`,
+        `UPDATE banlist SET is_approved = TRUE WHERE community_name = $1 AND user_name = $2;`,
          [
              escapeQuotes(community),
              escapeQuotes(username)
@@ -259,6 +259,17 @@ const addModsDB = (community,username,isadmin) => {
             $2,
             $3
         );`,
+         [
+             escapeQuotes(community),
+             escapeQuotes(username),
+             escapeQuotes(isadmin)
+         ],
+     );
+};
+
+const updateModsDB = (community,username,isadmin) => {
+    return POOL.query(
+        `UPDATE moderators SET is_admin = $3 WHERE community_name = $1 AND user_name = $2`,
          [
              escapeQuotes(community),
              escapeQuotes(username),
@@ -352,7 +363,7 @@ const retrieveCommunityStatsDB = (community) => {
 const retrieveCommunityBansDB = (community) => {
     return POOL.query(
            `SELECT * FROM banlist
-            WHERE community_name =  $1;`,
+            WHERE community_name =  $1 ORDER BY is_approved DESC;`,
             [
                 escapeQuotes(community),
             ],
@@ -538,6 +549,7 @@ const uploadToDigitalOcean = (buffer, req, key) => new Promise((resolve, reject)
 /* -------------------------------------------------------------------------- */
 
 module.exports = {
+    updateModsDB,
     getUserFavouredPostsOrComments,
     getUserComments,
     getUserPosts,

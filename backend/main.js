@@ -55,7 +55,8 @@ const {
     getModeratorCommunities,
     getUserPosts,
     getUserComments,
-    getUserFavouredPostsOrComments
+    getUserFavouredPostsOrComments,
+    updateModsDB
 } = require('./db_utils.js')
 
 /* -------------------------------------------------------------------------- */
@@ -436,6 +437,23 @@ app.post('/api/deleteFromBanlist', async (req, resp) => {
 app.post('/api/addMods', async (req, resp) => {
     try {
         await addModsDB(req.body.params.communityName, req.body.params.userName, req.body.params.isAdmin);
+        const result = await retrieveCommunityModsDB(req.body.params.communityName)
+        resp.status(200);
+        resp.type('application/json');
+        resp.json({ modRows: result.rows });
+        return;
+    } catch (e) {
+        console.info(e);
+		resp.status(404);
+		resp.type('application/json');
+        resp.json({ message: 'An error has occured.'});
+        return;
+    }
+});
+
+app.post('/api/updateMods', async (req, resp) => {
+    try {
+        await updateModsDB(req.body.params.communityName, req.body.params.userName, req.body.params.isAdmin);
         const result = await retrieveCommunityModsDB(req.body.params.communityName)
         resp.status(200);
         resp.type('application/json');
