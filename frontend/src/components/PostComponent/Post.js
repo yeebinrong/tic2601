@@ -19,8 +19,6 @@ import { createComment, modifyFavour, retrieveCommunityByName, retrievePostByIdA
 import { useParams } from 'react-router-dom';
 import moment from 'moment';
 import Grid from '@mui/material/Unstable_Grid2';
-import ShieldIcon from '@mui/icons-material/Shield';
-import LocalPoliceIcon from '@mui/icons-material/LocalPolice';
 import { withSnackbar } from 'notistack';
 import { snackBarProps } from '../../constants/constants';
 
