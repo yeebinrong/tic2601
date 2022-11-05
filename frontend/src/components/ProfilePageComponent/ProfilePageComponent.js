@@ -83,6 +83,7 @@ class ProfilePageComponent extends React.Component {
         this.props.setIsLoading(true);
         const formData = new FormData();
         formData.set('username', this.props.userInfo.username)
+        formData.set('type', 'user')
         formData.set('file', this.state.selectedFile)
         uploadProfilePicture(formData)
         .then(res => {
@@ -339,7 +340,7 @@ class ProfilePageComponent extends React.Component {
                             this.state.user_name === this.props.userInfo.username &&
                             <>
                                 <Button
-                                    style={{ width: '300px', margin: 'auto', marginTop: '16px', textTransform: 'none', backgroundColor: 'rgb(0, 178, 210)' }}
+                                    style={{ margin: 'auto', marginTop: '16px', textTransform: 'none', backgroundColor: 'rgb(0, 178, 210)' }}
                                     onClick={() => { this.fileRef.current.click() }}
                                     variant='contained'
                                 >
@@ -352,11 +353,11 @@ class ProfilePageComponent extends React.Component {
                                     />
                                     Select Profile Picture
                                 </Button>
-                                <div style={{ width: '200px', margin: '16px auto', padding: '8px', textAlign: 'center', border: 'solid 1px rgb(0, 178, 210)', borderRadius: '5px' }}>
+                                <div style={{ margin: '16px auto', padding: '8px', textAlign: 'center', border: 'solid 1px rgb(0, 178, 210)', borderRadius: '5px' }}>
                                     {this.state.selectedFile ? this.state.selectedFile.name : 'No file is selected!'}
                                 </div>
                                 <Button
-                                    style={{ width: '300px', margin: 'auto', textTransform: 'none', backgroundColor: !this.state.selectedFile ? 'rgba(0, 0, 0, 0.24)' : 'rgb(0, 178, 210)' }}
+                                    style={{ margin: 'auto', textTransform: 'none', backgroundColor: !this.state.selectedFile ? 'rgba(0, 0, 0, 0.24)' : 'rgb(0, 178, 210)' }}
                                     disabled={!this.state.selectedFile}
                                     onClick={this.onProfilePictureChange}
                                     variant='contained'

@@ -29,7 +29,8 @@ CREATE OR REPLACE FUNCTION searchPostWithParamsFunc(
 	comment_count BIGINT,
 	view_count INTEGER,
 	url VARCHAR(2048),
-        profile_picture VARCHAR(256)
+	profile_picture VARCHAR(256),
+	post_profile_picture VARCHAR(256)
   )
   LANGUAGE plpgsql AS
 $func$
@@ -68,13 +69,13 @@ DECLARE
         'WITH all_communities AS
                 (SELECT ac.community_name, p.user_name, AGE(CURRENT_TIMESTAMP, p.datetime_created), p.datetime_created, p.title, p.flair, p.url, p.post_id, p.view_count,
                 COALESCE((SELECT SUM(favour_point) FROM post_favours WHERE post_id = p.post_id AND community_name = p.community_name), 0) AS fav_point, fp.favour_point AS is_favour,
-                (SELECT count(*) FROM comments WHERE post_id = p.post_id AND community_name = p.community_name) AS comment_count, u.profile_picture
+                (SELECT count(*) FROM comments WHERE post_id = p.post_id AND community_name = p.community_name) AS comment_count, u.profile_picture, (SELECT profile_picture FROM community WHERE community_name = ac.community_name) as post_profile_picture
                 FROM community ac
                 INNER JOIN posts p ON p.community_name = ac.community_name AND p.datetime_deleted IS NULL
                 LEFT JOIN post_favours fp ON fp.post_id = p.post_id AND fp.community_name = p.community_name AND fp.giver = $1
                 LEFT JOIN users u ON u.user_name = p.user_name
             GROUP BY ac.community_name, p.user_name, p.datetime_created, p.title, p.flair, p.url, p.post_id, p.view_count, p.community_name, fp.favour_point, u.profile_picture)
-            SELECT DISTINCT post_id, community_name, user_name, age, datetime_created, title, flair, fav_point, is_favour, comment_count, view_count, url, profile_picture
+            SELECT DISTINCT post_id, community_name, user_name, age, datetime_created, title, flair, fav_point, is_favour, comment_count, view_count, url, profile_picture, post_profile_picture
             FROM all_communities' || paramQuery USING currentUser;
 END;
 $func$;

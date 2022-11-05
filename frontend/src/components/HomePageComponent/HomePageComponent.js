@@ -64,8 +64,7 @@ export const renderPostLists = (posts, params, handleChange, onFavourChange, onD
                                 <Avatar
                                     style={{ margin: '0 8px 0 8px' }}
                                     sx={{ width: 32, height: 32 }}
-                                    // TODO add community profile picture?
-                                    src={`/static/user-avatar-default.png`}>
+                                    src={post.post_profile_picture ? post.post_profile_picture : `/static/user-avatar-default.png`}>
                                 </Avatar>
                                 <a  href={`/community/${post.community_name}/posts/best`}
                                 style={{
@@ -89,7 +88,7 @@ export const renderPostLists = (posts, params, handleChange, onFavourChange, onD
                                     style={{ margin: '0 8px 0 0' }}
                                     sx={{ width: 32, height: 32 }}
                                     src={post.profile_picture ?
-                                        post.profile_picture:
+                                        post.profile_picture :
                                         `/static/user-avatar-default.png`}>
                                 </Avatar>
                                 <a style={{ margin: 'auto', color: 'inherit', textDecoration: 'none' }} href={`/user/${post.user_name}/profile/overview`}>

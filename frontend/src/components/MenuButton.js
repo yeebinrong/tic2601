@@ -20,7 +20,6 @@ const MenuButton = (props) => {
     function handleDelete(communityName, postId, postOwner) {
         deleteAPost({ communityName, postId, postOwner })
             .then(res => {
-                console.log(res);
                 if (!res.error) {
                     props.deleteCallback(communityName, postId);
                     props.enqueueSnackbar(

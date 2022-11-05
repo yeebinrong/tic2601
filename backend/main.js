@@ -34,8 +34,6 @@ const {
     deleteFromBanlistDB,
     approveBanDB,
     addModsDB,
-    updateCommunityDescDB,
-    updateCommunityColourDB,
     updateFollowDB,
     retrieveFollowerStatsDB,
     retrievePostStatsDB,
@@ -56,7 +54,8 @@ const {
     getUserPosts,
     getUserComments,
     getUserFavouredPostsOrComments,
-    updateModsDB
+    updateModsDB,
+    updateCommunity
 } = require('./db_utils.js')
 
 /* -------------------------------------------------------------------------- */
@@ -265,10 +264,8 @@ app.post('/api/create_image_post', upload.single('file'), async (req, resp) => {
     let insertedPostId = -1;
     const { selectedCommunity, title, selectedFlair } = req.body;
     try {
-        console.log(req.body);
         const buffer = await READ_FILE(req.file.path);
         const key = await uploadToDigitalOcean(buffer, req, crypto.randomBytes(16).toString("hex"));
-        console.log(key);
         const results = await insertUrlPost(req.token.username, selectedCommunity, title, key, selectedFlair)
         await UNLINK_ALL_FILES(UPLOAD_PATH);
         insertedPostId = results.rows[0].post_id
@@ -393,7 +390,7 @@ app.get('/api/search', async (req, resp) => {
         resp.json({rows: results.rows });
         return;
     } catch (e) {
-        console.log(e);
+        console.info(e);
         resp.status(400);
         resp.type('application/json');
         resp.json({ message: 'An error has occurred.' });
@@ -470,7 +467,7 @@ app.post('/api/updateMods', async (req, resp) => {
 
 app.post('/api/updateComDesc', async (req, resp) => {
     try {
-        await updateCommunityDescDB(req.body.params.communityName, req.body.params.newDesc);
+        await updateCommunity('description' , req.body.params.newDesc, req.body.params.communityName);
         resp.status(200);
         resp.type('application/json');
         resp.json({ message: 'desc updated ok' });
@@ -502,7 +499,7 @@ app.post('/api/approveBan', async (req, resp) => {
 
 app.post('/api/updateColour', async (req, resp) => {
     try {
-        await updateCommunityColourDB(req.body.params.communityName, req.body.params.newColour);
+        await updateCommunity('colour', req.body.params.newColour, req.body.params.communityName);
         resp.status(200);
         resp.type('application/json');
         resp.json({ message: 'update ok' });
@@ -642,10 +639,22 @@ app.post('/api/update_description', async (req, resp) => {
 
 // POST /api/upload
 app.post('/api/upload', upload.single('file'), async (req, resp) => {
+    const { type, communityName } = req.body;
+    if (type !== 'user' && type !== 'community') {
+		resp.status(400);
+		resp.type('application/json');
+		resp.json({ message: `Invalid value for type [${type}]`});
+        return;
+    }
     try {
         const buffer = await READ_FILE(req.file.path);
-        const key = await uploadToDigitalOcean(buffer, req, req.token.username);
-        await updateUserProfile('profile_picture', `${key}?${Date.now()}`, req.token.username);
+        const initialKey = type === 'user' ? req.token.username : communityName;
+        const key = await uploadToDigitalOcean(buffer, req, initialKey);
+        if (type === 'user') {
+            await updateUserProfile('profile_picture', `${key}?${Date.now()}`, req.token.username);
+        } else {
+            await updateCommunity('profile_picture', `${key}?${Date.now()}`, communityName);
+        }
         await UNLINK_ALL_FILES(UPLOAD_PATH);
         resp.status(200);
         resp.type('application/json');
@@ -662,7 +671,6 @@ app.post('/api/upload', upload.single('file'), async (req, resp) => {
 
 // POST /api/report
 app.post('/api/report', async (req, resp) => {
-    console.log(req);
     try {
         const { userName, communityName } = req.body;
         await insertUserIntoBanList(userName, communityName);
@@ -671,7 +679,7 @@ app.post('/api/report', async (req, resp) => {
         resp.json({ message: 'report ok' });
         return;
     } catch (e) {
-        console.log(e);
+        console.info(e);
 		resp.status(400);
 		resp.type('application/json');
 		resp.json({ message: `${e}`});

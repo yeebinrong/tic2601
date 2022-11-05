@@ -358,7 +358,6 @@ export function uploadProfilePicture(formData) {
         }));
 }
 
-
 export function retrieveAllFollowedCommunities() {
     return axios
         .get(`${HOST}/api/all_followed_communities`, {

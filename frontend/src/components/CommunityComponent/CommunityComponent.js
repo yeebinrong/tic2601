@@ -1,6 +1,6 @@
 import './CommunityComponent.scss';
 import moment from 'moment';
-import { modifyFavour, retrieveCommunityPosts, updateFollow, deleteFromBanlist,deleteFromMods, retrieveModPageStats, updateColour, approveBan,updateComDesc, addMods, updateMods} from '../../apis/app-api';
+import { modifyFavour, retrieveCommunityPosts, updateFollow, deleteFromBanlist,deleteFromMods, retrieveModPageStats, updateColour, approveBan,updateComDesc, addMods, updateMods, uploadProfilePicture} from '../../apis/app-api';
 import * as React from 'react';
 import {SketchPicker} from 'react-color';
 import Box from '@mui/material/Box';
@@ -148,7 +148,9 @@ class CommunityComponent extends React.Component {
             following:"",
             followStatus: "",
             newMod:"",
-            newModAdmin:false
+            newModAdmin:false,
+            selectedFile: null,
+            profile_picture: null,
         };
 
         if (props.isVerifyDone) {
@@ -179,10 +181,8 @@ class CommunityComponent extends React.Component {
                     overallStats:res.data.infoRows,
                 });
             })
-
-            
         }
-
+        this.fileRef = React.createRef(null);
     }
 
     shouldComponentUpdate (nextProps) {
@@ -237,7 +237,6 @@ class CommunityComponent extends React.Component {
 
     //Mod page Banlist Approve Checkbox onChcek
     handleCheck= (banusername, index) => {
-       // console.log(banusername)
         approveBan({communityName:this.props.params.community_name,username:banusername})
             .then(res => {
                 if (!res.error) {
@@ -264,7 +263,6 @@ class CommunityComponent extends React.Component {
         this.setState({
             newModAdmin: !(this.state.newModAdmin)
      });
-     console.log(this.state.newModAdmin);
     }
 
     //postrenderlist onChange
@@ -318,7 +316,6 @@ class CommunityComponent extends React.Component {
         .then(res => {
             if (!res.error) {
                 const tempMods = res.data.modRows;
-                console.log(tempMods);
                     this.setState({
                         mod: tempMods
                     })
@@ -431,7 +428,6 @@ class CommunityComponent extends React.Component {
 
     //Follow Button onClick
     changeFollow = () => {
-      // console.log(this.state.following[0].count);
         updateFollow({communityName:this.props.params.community_name,isFollowing:this.state.following})
             .then(res => {
                 if (!res.error) {
@@ -679,7 +675,7 @@ class CommunityComponent extends React.Component {
                                                                             this.handleUpdateMods(mods.user_name, !mods.is_admin);
                                                                         }}
                                                                     >
-                                                                        Toggle Admin
+                                                                        {mods.is_admin ? 'Demote' : 'Promote'}
                                                                     </Button>}
                                                                     {this.state.isModAdmin === true  && this.props.userInfo.username !== mods.user_name &&
                                                                     <Button
@@ -740,9 +736,46 @@ class CommunityComponent extends React.Component {
                                 </Grid>
                                 <Grid xs style={{ position: 'relative' }}>
                                     <div style={{ width: '100%', color: 'white', backgroundColor: this.state.info.colour, height: '35px', borderRadius: '5px', padding: '16px 6px 6px 6px', textIndent: '16px' }}>
-                                        <b>Community Description</b>
+                                        <b>Community Profile</b>
                                     </div>
                                     <Item>
+                                        <div style={{ margin: '16px 32px 0 32px', textAlign: 'center' }}>
+                                            <div style={{ display: 'flex', flexDirection: 'column', padding: '16px' }}>
+                                                <img
+                                                    draggable={false}
+                                                    src={this.state.profile_picture ?
+                                                        this.state.profile_picture:
+                                                        `/static/user-avatar-default.png`}
+                                                    className={'profile-page-picture'}
+                                                    alt="community profile picture"
+                                                />
+                                                <Button
+                                                    style={{ margin: 'auto', marginTop: '16px', textTransform: 'none', backgroundColor: this.state.info.colour }}
+                                                    onClick={() => { this.fileRef.current.click() }}
+                                                    variant='contained'
+                                                >
+                                                    <input
+                                                        ref={this.fileRef}
+                                                        type="file"
+                                                        style={{ display: 'none' }}
+                                                        onChange={this.onFileChange}
+                                                        accept="image/png, image/gif, image/jpeg, image/jpg"
+                                                    />
+                                                    Select Community Profile Picture
+                                                </Button>
+                                                <div style={{ margin: '16px auto', padding: '8px', textAlign: 'center', border: 'solid 1px rgb(0, 178, 210)', borderRadius: '5px' }}>
+                                                    {this.state.selectedFile ? this.state.selectedFile.name : 'No file is selected!'}
+                                                </div>
+                                                <Button
+                                                    style={{ margin: 'auto', textTransform: 'none', backgroundColor: !this.state.selectedFile ? 'rgba(0, 0, 0, 0.24)' : this.state.info.colour }}
+                                                    disabled={!this.state.selectedFile}
+                                                    onClick={this.onProfilePictureChange}
+                                                    variant='contained'
+                                                >
+                                                    Change Community Profile Picture
+                                                </Button>
+                                            </div>
+                                        </div>
                                         <div style={{ margin: '16px 32px 0 32px', textAlign: 'center' }}>
                                             <TextField
                                                 fullWidth
@@ -760,8 +793,7 @@ class CommunityComponent extends React.Component {
                                                     margin: '24px auto',
                                                     width: '300px',
                                                     textTransform: 'none',
-                                                    backgroundColor: !this.state.description || this.state.description === '' ? 'rgba(0, 0, 0, 0.54)' : this.state.info.colour,
-                                                    color: 'white',
+                                                    backgroundColor: !this.state.description || this.state.description === '' ? 'rgba(0, 0, 0, 0.24)' : this.state.info.colour,
                                                 }}
                                                 variant='contained'
                                                 color={'primary'}
@@ -773,16 +805,18 @@ class CommunityComponent extends React.Component {
                                                 Change Community Description
                                             </Button>
                                         </div>
+                                        <div style={{ padding: '0 32px 16px 32px' }}>
+                                            <SketchPicker
+                                                width={'auto'}
+                                                color = {this.state.info.colour}
+                                                onChangeComplete={this.handleComColourChange}
+                                            />
+                                        </div>
                                     </Item>
                                     <div style={{ marginTop: '32px', color: 'white', backgroundColor: this.state.info.colour ? this.state.info.colour : 'rgb(0, 178, 210)', height: '35px', borderRadius: '5px', padding: '16px 6px 6px 6px', textIndent: '16px' }}>
                                         <b>Community Colour</b>
                                     </div>
                                     <Item style={{ padding: '32px' }}>
-                                        <SketchPicker
-                                            width={'auto'}
-                                            color = {this.state.info.colour}
-                                            onChangeComplete={this.handleComColourChange}
-                                        />
                                     </Item>
                                     <div style={{ marginTop: '32px', color: 'white', backgroundColor: this.state.info.colour ? this.state.info.colour : 'rgb(0, 178, 210)', height: '35px', borderRadius: '5px', padding: '16px 6px 6px 6px', textIndent: '16px' }}>
                                         <b>Community Banlist</b>
@@ -842,7 +876,52 @@ class CommunityComponent extends React.Component {
         )
     }
 
+    onFileChange = (e) => {
+        if(e.target.files[0].size > 1000000){
+            this.props.enqueueSnackbar(
+                "Maximum file size 1mb, selected file is too big!",
+                snackBarProps('error'),
+            );
+            e.target.value = null;
+        } else {
+            this.setState({
+                selectedFile: e.target.files[0],
+                profile_picture: URL.createObjectURL(e.target.files[0]),
+            });
+        }
+    }
 
+    onProfilePictureChange = (e) => {
+        this.props.setIsLoading(true);
+        const formData = new FormData();
+        formData.set('communityName', this.state.info.community_name)
+        formData.set('type', 'community')
+        formData.set('file', this.state.selectedFile)
+        uploadProfilePicture(formData)
+        .then(res => {
+            if (!res.error) {
+                const profile_pic_url = `${res.data.profile_picture}?${Date.now()}`;
+                this.setState({
+                    info: {
+                        ...this.state.info,
+                        profile_picture: profile_pic_url,
+                    },
+                    selectedFile: null,
+                });
+                this.props.enqueueSnackbar(
+                    "Successfully changed community profile picture!",
+                    snackBarProps('success'),
+                );
+            } else {
+                this.props.enqueueSnackbar(
+                    "Failed to change community profile picture!",
+                    snackBarProps('error'),
+                );
+            }
+            this.props.setIsLoading(false);
+        })
+        e.target.value = null;
+    }
 
     render() {
         return (
@@ -851,8 +930,8 @@ class CommunityComponent extends React.Component {
                 <div style={{ backgroundColor: 'white' }}>
                     <div style={{ display: 'flex', marginLeft: '20%', paddingTop: '10px' }}>
                         <div>
-                            <Avatar alt="Community Logo" sx={{ width: 55, height: 55 }} src={this.state.info.profile_picture ?
-                                this.state.info.profile_picture: `/static/readit_logo.png`} />
+                            <Avatar alt="Community Logo" sx={{ width: 128, height: 128, margin: '8px' }} src={this.state.info.profile_picture ?
+                                this.state.info.profile_picture: `/static/user-avatar-default.png`} />
                         </div>
                         <div style={{ marginRight: '25px' }}>
                             <b style={{ fontSize: '30px', marginLeft: '10%' }}>{this.state.info.community_name}</b>

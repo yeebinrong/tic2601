@@ -219,10 +219,10 @@ class CreatePostComponent extends React.Component {
                                                     style={{ backgroundColor: this.state.srcImage ? 'initial' : '#d8dfe2' }}
                                                 />
                                             </div>
-                                            <div style={{ display: 'flex', flexDirection: 'column', margin: 'auto 0' }}>
+                                            <div style={{ display: 'flex', flexDirection: 'column', margin: 'auto' }}>
                                                 <div style={{ margin: '0 auto', display: 'flex' }}>
                                                     <Button
-                                                        style={{ width: '300px', margin: 'auto', marginTop: '16px', textTransform: 'none', backgroundColor: 'rgb(0, 178, 210)' }}
+                                                        style={{ margin: 'auto', marginTop: '16px', textTransform: 'none', backgroundColor: 'rgb(0, 178, 210)' }}
                                                         onClick={() => { this.fileRef.current.click() }}
                                                         variant='contained'
                                                     >
@@ -236,7 +236,7 @@ class CreatePostComponent extends React.Component {
                                                         Select Image to upload
                                                     </Button>
                                                 </div>
-                                                <div style={{ width: '200px', margin: '16px auto', padding: '8px', textAlign: 'center', border: 'solid 1px rgb(0, 178, 210)', borderRadius: '5px' }}>
+                                                <div style={{ margin: '16px auto', padding: '8px', textAlign: 'center', border: 'solid 1px rgb(0, 178, 210)', borderRadius: '5px' }}>
                                                     {this.state.content ? this.state.content.name : 'No file is selected!'}
                                                 </div>
                                             </div>

@@ -63,14 +63,15 @@ const getHomePagePosts = (currentUser, sortBy) => {
         `WITH following_communities AS
             (SELECT fc.community_name, p.user_name, AGE(CURRENT_TIMESTAMP, p.datetime_created), p.datetime_created, p.title, p.flair, p.url, p.post_id, p.view_count,
             COALESCE((SELECT SUM(favour_point) FROM post_favours WHERE post_id = p.post_id AND community_name = p.community_name), 0) AS fav_point, fp.favour_point AS is_favour,
-            (SELECT count(*) FROM comments WHERE post_id = p.post_id AND community_name = p.community_name) AS comment_count, u.profile_picture
+            (SELECT count(*) FROM comments WHERE post_id = p.post_id AND community_name = p.community_name) AS comment_count,
+            u.profile_picture, (SELECT profile_picture FROM community WHERE community_name = fc.community_name) as post_profile_picture
             FROM followed_communities fc
             INNER JOIN posts p ON p.community_name = fc.community_name AND p.datetime_deleted IS NULL
             LEFT JOIN post_favours fp ON fp.post_id = p.post_id AND fp.community_name = p.community_name AND fp.giver = $1
             LEFT JOIN users u ON u.user_name = p.user_name
-            GROUP BY fc.community_name, p.user_name, p.datetime_created, p.title, p.flair, p.url, p.post_id, p.view_count, p.community_name, fp.favour_point, u.profile_picture, fc.user_name
+            GROUP BY fc.community_name, p.user_name, p.datetime_created, p.title, p.flair, p.url, p.post_id, p.view_count, p.community_name, fp.favour_point, fc.user_name, u.profile_picture
             HAVING fc.user_name = $1)
-        SELECT DISTINCT post_id, community_name, user_name, age, datetime_created, title, flair, fav_point, is_favour, comment_count, view_count, url, profile_picture
+        SELECT DISTINCT post_id, community_name, user_name, age, datetime_created, title, flair, fav_point, is_favour, comment_count, view_count, url, profile_picture, post_profile_picture
         FROM following_communities
         ORDER BY ` + sortBy,
         [
@@ -204,14 +205,15 @@ const retrieveCommunityPostsDB = (community, sortBy, currentUser) => {
         `WITH one_community AS
             (SELECT oc.community_name, p.user_name, AGE(CURRENT_TIMESTAMP, p.datetime_created), p.datetime_created, p.title, p.flair, p.url, p.post_id, p.view_count,
             COALESCE((SELECT SUM(favour_point) FROM post_favours WHERE post_id = p.post_id AND community_name = p.community_name), 0) AS fav_point, fp.favour_point AS is_favour,
-            (SELECT count(*) FROM comments WHERE post_id = p.post_id AND community_name = p.community_name) AS comment_count, u.profile_picture
+            (SELECT count(*) FROM comments WHERE post_id = p.post_id AND community_name = p.community_name) AS comment_count,
+            u.profile_picture, (SELECT profile_picture FROM community WHERE community_name = oc.community_name) as post_profile_picture
             FROM community oc
             INNER JOIN posts p ON p.community_name = oc.community_name AND p.datetime_deleted IS NULL
             LEFT JOIN post_favours fp ON fp.post_id = p.post_id AND fp.community_name = p.community_name AND fp.giver = $2
             LEFT JOIN users u ON u.user_name = p.user_name
             GROUP BY oc.community_name, p.user_name, p.datetime_created, p.title, p.flair, p.url, p.post_id, p.view_count, p.community_name, fp.favour_point, u.profile_picture
             HAVING oc.community_name = $1)
-        SELECT DISTINCT post_id, community_name, user_name, age, datetime_created, title, flair, fav_point, is_favour, comment_count, view_count, url, profile_picture
+        SELECT DISTINCT post_id, community_name, user_name, age, datetime_created, title, flair, fav_point, is_favour, comment_count, view_count, url, profile_picture, post_profile_picture
         FROM one_community
         ORDER BY ` + sortBy,
         [
@@ -242,15 +244,14 @@ const approveBanDB = (community,username) => {
      );
 };
 
-const updateCommunityDescDB = (community,newDesc) => {
-    return POOL.query(
-        `UPDATE community SET description = $2  WHERE community_name = $1;`,
-         [
-             escapeQuotes(community),
-             escapeQuotes(newDesc)
-         ],
-     );
-};
+const updateCommunity = (columnName, value, communityName) => {
+    return POOL.query(`UPDATE community SET ${columnName} = $1 WHERE community_name = $2`,
+        [
+            escapeQuotes(value),
+            escapeQuotes(communityName),
+        ]
+    );
+}
 
 const addModsDB = (community,username,isadmin) => {
     return POOL.query(
@@ -277,17 +278,6 @@ const updateModsDB = (community,username,isadmin) => {
          ],
      );
 };
-
-const updateCommunityColourDB = (community,colour) => {
-    return POOL.query(
-        `UPDATE community SET colour = $2  WHERE community_name = $1;`,
-         [
-             escapeQuotes(community),
-             escapeQuotes(colour)
-         ],
-     );
-};
-
 
 const retrieveFollowerStatsDB = (community) => {
     return POOL.query(
@@ -430,7 +420,6 @@ const deleteFromBanlistDB = (community,username) => {
 const updateFollowDB = (community,isFollowing,username) => {
 
     if(isFollowing !== '0'){
-        console.log("deleting");
         return POOL.query(`DELETE FROM followed_communities WHERE community_name = $1 AND user_name = $2 ;`,
             [
                 escapeQuotes(community),
@@ -439,7 +428,6 @@ const updateFollowDB = (community,isFollowing,username) => {
         );
     }
     else {
-        console.log("adding");
         return POOL.query(`INSERT INTO followed_communities(community_name,user_name) VALUES($1,$2);`,
             [
                 escapeQuotes(community),
@@ -549,6 +537,7 @@ const uploadToDigitalOcean = (buffer, req, key) => new Promise((resolve, reject)
 /* -------------------------------------------------------------------------- */
 
 module.exports = {
+    updateCommunity,
     updateModsDB,
     getUserFavouredPostsOrComments,
     getUserComments,
@@ -569,8 +558,6 @@ module.exports = {
     isModAdminDB,
     approveBanDB,
     addModsDB,
-    updateCommunityDescDB,
-    updateCommunityColourDB,
     updateUserProfile,
     retrieveFollowerStatsDB,
     retrievePostStatsDB,
