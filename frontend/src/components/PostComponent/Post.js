@@ -126,7 +126,7 @@ const CommentBox = (props) => {
     };
     return (
         <div>
-            {props.post && <div>Comment as <u>{props.post.user_name}</u></div>}
+            {props.post && <div>Comment as <u>{props.userInfo?.username}</u></div>}
             <TextareaAutosize
                 maxRows={4}
                 aria-label='maximum height'
@@ -188,9 +188,10 @@ const Comment = (props) => {
                 setShowReplyBox(false);
             }}>Edit</Button>}
 
-            {showReplyBox && <CommentBox communityName={props.comment.community_name} postId={props.comment.post_id} replyTo={props.comment.comment_id}></CommentBox>}
+            {showReplyBox && <CommentBox userInfo={props.userInfo} communityName={props.comment.community_name} postId={props.comment.post_id} replyTo={props.comment.comment_id}></CommentBox>}
             {showEditBox &&
                 <CommentBox
+                    userInfo={props.userInfo}
                     communityName={props.comment.community_name}
                     postId={props.comment.post_id}
                     commentId={props.comment.comment_id}
@@ -366,7 +367,7 @@ const Post = (props) => {
 
                     <hr />
                     <div>
-                        <CommentBox communityName={post.community_name} post={post} postId={post.post_id}></CommentBox>
+                        <CommentBox userInfo={props.userInfo} communityName={post.community_name} post={post} postId={post.post_id}></CommentBox>
                     </div>
 
                     <hr />

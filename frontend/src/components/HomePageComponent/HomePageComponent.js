@@ -32,7 +32,7 @@ export const renderPostLists = (posts, params, handleChange, onFavourChange, onD
                 indicatorColor={mainColour}
             />
         </Item>
-        {!posts && (
+        {!posts || posts.length === 0 && (
             <Item key={'no_post_found'} style={{ height: '64px', padding: '32px', textAlign: 'center' }}>
                 <p>No posts found!</p>
             </Item>
