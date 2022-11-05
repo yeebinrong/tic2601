@@ -49,6 +49,7 @@ export const getQueryParameters = str => {
             q: '',
         };
     }
+    str = str.replace(/\\/g, '');
     const search = str.substring(1);
     const parsed = JSON.parse('{"' + search.replace(/&/g, '","').replace(/=/g,'":"') + '"}', function(key, value) { return key===""?value:decodeURIComponent(value) });
     if (!parsed.user) {

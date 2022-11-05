@@ -29,19 +29,19 @@ DECLARE
 		appendParam text := ' ';
 		BEGIN
         IF userFilter != '' THEN
-            paramQuery = paramQuery || appendParam || 'user_name = ' || '''' || userFilter || '''';
+            paramQuery = paramQuery || appendParam || 'user_name = ''' || userFilter || '''';
 			appendParam = ' AND ';
         END IF;
         IF flairFilter != '' THEN
-            paramQuery = paramQuery || appendParam || 'flair = ' || '''' || flairFilter || '''';
+            paramQuery = paramQuery || appendParam || 'flair = ''' || flairFilter || '''';
 			appendParam = ' AND ';
         END IF;
         IF communityFilter != '' THEN
-            paramQuery = paramQuery || appendParam || 'community_name = ' || '''' || communityFilter || '''';
+            paramQuery = paramQuery || appendParam || 'community_name = ''' || communityFilter || '''';
 			appendParam = ' AND ';
         END IF;
         IF queryFilter != '' THEN
-            paramQuery = paramQuery || appendParam || 'to_tsvector(title) @@ to_tsquery(' || '''' || queryFilter || '''' || ')';
+            paramQuery = paramQuery || appendParam || 'to_tsvector(title) @@ to_tsquery(''' || queryFilter || ''')';
 			appendParam = ' AND ';
         END IF;
 		CASE orderParam

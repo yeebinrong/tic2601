@@ -39,6 +39,12 @@ class SearchComponent extends React.Component {
     }
 
     shouldComponentUpdate (nextProps) {
+        if (this.props.location.search === '') {
+            this.props.navigate({
+                pathname: `/home/best`,
+                replace: true,
+            });
+        }
         if ((nextProps.isVerifyDone && !this.props.isVerifyDone) ||
         (nextProps.location.search !== this.props.location.search) ||
         nextProps.params.currentTab !== this.props.params.currentTab
@@ -125,19 +131,27 @@ class SearchComponent extends React.Component {
                 } else if (keys[i] === 'flair') {
                     chipArray.push(`f/${queryParams[keys[i]]}`);
                 } else if (keys[i] === 'q') {
-                    chipArray.push(queryParams[keys[i]]);
+                    chipArray.push(`Searching for [${queryParams[keys[i]]}]`);
                 }
             }
         }
         return chipArray.map(((val, index) => {
+            let color = 'rgb(0, 178, 210)';
+            if (val.startsWith('u/')) {
+                color = 'teal';
+            } else if (val.startsWith('f/')) {
+                color = 'purple'
+            } else if (val.startsWith('Searching')) {
+                color = '#1976d2';
+            }
             return (
                 <Chip
-                    style={{ marginLeft: '8px' }}
+                    style={{ marginLeft: '8px', backgroundColor: color }}
                     key={index}
                     value={val}
                     label={val}
                     color="primary"
-                    variant="outlined"
+                    variant="contained"
                     onDelete={() => this.removeChipAndSearch(val)}
                 />
             );
@@ -201,7 +215,7 @@ class SearchComponent extends React.Component {
             <>
                 <div style={{ fontSize: '30px', margin: '32px 184px 0px 304px' }}>
                     <div>
-                        {this.props.location.search === '' ? 'All posts' : 'Search Results'}
+                        Search Results
                     </div>
                     {this.parseSearchToChips()}
                 </div>

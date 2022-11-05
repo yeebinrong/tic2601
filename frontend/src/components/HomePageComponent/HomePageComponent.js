@@ -1,7 +1,7 @@
 import React from 'react';
 import './HomePageComponent.scss';
 import { retrieveHomePagePosts, modifyFavour } from '../../apis/app-api';
-import { getQueryParameters, withParams } from '../../constants/constants';
+import { withParams } from '../../constants/constants';
 import TabButton from '../TabButton';
 import MenuButton from '../MenuButton';
 import {
@@ -285,7 +285,6 @@ class HomePageComponent extends React.Component {
         if (props.isVerifyDone) {
             this.props.setIsLoading(true);
             retrieveHomePagePosts({
-                ...getQueryParameters(this.props.location.search),
                 currentTab: this.props.params.currentTab
             }).then((res) => {
                 this.props.setIsLoading(false);
@@ -304,7 +303,6 @@ class HomePageComponent extends React.Component {
         ) {
             this.props.setIsLoading(true);
             retrieveHomePagePosts({
-                ...getQueryParameters(this.props.location.search),
                 currentTab: nextProps.params.currentTab
             }).then((res) => {
                 this.props.setIsLoading(false);
