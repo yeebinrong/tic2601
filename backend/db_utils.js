@@ -35,14 +35,9 @@ const retrieveUserInfo = (username) => {
             profile_picture,
             user_description,
             datetime_created,
-        COALESCE((SELECT SUM(fp.favour_point)
-        FROM
-            (SELECT favour_point
-                FROM post_favours
-                WHERE receiver = $1
-                UNION ALL SELECT favour_point
-                FROM comment_favours
-                WHERE receiver = $1) AS fp), 0) as total_favours,
+            (SELECT SUM(favour_point)
+                FROM total_user_favours
+                WHERE user_name = $1) as total_favours,
         (SELECT COUNT(*) FROM posts WHERE user_name = $1) as total_posts,
         (SELECT COUNT(*) FROM comments WHERE commenter = $1) as total_comments
         FROM users
@@ -65,7 +60,7 @@ const getHomePagePosts = (currentUser, sortBy) => {
     return POOL.query(
         `WITH following_communities AS
             (SELECT fc.community_name, p.user_name, AGE(CURRENT_TIMESTAMP, p.datetime_created), p.datetime_created, p.title, p.flair, p.url, p.post_id, p.view_count,
-            COALESCE((SELECT SUM(favour_point) FROM post_favours WHERE post_id = p.post_id AND community_name = p.community_name), 0) AS fav_point, fp.favour_point AS is_favour,
+            (SELECT favour_point FROM total_post_favours WHERE post_id = p.post_id AND community_name = p.community_name) AS fav_point, fp.favour_point AS is_favour,
             (SELECT count(*) FROM comments WHERE post_id = p.post_id AND community_name = p.community_name) AS comment_count,
             u.profile_picture, (SELECT profile_picture FROM community WHERE community_name = fc.community_name) as post_profile_picture
             FROM followed_communities fc
@@ -108,9 +103,9 @@ const updatePostFavour = (postId, favour, value, currentUser, receiver, communit
         return POOL.query(`UPDATE post_favours SET favour_point = $1
                             WHERE community_name = $2 AND post_id = $3 AND giver = $4 AND receiver = $5`,
             [
-                escapeQuotes(postId),
-                escapeQuotes(communityName),
                 escapeQuotes(value),
+                escapeQuotes(communityName),
+                escapeQuotes(postId),
                 escapeQuotes(currentUser),
                 escapeQuotes(receiver)
             ]
@@ -216,7 +211,7 @@ const retrieveCommunityPostsDB = (community, sortBy, currentUser) => {
     return POOL.query(
         `WITH one_community AS
             (SELECT oc.community_name, p.user_name, AGE(CURRENT_TIMESTAMP, p.datetime_created), p.datetime_created, p.title, p.flair, p.url, p.post_id, p.view_count,
-            COALESCE((SELECT SUM(favour_point) FROM post_favours WHERE post_id = p.post_id AND community_name = p.community_name), 0) AS fav_point, fp.favour_point AS is_favour,
+            (SELECT favour_point FROM total_post_favours WHERE post_id = p.post_id AND community_name = p.community_name) AS fav_point, fp.favour_point AS is_favour,
             (SELECT count(*) FROM comments WHERE post_id = p.post_id AND community_name = p.community_name) AS comment_count,
             u.profile_picture, (SELECT profile_picture FROM community WHERE community_name = oc.community_name) as post_profile_picture
             FROM community oc
@@ -359,22 +354,16 @@ const retrieveFavStatsDB = (community) => {
      );
 };
 
-
 const retrieveCommunityStatsDB = (community) => {
     return POOL.query(
-           `SELECT c.community_name, COUNT(DISTINCT fc.user_name) AS follower_count, COUNT(DISTINCT m.user_name) AS mod_count, COUNT(DISTINCT p.post_id) AS post_count,
-           COALESCE(
-            (SELECT SUM(fp.favour_point) FROM (
-                SELECT favour_point FROM post_favours WHERE community_name = c.community_name
-                    UNION ALL
-                SELECT favour_point FROM comment_favours WHERE community_name = c.community_name)
-            as fp), 0) AS fav_total
-           FROM community c
+        `SELECT c.community_name, COUNT(DISTINCT fc.user_name) AS follower_count, COUNT(DISTINCT m.user_name) AS mod_count, COUNT(DISTINCT p.post_id) AS post_count,
+            (SELECT SUM(favour_point) FROM total_community_favours WHERE community_name = c.community_name) AS fav_total
+        FROM community c
            LEFT JOIN followed_communities fc ON c.community_name = fc.community_name
            LEFT JOIN moderators m ON c.community_name = m.community_name
            LEFT JOIN posts p ON c.community_name = p.community_name
-           GROUP BY c.community_name
-           HAVING c.community_name =  $1;`,
+        GROUP BY c.community_name
+        HAVING c.community_name =  $1;`,
             [
                 escapeQuotes(community),
             ],
@@ -520,15 +509,17 @@ const getUserComments = (userName) => {
     );
 }
 
+
+
 const getUserFavouredPostsOrComments = (userName) => {
     return POOL.query(`
         SELECT pc.community_name, pc.post_id, pc.comment_id, pc.user_name, pc.flair, pc.datetime_created, pc.title, pc.content, pc.is_favour, pc.favour_points, pc.comment_count
         FROM (SELECT community_name, post_id, NULL as comment_id, user_name, flair, datetime_created, title, NULL as content, TRUE as is_favour,
-            COALESCE((SELECT SUM(favour_point) FROM post_favours WHERE post_id = p.post_id AND community_name = p.community_name), 0) as favour_points,
+            (SELECT favour_point FROM total_post_favours WHERE post_id = p.post_id AND community_name = p.community_name) AS favour_points,
             (SELECT count(*) FROM comments WHERE post_id = p.post_id AND community_name = p.community_name) AS comment_count
         FROM posts p WHERE datetime_deleted IS NULL AND user_name = $1 UNION
             SELECT community_name, post_id, comment_id, commenter as user_name, NULL as flair, datetime_created, NULL as title, content, TRUE as is_favour,
-            COALESCE((SELECT SUM(favour_point) FROM comment_favours WHERE post_id = c.post_id AND community_name = c.community_name AND comment_id = c.comment_id), 0) as favour_points,
+            (SELECT favour_point FROM total_comment_favours WHERE post_id = c.post_id AND community_name = c.community_name AND comment_id = c.comment_id) AS favour_points,
             NULL as comment_count
         FROM comments c WHERE is_deleted IS FALSE AND commenter = $1) AS pc ORDER BY datetime_created DESC;`,
         [

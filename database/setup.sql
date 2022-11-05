@@ -67,10 +67,11 @@ DECLARE
 		RAISE NOTICE 'Value: %', 'SELECT * FROM posts' || paramQuery;
         RETURN QUERY EXECUTE
         'WITH all_communities AS
-                (SELECT ac.community_name, p.user_name, AGE(CURRENT_TIMESTAMP, p.datetime_created), p.datetime_created, p.title, p.flair, p.url, p.post_id, p.view_count,
-                COALESCE((SELECT SUM(favour_point) FROM post_favours WHERE post_id = p.post_id AND community_name = p.community_name), 0) AS fav_point, fp.favour_point AS is_favour,
-                (SELECT count(*) FROM comments WHERE post_id = p.post_id AND community_name = p.community_name) AS comment_count, u.profile_picture, (SELECT profile_picture FROM community WHERE community_name = ac.community_name) as post_profile_picture
-                FROM community ac
+			(SELECT ac.community_name, p.user_name, AGE(CURRENT_TIMESTAMP, p.datetime_created), p.datetime_created, p.title, p.flair, p.url, p.post_id, p.view_count,
+				(SELECT favour_point FROM total_post_favours WHERE post_id = p.post_id AND community_name = p.community_name) AS fav_point, fp.favour_point AS is_favour,
+				(SELECT count(*) FROM comments WHERE post_id = p.post_id AND community_name = p.community_name) AS comment_count, u.profile_picture,
+				(SELECT profile_picture FROM community WHERE community_name = ac.community_name) as post_profile_picture
+			FROM community ac
                 INNER JOIN posts p ON p.community_name = ac.community_name AND p.datetime_deleted IS NULL
                 LEFT JOIN post_favours fp ON fp.post_id = p.post_id AND fp.community_name = p.community_name AND fp.giver = $1
                 LEFT JOIN users u ON u.user_name = p.user_name
@@ -218,6 +219,47 @@ CREATE TABLE banlist(
 	REFERENCES community(community_name)
 	ON DELETE CASCADE ON UPDATE CASCADE
 );
+
+DROP VIEW IF EXISTS total_community_favours;
+CREATE OR REPLACE VIEW total_community_favours AS
+	SELECT community_name, COALESCE(
+	(SELECT SUM(favour_point) FROM (
+		SELECT favour_point FROM post_favours WHERE community_name = cm.community_name
+			UNION ALL
+		SELECT favour_point FROM comment_favours WHERE community_name = cm.community_name)
+	as fp), 0) AS favour_point
+	FROM community cm;
+
+DROP VIEW IF EXISTS total_post_favours;
+CREATE OR REPLACE VIEW total_post_favours AS
+	SELECT post_id, community_name, COALESCE(
+		(SELECT SUM(favour_point)
+			FROM post_favours
+			WHERE post_id = p.post_id AND community_name = p.community_name)
+		, 0) as favour_point
+	FROM posts p;
+
+DROP VIEW IF EXISTS total_comment_favours;
+CREATE OR REPLACE VIEW total_comment_favours AS
+	SELECT comment_id, post_id, community_name, COALESCE(
+		(SELECT SUM(favour_point)
+			FROM comment_favours
+			WHERE comment_id = c.comment_id AND post_id = c.post_id AND community_name = c.community_name)
+		, 0) as favour_point
+	FROM comments c;
+
+DROP VIEW IF EXISTS total_user_favours;
+CREATE OR REPLACE VIEW total_user_favours AS
+	SELECT user_name,
+	COALESCE((SELECT SUM(fp.favour_point)
+        FROM
+            (SELECT favour_point
+                FROM post_favours
+                WHERE receiver = u.user_name
+                UNION ALL SELECT favour_point
+                FROM comment_favours
+                WHERE receiver = u.user_name) AS fp), 0) as favour_point
+	FROM users u;
 
 -- Insert default user testaccount
 INSERT into users (user_name, password, email, user_description)
