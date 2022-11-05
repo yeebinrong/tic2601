@@ -224,13 +224,13 @@ class CommunityComponent extends React.Component {
     }
     //Mod page analytics Init
     initModPage = () => {
-        this.state.followerStats.map((fol,index) => {
+        this.state.followerStats.forEach((fol,index) => {
             followerData[index].Value = fol.follow_total ? fol.follow_total : 0
         })
-        this.state.postStats.map((pos,index) => {
+        this.state.postStats.forEach((pos,index) => {
             postData[index].Value = pos.post_total ? pos.post_total : 0
         })
-        this.state.favStats.map((fav,index) => {
+        this.state.favStats.forEach((fav,index) => {
             favData[index].Value = fav.fav_total ? fav.fav_total : 0
         })
     }
@@ -578,9 +578,9 @@ class CommunityComponent extends React.Component {
         return (
             <>
             { this.state.stats.map(stat => {
-                        {followerData[3].Value=stat.follower_count ? stat.follower_count : "0"}
-                        {postData[3].Value=stat.post_count ? stat.post_count : "0"}
-                        {favData[3].Value=stat.fav_total ? stat.fav_total : "0"}
+                        followerData[3].Value=stat.follower_count ? stat.follower_count : "0";
+                        postData[3].Value=stat.post_count ? stat.post_count : "0";
+                        favData[3].Value=stat.fav_total ? stat.fav_total : "0";
                         return(
                             <Grid container spacing={6} style={{ margin: '16px 280px' }}>
                                 <Grid item xs={7.5}>
@@ -747,7 +747,7 @@ class CommunityComponent extends React.Component {
                                                         this.state.profile_picture:
                                                         `/static/user-avatar-default.png`}
                                                     className={'profile-page-picture'}
-                                                    alt="community profile picture"
+                                                    alt="community profile"
                                                 />
                                                 <Button
                                                     style={{ margin: 'auto', marginTop: '16px', textTransform: 'none', backgroundColor: this.state.info.colour }}

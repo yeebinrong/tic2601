@@ -215,7 +215,7 @@ class CreatePostComponent extends React.Component {
                                                         this.state.srcImage:
                                                         `/static/user-avatar-default.png`}
                                                     className={'upload-post-image'}
-                                                    alt="image to upload"
+                                                    alt="post"
                                                     style={{ backgroundColor: this.state.srcImage ? 'initial' : '#d8dfe2' }}
                                                 />
                                             </div>
