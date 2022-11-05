@@ -19,6 +19,10 @@ import { createComment, modifyFavour, retrieveCommunityByName, retrievePostByIdA
 import { useParams } from 'react-router-dom';
 import moment from 'moment';
 import Grid from '@mui/material/Unstable_Grid2';
+import ShieldIcon from '@mui/icons-material/Shield';
+import LocalPoliceIcon from '@mui/icons-material/LocalPolice';
+import { withSnackbar } from 'notistack';
+import { snackBarProps } from '../../constants/constants';
 
 const Item = styled(Paper)(({ theme }) => ({
     backgroundColor: theme.palette.mode === 'dark' ? '#1A2027' : '#fff',
@@ -120,6 +124,17 @@ const CommentBox = (props) => {
         }
         createComment(props.communityName, props.postId, commentText, props.replyTo)
             .then(r => {
+                if (!r.error) {
+                    props.enqueueSnackbar(
+                        `Comment has been added.`,
+                        snackBarProps('success'),
+                    );
+                } else {
+                    props.enqueueSnackbar(
+                        `An error has occurred.`,
+                        snackBarProps('error'),
+                    );
+                }
                 console.log(r);
                 window.location.reload();
             });
@@ -133,6 +148,17 @@ const CommentBox = (props) => {
         }
         updateComment(props.communityName, props.postId, props.commentId, commentText)
             .then(r => {
+                if (!r.error) {
+                    props.enqueueSnackbar(
+                        `Comment has been updated.`,
+                        snackBarProps('success'),
+                    );
+                } else {
+                    props.enqueueSnackbar(
+                        `An error has occurred.`,
+                        snackBarProps('error'),
+                    );
+                }
                 console.log(r);
                 window.location.reload();
             });
@@ -167,7 +193,14 @@ const CommentBox = (props) => {
                 >
                     Comment
                 </Button>}
-            {props.commentId && <Button variant='outlined' size='small' onClick={callUpdateCommentApi}>Save</Button>}
+            {props.commentId &&
+            <Button
+                style={{ margin: '16px 0' }}
+                variant='outlined'
+                size='small'
+                onClick={callUpdateCommentApi}>
+                    Save
+            </Button>}
         </div>
     );
 };
@@ -176,7 +209,7 @@ const Comment = (props) => {
 
     const subComments = props.comment.reply_comments && props.comment.reply_comments.map((cmt) =>
         <li key={cmt.comment_id}>
-            <Comment comment={cmt} parentComment={props.comment} reloadPostFunc={props.reloadPostFunc} />
+            <Comment comment={cmt} parentComment={props.comment} reloadPostFunc={props.reloadPostFunc} enqueueSnackbar={props.enqueueSnackbar} />
         </li>,
     );
     const onFavourChange = () => {
@@ -217,7 +250,14 @@ const Comment = (props) => {
                 setShowReplyBox(false);
             }}>Edit</Button>}
 
-            {showReplyBox && <CommentBox userInfo={props.userInfo} communityName={props.comment.community_name} postId={props.comment.post_id} replyTo={props.comment.comment_id}></CommentBox>}
+            {showReplyBox &&
+            <CommentBox
+                userInfo={props.userInfo}
+                communityName={props.comment.community_name}
+                postId={props.comment.post_id}
+                replyTo={props.comment.comment_id}
+                enqueueSnackbar={props.enqueueSnackbar}
+            />}
             {showEditBox &&
                 <CommentBox
                     userInfo={props.userInfo}
@@ -225,6 +265,7 @@ const Comment = (props) => {
                     postId={props.comment.post_id}
                     commentId={props.comment.comment_id}
                     commentText={props.comment.content}
+                    enqueueSnackbar={props.enqueueSnackbar}
                 />}
             <ul>
                 {subComments}
@@ -232,7 +273,7 @@ const Comment = (props) => {
         </div>
     );
 };
-const Community = ({ community, reloadPostFunc }) => {
+const Community = ({ community, reloadPostFunc, enqueueSnackbar }) => {
 
     const joined = community.joined
     const changeFollow = () => {
@@ -240,6 +281,17 @@ const Community = ({ community, reloadPostFunc }) => {
             communityName: community.community_name,
             isFollowing: joined ? "1" : "0"
         }).then(res => {
+            if (!res.error) {
+                enqueueSnackbar(
+                    `Community ${joined ? 'unfollowed' : 'followed'} successfully.`,
+                    snackBarProps('success'),
+                );
+            } else {
+                enqueueSnackbar(
+                    `An error has occurred.`,
+                    snackBarProps('error'),
+                );
+            }
             reloadPostFunc()
         })
     }
@@ -247,16 +299,14 @@ const Community = ({ community, reloadPostFunc }) => {
 
     return (
         <div>
-
-            <div style={{ backgroundColor: community.colour, height: '35px', borderRadius: '5px', paddingTop: '10px', textIndent: '16px' }}>
-
-                <b className={'sideBoxHeader'}>About Community</b>
+            <div style={{ color: 'white', backgroundColor: community.colour, height: '35px', borderRadius: '5px', padding: '16px 6px 6px 6px', textIndent: '16px' }}>
+                <b>About Community</b>
             </div>
             <Item>
                 <div style={{ textAlign: 'left', padding: 10 }}>
                     <b>Welcome to r/{community.community_name}</b>
                     <p>{community.description}</p>
-                    <Divider style={{ margin: '16px 0' }}></Divider>
+                    <Divider style={{margin:'16px 0'}}></Divider>
                     <b>Creation Date: {moment(community.datetime_created).format('DD-MM-YYYY hh:mmA')}</b>
                     <Divider style={{ margin: '16px 0' }}></Divider>
                     <Button
@@ -268,7 +318,33 @@ const Community = ({ community, reloadPostFunc }) => {
                     </Button>
                 </div>
             </Item>
-
+            {/* <div style={{ marginTop: '16px', color: 'white', backgroundColor: community.colour, height: '35px', borderRadius: '5px', padding: '16px 6px 6px 6px', textIndent: '16px' }}>
+                <b>Community Moderators</b>
+            </div>
+            <Item>
+                <div>
+                    <Box style={{ textAlign: 'left', verticalAlign: 'middle' }}>
+                        {community.mod?.map(mods => {
+                            return (
+                                <div key={`mods_${mods.user_name}`}>
+                                    <Box key={mods.user_name} style={{margin: '8px 0', display: 'flex' }}>
+                                        <span style={{ margin: '8px 0 auto 16px' }}>
+                                            {mods.is_admin === true ? <LocalPoliceIcon /> : <ShieldIcon />}
+                                        </span>
+                                        <span style={{ margin: 'auto 0 auto 4px' }}>
+                                            <b>{mods.is_admin === true ? 'Admin Moderator' : 'Moderator'}</b>
+                                        </span>
+                                        <span style={{ margin: 'auto 0 auto 8px' }}>
+                                            {mods.user_name}
+                                        </span>
+                                    </Box>
+                                    <Divider/>
+                                </div>
+                            )
+                        })}
+                    </Box>
+                </div>
+            </Item> */}
         </div>
     );
 };
@@ -301,7 +377,7 @@ const Post = (props) => {
     let commentComponents = null;
     if (post && post.comments) {
         commentComponents = post.comments.map((cmt) => {
-            return <Comment key={cmt.comment_id} comment={cmt} reloadPostFunc={reloadPostFunc} />;
+            return <Comment key={cmt.comment_id} comment={cmt} reloadPostFunc={reloadPostFunc} enqueueSnackbar={props.enqueueSnackbar} />;
         });
     }
 
@@ -322,9 +398,19 @@ const Post = (props) => {
             {post &&
             <Grid xs={8}>
                 <Box sx={{ width: '100%' }}>
-                    <Stack spacing={2} style={{ display: 'flex' }}>
+                    <Stack style={{ display: 'flex' }}>
+                        <div
+                            style={{
+                                color: 'white',
+                                backgroundColor: community?.colour,
+                                height: '35px',
+                                borderRadius: '5px',
+                                padding: '16px 6px 6px 6px',
+                                textIndent: '16px'
+                            }}
+                        />
                         <Item style={{ textAlign: 'left', padding: '32px 64px' }}>
-                            <Box sx={{ display: 'flex', alignItems: 'center', marginTop: '16px' }}>
+                            <Box sx={{ display: 'flex', alignItems: 'center'    }}>
                                 <Avatar
                                     sx={{ width: 64, height: 64 }}
                                     src={post.post_profile_picture ? post.post_profile_picture : `/static/user-avatar-default.png`}>
@@ -421,7 +507,13 @@ const Post = (props) => {
                             </div>
                             <Divider style={{ margin: '8px 0' }} />
                             <div>
-                                <CommentBox userInfo={props.userInfo} communityName={post.community_name} post={post} postId={post.post_id}></CommentBox>
+                                <CommentBox
+                                    userInfo={props.userInfo}
+                                    communityName={post.community_name}
+                                    post={post}
+                                    postId={post.post_id}
+                                    enqueueSnackbar={props.enqueueSnackbar}
+                                />
                             </div>
                             <Divider style={{ margin: '8px 0 24px 0' }} />
                             <div>
@@ -433,11 +525,11 @@ const Post = (props) => {
             </Grid>}
             {post &&
             <Grid xs style={{ position: 'relative' }}>
-                {community && <Community community={community} reloadPostFunc={reloadPostFunc} ></Community>}
+                {community && <Community community={community} reloadPostFunc={reloadPostFunc} enqueueSnackbar={props.enqueueSnackbar} ></Community>}
             </Grid>}
         </Grid>
     );
 };
 
 
-export default Post;
+export default withSnackbar(Post);
