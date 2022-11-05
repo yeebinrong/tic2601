@@ -59,7 +59,7 @@ class CreateCommunityComponent extends React.Component {
                   <div className='margin-top' style={{ marginLeft: '16px', paddingBottom: '16px' }}>
                     <TextField
                     size="small"
-                      onChange={(e) =>  {
+                      onChange={(e) => {
                         if (e.target.value.length<22) {
                           this.setState({communityName:e.target.value})
                         }

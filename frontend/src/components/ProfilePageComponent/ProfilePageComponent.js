@@ -393,7 +393,7 @@ class ProfilePageComponent extends React.Component {
                                 multiline
                                 rows='5'
                                 size="small"
-                                onChange={(e) =>  {
+                                onChange={(e) => {
                                     this.setState({ user_description: e.target.value })
                                 }}
                                 value={this.state.user_description}

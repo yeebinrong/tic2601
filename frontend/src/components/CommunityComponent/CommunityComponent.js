@@ -95,9 +95,9 @@ export const FollowerChart = () => {
                     <YAxis />
                     <Tooltip />
                     <Legend />
-                    <Line type="monotone" dataKey="Value" stroke="#8884d8" />
+                    <Line type="monotone" dataKey="Value" name="No. of followers" stroke="#8884d8" />
                     </LineChart>
-                </>        
+                </>
             );
 }
 
@@ -111,9 +111,9 @@ export const PostChart = () => {
             <YAxis />
             <Tooltip />
             <Legend />
-            <Line type="monotone" dataKey="Value" stroke="#8884d8" />
+            <Line type="monotone" dataKey="Value" name="No. of posts" stroke="#8884d8" />
             </LineChart>
-        </>        
+        </>
     );
 }
 
@@ -127,9 +127,9 @@ export const FavChart = () => {
             <YAxis />
             <Tooltip />
             <Legend />
-            <Line type="monotone" dataKey="Value" stroke="#8884d8" />
+            <Line type="monotone" dataKey="Value" name="No. of favours" stroke="#8884d8" />
             </LineChart>
-        </>        
+        </>
     );
 }
 
@@ -572,7 +572,7 @@ class CommunityComponent extends React.Component {
                         </Item>
 
                     </Grid>
-                </Grid>        
+                </Grid>
             </>
         )
     }
@@ -591,37 +591,51 @@ class CommunityComponent extends React.Component {
                                     <Box sx={{ width: '100%' }}>
                                         <Stack spacing={2}>
                                             <div>
-                                                <Paper component="form" sx={{ p: '2px 4px', display: 'flex', justifyContent: 'center' }}>
-                                                    <table>
-                                                        <tr>
-                                                            <th>Follower Count</th>
-                                                            <th>Post Count</th>
-                                                            <th>Total Favours</th>
-                                                            <th>Moderator Count</th>
-                                                        </tr>
-                                                        <tr>
-                                                            <td>{followerData[3].Value}</td>
-                                                            <td>{postData[3].Value}</td>
-                                                            <td>{favData[3].Value}</td>
-                                                        </tr>
-                                                    </table>
-                                                </Paper>
+                                                <div style={{ color: 'white', backgroundColor: this.state.info.colour ? this.state.info.colour : 'rgb(0, 178, 210)', height: '35px', borderRadius: '5px', padding: '16px 6px 6px 6px', textIndent: '16px' }}>
+                                                    <b>Community Statistics</b>
+                                                </div>
+                                                <div>
+                                                    <Paper component="form" sx={{ p: '2px 4px', display: 'flex', justifyContent: 'center' }}>
+                                                        <table>
+                                                            <tr>
+                                                                <th>Follower Count</th>
+                                                                <th>Post Count</th>
+                                                                <th>Total Favours</th>
+                                                                <th>Moderator Count</th>
+                                                                <th>No. of banned users</th>
+                                                            </tr>
+                                                            <tr>
+                                                                <td>{followerData[3].Value}</td>
+                                                                <td>{postData[3].Value}</td>
+                                                                <td>{favData[3].Value}</td>
+                                                                <td>{this.state.mod ? `${this.state.mod.length}` : '0'}</td>
+                                                                <td>{this.state.ban ? `${this.state.ban.filter(b => b.is_approved).length}` : '0'}</td>
+                                                            </tr>
+                                                        </table>
+                                                    </Paper>
+                                                </div>
                                             </div>
                                             <div>
-                                            <b>Followers</b>
-                                                <Paper component="form" sx={{ p: '2px 4px', display: 'flex', justifyContent: 'center' }}>
+                                            <div style={{ marginTop: '16px', color: 'white', backgroundColor: this.state.info.colour ? this.state.info.colour : 'rgb(0, 178, 210)', height: '35px', borderRadius: '5px', padding: '16px 6px 6px 6px', textIndent: '16px' }}>
+                                                <b>Followers</b>
+                                            </div>
+                                                <Paper component="form" sx={{ p: '32px 4px', display: 'flex', justifyContent: 'center' }}>
                                                     <FollowerChart/>
                                                 </Paper>
                                             </div>
                                             <div>
-                                            <b>Posts</b>
-                                                <Paper component="form" sx={{ p: '2px 4px', display: 'flex', justifyContent: 'center' }}>
+                                            <div style={{ marginTop: '16px', color: 'white', backgroundColor: this.state.info.colour ? this.state.info.colour : 'rgb(0, 178, 210)', height: '35px', borderRadius: '5px', padding: '16px 6px 6px 6px', textIndent: '16px' }}>
+                                                <b>Posts</b>
+                                            </div>
+                                                <Paper component="form" sx={{ p: '32px 4px', display: 'flex', justifyContent: 'center' }}>
                                                     <PostChart/>
                                                 </Paper>
                                             </div>
                                             <div>
-                                            <b>Favours</b>
-                                                <Paper component="form" sx={{ p: '2px 4px', display: 'flex', justifyContent: 'center' }}>
+                                            <div style={{ marginTop: '16px', color: 'white', backgroundColor: this.state.info.colour ? this.state.info.colour : 'rgb(0, 178, 210)', height: '35px', borderRadius: '5px', padding: '16px 6px 6px 6px', textIndent: '16px' }}>
+                                                <b>Favours</b>
+                                            </div>
+                                                <Paper component="form" sx={{ p: '32px 4px', display: 'flex', justifyContent: 'center' }}>
                                                     <FavChart/>
                                                 </Paper>
                                             </div>
@@ -735,7 +749,7 @@ class CommunityComponent extends React.Component {
                                                 multiline
                                                 rows='5'
                                                 size="small"
-                                                onChange={(e) =>  {
+                                                onChange={(e) => {
                                                     this.setState({ description: e.target.value })
                                                 }}
                                                 value={this.state.description}
