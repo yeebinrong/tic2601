@@ -27,7 +27,7 @@ export const renderPostLists = (posts, params, handleChange, onFavourChange, onD
     <>
         <Item>
             <TabButton
-                value={params.currentTab}
+                value={params.currentTab ? params.currentTab : 'best'}
                 handleChange={handleChange}
                 indicatorColor={mainColour}
             />

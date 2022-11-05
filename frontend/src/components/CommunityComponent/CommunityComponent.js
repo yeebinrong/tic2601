@@ -575,305 +575,303 @@ class CommunityComponent extends React.Component {
 
     //Mod Setting UI
     renderMod = () => {
-        return (
-            <>
-            { this.state.stats.map(stat => {
-                        followerData[3].Value=stat.follower_count ? stat.follower_count : "0";
-                        postData[3].Value=stat.post_count ? stat.post_count : "0";
-                        favData[3].Value=stat.fav_total ? stat.fav_total : "0";
-                        return(
-                            <Grid container spacing={6} style={{ margin: '16px 280px' }}>
-                                <Grid item xs={7.5}>
-                                    <Box sx={{ width: '100%' }}>
-                                        <Stack spacing={2}>
-                                            <div>
-                                                <div style={{ color: 'white', backgroundColor: this.state.info.colour ? this.state.info.colour : 'rgb(0, 178, 210)', height: '35px', borderRadius: '5px', padding: '16px 6px 6px 6px', textIndent: '16px' }}>
-                                                    <b>Community Statistics</b>
-                                                </div>
-                                                <div>
-                                                    <Paper component="form" sx={{ p: '2px 4px', display: 'flex', justifyContent: 'center' }}>
-                                                        <table>
-                                                            <tr>
-                                                                <th>Follower Count</th>
-                                                                <th>Post Count</th>
-                                                                <th>Total Favours</th>
-                                                                <th>Moderator Count</th>
-                                                                <th>No. of banned users</th>
-                                                            </tr>
-                                                            <tr>
-                                                                <td>{followerData[3].Value}</td>
-                                                                <td>{postData[3].Value}</td>
-                                                                <td>{favData[3].Value}</td>
-                                                                <td>{this.state.mod ? `${this.state.mod.length}` : '0'}</td>
-                                                                <td>{this.state.ban ? `${this.state.ban.filter(b => b.is_approved).length}` : '0'}</td>
-                                                            </tr>
-                                                        </table>
-                                                    </Paper>
-                                                </div>
-                                            </div>
-                                            <div>
-                                            <div style={{ marginTop: '16px', color: 'white', backgroundColor: this.state.info.colour ? this.state.info.colour : 'rgb(0, 178, 210)', height: '35px', borderRadius: '5px', padding: '16px 6px 6px 6px', textIndent: '16px' }}>
-                                                <b>Followers</b>
-                                            </div>
-                                                <Paper component="form" sx={{ p: '32px 4px', display: 'flex', justifyContent: 'center' }}>
-                                                    <FollowerChart/>
-                                                </Paper>
-                                            </div>
-                                            <div>
-                                            <div style={{ marginTop: '16px', color: 'white', backgroundColor: this.state.info.colour ? this.state.info.colour : 'rgb(0, 178, 210)', height: '35px', borderRadius: '5px', padding: '16px 6px 6px 6px', textIndent: '16px' }}>
-                                                <b>Posts</b>
-                                            </div>
-                                                <Paper component="form" sx={{ p: '32px 4px', display: 'flex', justifyContent: 'center' }}>
-                                                    <PostChart/>
-                                                </Paper>
-                                            </div>
-                                            <div>
-                                            <div style={{ marginTop: '16px', color: 'white', backgroundColor: this.state.info.colour ? this.state.info.colour : 'rgb(0, 178, 210)', height: '35px', borderRadius: '5px', padding: '16px 6px 6px 6px', textIndent: '16px' }}>
-                                                <b>Favours</b>
-                                            </div>
-                                                <Paper component="form" sx={{ p: '32px 4px', display: 'flex', justifyContent: 'center' }}>
-                                                    <FavChart/>
-                                                </Paper>
-                                            </div>
-                                            <div>
-                                                <div style={{ marginTop: '16px', color: 'white', backgroundColor: this.state.info.colour, height: '35px', borderRadius: '5px', padding: '16px 6px 6px 6px', textIndent: '16px' }}>
-                                                    <b>Community Moderators</b>
-                                                </div>
-                                                <Item style={{ display: 'flex', flexDirection: 'column', padding: '32px' }}>
-                                                    {this.state.mod.map(mods => {
-                                                        return (
-                                                            <>
-                                                                <Box key={mods.user_name} style={{ marginTop: '8px', display: 'flex' }}>
-                                                                    <span style={{ margin: '8px 0 auto 0' }}>
-                                                                        {mods.is_admin === true ? <LocalPoliceIcon /> : <ShieldIcon />}
-                                                                    </span>
-                                                                    <span style={{ margin: 'auto 0 auto 4px' }}>
-                                                                        <b>{mods.is_admin === true ? 'Admin Moderator' : 'Moderator'}</b>
-                                                                    </span>
-                                                                    <span style={{ margin: 'auto 0 auto 8px' }}>
-                                                                        u/{mods.user_name}
-                                                                    </span>
-                                                                    <Button
-                                                                        style={{ margin: 'auto 0 auto auto', textTransform: 'none' }}
-                                                                        variant='outlined'
-                                                                        size='small'
-                                                                        onClick={() => {
-                                                                            this.props.navigate({
-                                                                                pathname: `/user/${mods.user_name}/profile/overview`,
-                                                                                replace: true,
-                                                                            })
-                                                                        }}
-                                                                    >
-                                                                        View
-                                                                    </Button>
-                                                                    {this.state.isModAdmin === true && this.props.userInfo.username !== mods.user_name &&
-                                                                    <Button
-                                                                        style={{ margin: 'auto 0 auto 16px', textTransform: 'none' }}
-                                                                        variant='contained'
-                                                                        size='small'
-                                                                        onClick={() => {
-                                                                            this.handleUpdateMods(mods.user_name, !mods.is_admin);
-                                                                        }}
-                                                                    >
-                                                                        {mods.is_admin ? 'Demote' : 'Promote'}
-                                                                    </Button>}
-                                                                    {this.state.isModAdmin === true  && this.props.userInfo.username !== mods.user_name &&
-                                                                    <Button
-                                                                        style={{ margin: 'auto 0 auto 16px', textTransform: 'none' }}
-                                                                        variant='contained'
-                                                                        size='small'
-                                                                        color={"secondary"}
-                                                                        onClick={() => {
-                                                                            this.handleDeleteMod(mods.user_name)
-                                                                        }}
-                                                                    >
-                                                                        Remove
-                                                                    </Button>}
-                                                                </Box>
-                                                                <Divider style={{margin:'16px 0'}}></Divider>
-                                                            </>
-                                                        )}
-                                                    )}
-                                                    <Box style={{ marginTop: '8px', display: 'flex' }}>
-                                                        <div style={{ marginRight: '16px', display: 'flex', flexGrow: '1' }}>
-                                                            <TextField
-                                                                fullWidth
-                                                                sx={{m:'2px'}}
-                                                                label="User Name"
-                                                                onChange={(e) => {
-                                                                    this.setState({
-                                                                        newMod: e.target.value,
-                                                                    });
-                                                                }}
-                                                            />
-                                                        </div>
-                                                        {this.state.isModAdmin === true &&
-                                                        <FormControlLabel
-                                                            label="Admin"
-                                                            control={
-                                                                <Checkbox
-                                                                checked={this.state.newModAdmin}
-                                                                onChange={() => this.handleAdminCheck()}
-                                                                />
-                                                            }
-                                                        />}
-                                                        <Button
-                                                            style={{ margin: 'auto 0 auto 16px', textTransform: 'none' }}
-                                                            variant='contained'
-                                                            size='small'
-                                                            color={"primary"}
-                                                            onClick={() => {
-                                                                this.handleNewMods(this.state.newMod, this.state.newModAdmin);
-                                                            }}
-                                                        >
-                                                            Add New Moderator
-                                                        </Button>
-                                                    </Box>
-                                                </Item>
-                                            </div>
-                                        </Stack>
-                                    </Box>
-                                </Grid>
-                                <Grid xs style={{ position: 'relative' }}>
-                                    <div style={{ width: '100%', color: 'white', backgroundColor: this.state.info.colour, height: '35px', borderRadius: '5px', padding: '16px 6px 6px 6px', textIndent: '16px' }}>
-                                        <b>Community Profile</b>
-                                    </div>
-                                    <Item>
-                                        <div style={{ margin: '16px 32px 0 32px', textAlign: 'center' }}>
-                                            <div style={{ display: 'flex', flexDirection: 'column', padding: '16px' }}>
-                                                <img
-                                                    draggable={false}
-                                                    src={this.state.profile_picture ?
-                                                        this.state.profile_picture:
-                                                        `/static/user-avatar-default.png`}
-                                                    className={'profile-page-picture'}
-                                                    alt="community profile"
-                                                />
-                                                <Button
-                                                    style={{ margin: 'auto', marginTop: '16px', textTransform: 'none', backgroundColor: this.state.info.colour }}
-                                                    onClick={() => { this.fileRef.current.click() }}
-                                                    variant='contained'
-                                                >
-                                                    <input
-                                                        ref={this.fileRef}
-                                                        type="file"
-                                                        style={{ display: 'none' }}
-                                                        onChange={this.onFileChange}
-                                                        accept="image/png, image/gif, image/jpeg, image/jpg"
-                                                    />
-                                                    Select Community Profile Picture
-                                                </Button>
-                                                <div style={{ margin: '16px auto', padding: '8px', textAlign: 'center', border: 'solid 1px rgb(0, 178, 210)', borderRadius: '5px' }}>
-                                                    {this.state.selectedFile ? this.state.selectedFile.name : 'No file is selected!'}
-                                                </div>
-                                                <Button
-                                                    style={{ margin: 'auto', textTransform: 'none', backgroundColor: !this.state.selectedFile ? 'rgba(0, 0, 0, 0.24)' : this.state.info.colour }}
-                                                    disabled={!this.state.selectedFile}
-                                                    onClick={this.onProfilePictureChange}
-                                                    variant='contained'
-                                                >
-                                                    Change Community Profile Picture
-                                                </Button>
-                                            </div>
-                                        </div>
-                                        <div style={{ margin: '16px 32px 0 32px', textAlign: 'center' }}>
+        followerData[3].Value= this.state.stats && this.state.stats[0].follower_count ? this.state.stats[0].follower_count : "0";
+        postData[3].Value= this.state.stats && this.state.stats[0].post_count ? this.state.stats[0].post_count : "0";
+        favData[3].Value= this.state.stats && this.state.stats[0].fav_total ? this.state.stats[0].fav_total : "0";
+        return(
+            <Grid container spacing={6} style={{ margin: '16px 280px' }}>
+                <Grid item xs={7.5}>
+                    <Box sx={{ width: '100%' }}>
+                        <Stack spacing={2}>
+                            <div>
+                                <div style={{ color: 'white', backgroundColor: this.state.info.colour ? this.state.info.colour : 'rgb(0, 178, 210)', height: '35px', borderRadius: '5px', padding: '16px 6px 6px 6px', textIndent: '16px' }}>
+                                    <b>Community Statistics</b>
+                                </div>
+                                <div>
+                                    <Paper component="form" sx={{ p: '2px 4px', display: 'flex', justifyContent: 'center' }}>
+                                        <table>
+                                            <thead>
+                                                <tr>
+                                                    <td>Follower Count</td>
+                                                    <td>Post Count</td>
+                                                    <td>Total Favours</td>
+                                                    <td>Moderator Count</td>
+                                                    <td>No. of banned users</td>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                <tr>
+                                                    <td>{followerData[3].Value}</td>
+                                                    <td>{postData[3].Value}</td>
+                                                    <td>{favData[3].Value}</td>
+                                                    <td>{this.state.mod ? `${this.state.mod.length}` : '0'}</td>
+                                                    <td>{this.state.ban ? `${this.state.ban.filter(b => b.is_approved).length}` : '0'}</td>
+                                                </tr>
+                                            </tbody>
+                                        </table>
+                                    </Paper>
+                                </div>
+                            </div>
+                            <div>
+                            <div style={{ marginTop: '16px', color: 'white', backgroundColor: this.state.info.colour ? this.state.info.colour : 'rgb(0, 178, 210)', height: '35px', borderRadius: '5px', padding: '16px 6px 6px 6px', textIndent: '16px' }}>
+                                <b>Followers</b>
+                            </div>
+                                <Paper component="form" sx={{ p: '32px 4px', display: 'flex', justifyContent: 'center' }}>
+                                    <FollowerChart/>
+                                </Paper>
+                            </div>
+                            <div>
+                            <div style={{ marginTop: '16px', color: 'white', backgroundColor: this.state.info.colour ? this.state.info.colour : 'rgb(0, 178, 210)', height: '35px', borderRadius: '5px', padding: '16px 6px 6px 6px', textIndent: '16px' }}>
+                                <b>Posts</b>
+                            </div>
+                                <Paper component="form" sx={{ p: '32px 4px', display: 'flex', justifyContent: 'center' }}>
+                                    <PostChart/>
+                                </Paper>
+                            </div>
+                            <div>
+                            <div style={{ marginTop: '16px', color: 'white', backgroundColor: this.state.info.colour ? this.state.info.colour : 'rgb(0, 178, 210)', height: '35px', borderRadius: '5px', padding: '16px 6px 6px 6px', textIndent: '16px' }}>
+                                <b>Favours</b>
+                            </div>
+                                <Paper component="form" sx={{ p: '32px 4px', display: 'flex', justifyContent: 'center' }}>
+                                    <FavChart/>
+                                </Paper>
+                            </div>
+                            <div>
+                                <div style={{ marginTop: '16px', color: 'white', backgroundColor: this.state.info.colour, height: '35px', borderRadius: '5px', padding: '16px 6px 6px 6px', textIndent: '16px' }}>
+                                    <b>Community Moderators</b>
+                                </div>
+                                <Item style={{ display: 'flex', flexDirection: 'column', padding: '32px' }}>
+                                    {this.state.mod.map(mods => {
+                                        return (
+                                            <>
+                                                <Box key={mods.user_name} style={{ marginTop: '8px', display: 'flex' }}>
+                                                    <span style={{ margin: '8px 0 auto 0' }}>
+                                                        {mods.is_admin === true ? <LocalPoliceIcon /> : <ShieldIcon />}
+                                                    </span>
+                                                    <span style={{ margin: 'auto 0 auto 4px' }}>
+                                                        <b>{mods.is_admin === true ? 'Admin Moderator' : 'Moderator'}</b>
+                                                    </span>
+                                                    <span style={{ margin: 'auto 0 auto 8px' }}>
+                                                        u/{mods.user_name}
+                                                    </span>
+                                                    <Button
+                                                        style={{ margin: 'auto 0 auto auto', textTransform: 'none' }}
+                                                        variant='outlined'
+                                                        size='small'
+                                                        onClick={() => {
+                                                            this.props.navigate({
+                                                                pathname: `/user/${mods.user_name}/profile/overview`,
+                                                                replace: true,
+                                                            })
+                                                        }}
+                                                    >
+                                                        View
+                                                    </Button>
+                                                    {this.state.isModAdmin === true && this.props.userInfo.username !== mods.user_name &&
+                                                    <Button
+                                                        style={{ margin: 'auto 0 auto 16px', textTransform: 'none' }}
+                                                        variant='contained'
+                                                        size='small'
+                                                        onClick={() => {
+                                                            this.handleUpdateMods(mods.user_name, !mods.is_admin);
+                                                        }}
+                                                    >
+                                                        {mods.is_admin ? 'Demote' : 'Promote'}
+                                                    </Button>}
+                                                    {this.state.isModAdmin === true  && this.props.userInfo.username !== mods.user_name &&
+                                                    <Button
+                                                        style={{ margin: 'auto 0 auto 16px', textTransform: 'none' }}
+                                                        variant='contained'
+                                                        size='small'
+                                                        color={"secondary"}
+                                                        onClick={() => {
+                                                            this.handleDeleteMod(mods.user_name)
+                                                        }}
+                                                    >
+                                                        Remove
+                                                    </Button>}
+                                                </Box>
+                                                <Divider style={{margin:'16px 0'}}></Divider>
+                                            </>
+                                        )}
+                                    )}
+                                    <Box style={{ marginTop: '8px', display: 'flex' }}>
+                                        <div style={{ marginRight: '16px', display: 'flex', flexGrow: '1' }}>
                                             <TextField
                                                 fullWidth
-                                                multiline
-                                                rows='5'
-                                                size="small"
+                                                sx={{m:'2px'}}
+                                                label="User Name"
                                                 onChange={(e) => {
-                                                    this.setState({ description: e.target.value })
+                                                    this.setState({
+                                                        newMod: e.target.value,
+                                                    });
                                                 }}
-                                                value={this.state.description}
-                                            />
-                                            <Button
-                                                disabled={!this.state.description || this.state.description === ''}
-                                                style={{
-                                                    margin: '24px auto',
-                                                    width: '300px',
-                                                    textTransform: 'none',
-                                                    backgroundColor: !this.state.description || this.state.description === '' ? 'rgba(0, 0, 0, 0.24)' : this.state.info.colour,
-                                                }}
-                                                variant='contained'
-                                                color={'primary'}
-                                                onClick={() => {
-                                                    this.props.setIsLoading(true);
-                                                    this.handleDescChange(this.state.description);
-                                                }}
-                                            >
-                                                Change Community Description
-                                            </Button>
-                                        </div>
-                                        <div style={{ padding: '0 32px 16px 32px' }}>
-                                            <SketchPicker
-                                                width={'auto'}
-                                                color = {this.state.info.colour}
-                                                onChangeComplete={this.handleComColourChange}
                                             />
                                         </div>
-                                    </Item>
-                                    <div style={{ marginTop: '32px', color: 'white', backgroundColor: this.state.info.colour ? this.state.info.colour : 'rgb(0, 178, 210)', height: '35px', borderRadius: '5px', padding: '16px 6px 6px 6px', textIndent: '16px' }}>
-                                        <b>Community Colour</b>
-                                    </div>
-                                    <Item style={{ padding: '32px' }}>
-                                    </Item>
-                                    <div style={{ marginTop: '32px', color: 'white', backgroundColor: this.state.info.colour ? this.state.info.colour : 'rgb(0, 178, 210)', height: '35px', borderRadius: '5px', padding: '16px 6px 6px 6px', textIndent: '16px' }}>
-                                        <b>Community Banlist</b>
-                                    </div>
-                                    <Item style={{ padding: '12px 32px 32px 32px' }}>
-                                        <Stack spacing={2} direction="column">
-                                            <Box style={{ textAlign: 'left' }}>
-                                                <div>
-                                                    {this.state.bans?.length === 0 &&
-                                                    <div style={{ marginTop: '16px' }}>
-                                                        No users banned or reported!
-                                                    </div>}
-                                                    {this.state.bans?.map((ban, index) => {
-                                                        return(
-                                                        <>
-                                                            <Box key={ban.user_name} style={{ marginTop: '8px', display: 'flex' }}>
-                                                                <span style={{ margin: 'auto', display: 'flex', flexGrow: '1' }}>
-                                                                    u/{ban.user_name}
-                                                                </span>
-                                                                {!ban.is_approved &&
-                                                                <Button
-                                                                    style={{ margin: 'auto 0 auto 16px', textTransform: 'none' }}
-                                                                    variant='contained'
-                                                                    size='small'
-                                                                    color={"primary"}
-                                                                    onClick={() => {
-                                                                        this.handleCheck(ban.user_name, index)
-                                                                    }}
-                                                                >
-                                                                    Ban u/{ban.user_name}
-                                                                </Button>}
-                                                                <Button
-                                                                    style={{ margin: 'auto 0 auto 16px', textTransform: 'none' }}
-                                                                    variant='contained'
-                                                                    size='small'
-                                                                    color={"secondary"}
-                                                                    onClick={() => {
-                                                                        this.handleDelete(ban.user_name, index)
-                                                                    }}
-                                                                >
-                                                                    {ban.is_approved ? `Unban u/${ban.user_name}` : 'Remove'}
-                                                                </Button>
-                                                            </Box>
-                                                            <Divider style={{margin:'16px 0'}}></Divider>
-                                                        </>
-                                                        )
-                                                    })}
-                                                </div>
+                                        {this.state.isModAdmin === true &&
+                                        <FormControlLabel
+                                            label="Admin"
+                                            control={
+                                                <Checkbox
+                                                checked={this.state.newModAdmin}
+                                                onChange={() => this.handleAdminCheck()}
+                                                />
+                                            }
+                                        />}
+                                        <Button
+                                            style={{ margin: 'auto 0 auto 16px', textTransform: 'none' }}
+                                            variant='contained'
+                                            size='small'
+                                            color={"primary"}
+                                            onClick={() => {
+                                                this.handleNewMods(this.state.newMod, this.state.newModAdmin);
+                                            }}
+                                        >
+                                            Add New Moderator
+                                        </Button>
+                                    </Box>
+                                </Item>
+                            </div>
+                        </Stack>
+                    </Box>
+                </Grid>
+                <Grid xs style={{ position: 'relative' }}>
+                    <div style={{ width: '100%', color: 'white', backgroundColor: this.state.info.colour, height: '35px', borderRadius: '5px', padding: '16px 6px 6px 6px', textIndent: '16px' }}>
+                        <b>Community Profile</b>
+                    </div>
+                    <Item>
+                        <div style={{ margin: '16px 32px 0 32px', textAlign: 'center' }}>
+                            <div style={{ display: 'flex', flexDirection: 'column', padding: '16px' }}>
+                                <img
+                                    draggable={false}
+                                    src={this.state.profile_picture ?
+                                        this.state.profile_picture:
+                                        `/static/user-avatar-default.png`}
+                                    className={'profile-page-picture'}
+                                    alt="community profile"
+                                />
+                                <Button
+                                    style={{ margin: 'auto', marginTop: '16px', textTransform: 'none', backgroundColor: this.state.info.colour }}
+                                    onClick={() => { this.fileRef.current.click() }}
+                                    variant='contained'
+                                >
+                                    <input
+                                        ref={this.fileRef}
+                                        type="file"
+                                        style={{ display: 'none' }}
+                                        onChange={this.onFileChange}
+                                        accept="image/png, image/gif, image/jpeg, image/jpg"
+                                    />
+                                    Select Community Profile Picture
+                                </Button>
+                                <div style={{ margin: '16px auto', padding: '8px', textAlign: 'center', border: 'solid 1px rgb(0, 178, 210)', borderRadius: '5px' }}>
+                                    {this.state.selectedFile ? this.state.selectedFile.name : 'No file is selected!'}
+                                </div>
+                                <Button
+                                    style={{ margin: 'auto', textTransform: 'none', backgroundColor: !this.state.selectedFile ? 'rgba(0, 0, 0, 0.24)' : this.state.info.colour }}
+                                    disabled={!this.state.selectedFile}
+                                    onClick={this.onProfilePictureChange}
+                                    variant='contained'
+                                >
+                                    Change Community Profile Picture
+                                </Button>
+                            </div>
+                        </div>
+                        <div style={{ margin: '16px 32px 0 32px', textAlign: 'center' }}>
+                            <TextField
+                                fullWidth
+                                multiline
+                                rows='5'
+                                size="small"
+                                onChange={(e) => {
+                                    this.setState({ description: e.target.value })
+                                }}
+                                value={this.state.description}
+                            />
+                            <Button
+                                disabled={!this.state.description || this.state.description === ''}
+                                style={{
+                                    margin: '24px auto',
+                                    width: '300px',
+                                    textTransform: 'none',
+                                    backgroundColor: !this.state.description || this.state.description === '' ? 'rgba(0, 0, 0, 0.24)' : this.state.info.colour,
+                                }}
+                                variant='contained'
+                                color={'primary'}
+                                onClick={() => {
+                                    this.props.setIsLoading(true);
+                                    this.handleDescChange(this.state.description);
+                                }}
+                            >
+                                Change Community Description
+                            </Button>
+                        </div>
+                        <div style={{ padding: '0 32px 16px 32px' }}>
+                            <SketchPicker
+                                width={'auto'}
+                                color = {this.state.info.colour}
+                                onChangeComplete={this.handleComColourChange}
+                            />
+                        </div>
+                    </Item>
+                    <div style={{ marginTop: '32px', color: 'white', backgroundColor: this.state.info.colour ? this.state.info.colour : 'rgb(0, 178, 210)', height: '35px', borderRadius: '5px', padding: '16px 6px 6px 6px', textIndent: '16px' }}>
+                        <b>Community Colour</b>
+                    </div>
+                    <Item style={{ padding: '32px' }}>
+                    </Item>
+                    <div style={{ marginTop: '32px', color: 'white', backgroundColor: this.state.info.colour ? this.state.info.colour : 'rgb(0, 178, 210)', height: '35px', borderRadius: '5px', padding: '16px 6px 6px 6px', textIndent: '16px' }}>
+                        <b>Community Banlist</b>
+                    </div>
+                    <Item style={{ padding: '12px 32px 32px 32px' }}>
+                        <Stack spacing={2} direction="column">
+                            <Box style={{ textAlign: 'left' }}>
+                                <div>
+                                    {this.state.bans?.length === 0 &&
+                                    <div style={{ marginTop: '16px' }}>
+                                        No users banned or reported!
+                                    </div>}
+                                    {this.state.bans?.map((ban, index) => {
+                                        return(
+                                        <>
+                                            <Box key={ban.user_name} style={{ marginTop: '8px', display: 'flex' }}>
+                                                <span style={{ margin: 'auto', display: 'flex', flexGrow: '1' }}>
+                                                    u/{ban.user_name}
+                                                </span>
+                                                {!ban.is_approved &&
+                                                <Button
+                                                    style={{ margin: 'auto 0 auto 16px', textTransform: 'none' }}
+                                                    variant='contained'
+                                                    size='small'
+                                                    color={"primary"}
+                                                    onClick={() => {
+                                                        this.handleCheck(ban.user_name, index)
+                                                    }}
+                                                >
+                                                    Ban u/{ban.user_name}
+                                                </Button>}
+                                                <Button
+                                                    style={{ margin: 'auto 0 auto 16px', textTransform: 'none' }}
+                                                    variant='contained'
+                                                    size='small'
+                                                    color={"secondary"}
+                                                    onClick={() => {
+                                                        this.handleDelete(ban.user_name, index)
+                                                    }}
+                                                >
+                                                    {ban.is_approved ? `Unban u/${ban.user_name}` : 'Remove'}
+                                                </Button>
                                             </Box>
-                                        </Stack>
-                                    </Item>
-                                </Grid>
-                            </Grid>
-                     );
-                })}
-            </>
-        )
+                                            <Divider style={{margin:'16px 0'}}></Divider>
+                                        </>
+                                        )
+                                    })}
+                                </div>
+                            </Box>
+                        </Stack>
+                    </Item>
+                </Grid>
+            </Grid>
+        );
     }
 
     onFileChange = (e) => {

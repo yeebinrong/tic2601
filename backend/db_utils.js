@@ -335,12 +335,17 @@ const retrieveFavStatsDB = (community) => {
 
 const retrieveCommunityStatsDB = (community) => {
     return POOL.query(
-           `SELECT c.community_name, COUNT(DISTINCT fc.user_name) AS follower_count, COUNT(DISTINCT m.user_name) AS mod_count, COUNT(DISTINCT p.post_id) AS post_count, SUM(f.favour_point) AS fav_total
+           `SELECT c.community_name, COUNT(DISTINCT fc.user_name) AS follower_count, COUNT(DISTINCT m.user_name) AS mod_count, COUNT(DISTINCT p.post_id) AS post_count,
+           COALESCE(
+            (SELECT SUM(fp.favour_point) FROM (
+                SELECT favour_point FROM post_favours WHERE community_name = c.community_name
+                    UNION ALL
+                SELECT favour_point FROM comment_favours WHERE community_name = c.community_name)
+            as fp), 0) AS fav_total
            FROM community c
            LEFT JOIN followed_communities fc ON c.community_name = fc.community_name
            LEFT JOIN moderators m ON c.community_name = m.community_name
            LEFT JOIN posts p ON c.community_name = p.community_name
-           LEFT JOIN post_favours f ON p.post_id = f.post_id AND f.community_name = p.community_name
            GROUP BY c.community_name
            HAVING c.community_name =  $1;`,
             [
