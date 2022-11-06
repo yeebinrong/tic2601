@@ -152,13 +152,9 @@ const insertOneCommunityAndReturnName = (userName, communityName) => {
 const insertTextPost = (username, selectedCommunity, title, content, selectedFlair) => {
     return POOL.query(
         `WITH P_ROWS AS
-            (INSERT INTO posts (post_id, community_name, title, user_name, flair)
+            (INSERT INTO posts (post_id, community_name, title, user_name, flair, content)
                 VALUES (COALESCE((SELECT max(post_id) +1 FROM posts WHERE community_name = $1), 1),
-                $1, $2, $3, $4) RETURNING post_id),
-            PC_ROWS AS
-            (INSERT INTO post_contents (community_name, post_id, content)
-            SELECT $1, post_id, $5
-                FROM P_ROWS)
+                $1, $2, $3, $4, $5) RETURNING post_id)
         SELECT post_id
         FROM P_ROWS;`,
         [
@@ -174,13 +170,9 @@ const insertTextPost = (username, selectedCommunity, title, content, selectedFla
 const insertUrlPost = (username, selectedCommunity, title, url, selectedFlair) => {
     return POOL.query(
         `WITH P_ROWS AS
-            (INSERT INTO posts (post_id, community_name, title, user_name, flair, url)
+            (INSERT INTO posts (post_id, community_name, title, user_name, flair, url, content)
                 VALUES (COALESCE((SELECT max(post_id) +1 FROM posts WHERE community_name = $1), 1),
-                $1, $2, $3, $4, $5) RETURNING post_id),
-            PC_ROWS AS
-            (INSERT INTO post_contents (community_name, post_id, content)
-            SELECT $1, post_id, $5
-                FROM P_ROWS)
+                $1, $2, $3, $4, $5, $5) RETURNING post_id)
         SELECT post_id
         FROM P_ROWS;`,
         [
@@ -303,13 +295,13 @@ const updateModsDB = (community,username,isadmin) => {
 
 const retrieveFollowerStatsDB = (community) => {
     return POOL.query(
-        `SELECT COUNT(user_name) AS follow_total, 0 AS days_ago FROM followed_communities WHERE community_name = $1 AND followed_date <= (CURRENT_DATE)
+        `SELECT COUNT(user_name) AS follow_total, 0 AS days_ago FROM followed_communities WHERE community_name = $1 AND followed_datetime <= (CURRENT_DATE)
         UNION
-        SELECT COUNT(user_name) AS follow_total, 7 AS days_ago FROM followed_communities WHERE community_name = $1 AND followed_date <= (CURRENT_DATE-7)
+        SELECT COUNT(user_name) AS follow_total, 7 AS days_ago FROM followed_communities WHERE community_name = $1 AND followed_datetime <= (CURRENT_DATE-7)
         UNION
-        SELECT COUNT(user_name) AS follow_total, 14 AS days_ago FROM followed_communities WHERE community_name = $1 AND followed_date <= (CURRENT_DATE-14)
+        SELECT COUNT(user_name) AS follow_total, 14 AS days_ago FROM followed_communities WHERE community_name = $1 AND followed_datetime <= (CURRENT_DATE-14)
         UNION
-        SELECT COUNT(user_name) AS follow_total, 21 AS days_ago FROM followed_communities WHERE community_name = $1 AND followed_date <= (CURRENT_DATE-28)
+        SELECT COUNT(user_name) AS follow_total, 21 AS days_ago FROM followed_communities WHERE community_name = $1 AND followed_datetime <= (CURRENT_DATE-28)
         ORDER BY days_ago desc;`,
          [
              escapeQuotes(community),

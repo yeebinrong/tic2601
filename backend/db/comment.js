@@ -55,7 +55,7 @@ exports.createComment = (communityName, postId, commenter, content, replyTo) => 
 
 exports.updateComment = (commentId, content, communityName, postId) => {
     return POOL.query(
-        'UPDATE comments SET content = $1, is_edited = \'Y\' WHERE comment_id = $2 AND community_name = $3 AND post_id = $4 RETURNING *',
+        'UPDATE comments SET content = $1, is_edited = TRUE WHERE comment_id = $2 AND community_name = $3 AND post_id = $4 RETURNING *',
         [content, commentId, communityName, postId]);
 };
 
