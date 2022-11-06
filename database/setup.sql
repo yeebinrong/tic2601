@@ -118,8 +118,6 @@ CREATE TABLE post_contents (
 	community_name VARCHAR(21) NOT NULL,
 	post_id INTEGER NOT NULL,
 	content VARCHAR(1000) NOT NULL,
-	is_edited BOOLEAN NOT NULL DEFAULT FALSE,
-	datetime_edited TIMESTAMP DEFAULT NULL,
 	PRIMARY KEY (post_id, community_name),
 	CONSTRAINT PFK
 	FOREIGN KEY (community_name, post_id)
