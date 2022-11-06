@@ -2,14 +2,9 @@
 CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
 
 -- [Create enums]
--- TrueOrFalse enum
 DO $$
 BEGIN
-	DROP TYPE trueorfalse CASCADE;
 	DROP TYPE flairenum CASCADE;
-    IF NOT EXISTS (SELECT 1 FROM pg_type WHERE typname = 'trueorfalse') THEN
-        CREATE TYPE TrueOrFalse AS ENUM ('Y', 'N');
-    END IF;
     IF NOT EXISTS (SELECT 1 FROM pg_type WHERE typname = 'flairenum') THEN
         CREATE TYPE FlairEnum AS ENUM ('Text', 'News', 'Discussion', 'Photo', 'Video');
     END IF;
@@ -22,19 +17,10 @@ END$$;
 CREATE OR REPLACE FUNCTION searchPostWithParamsFunc(
 	currentUser text, orderParam text, userFilter text, flairFilter text, communityFilter text, queryFilter text)
   RETURNS TABLE(
-	post_id INTEGER,
-	community_name VARCHAR(21),
-	user_name VARCHAR(30),
-	age INTERVAL,
-	datetime_created TIMESTAMP,
-	title VARCHAR(300),
-	flair FlairEnum,
-	fav_point BIGINT,
-	is_favour INTEGER,
-	comment_count BIGINT,
-	view_count INTEGER,
-	url VARCHAR(2048),
-        profile_picture VARCHAR(256)
+	post_id INTEGER, community_name VARCHAR(21), user_name VARCHAR(30),
+	age INTERVAL, datetime_created TIMESTAMP, title VARCHAR(300), flair FlairEnum,
+	fav_point BIGINT, is_favour INTEGER, comment_count BIGINT, view_count INTEGER,
+	url VARCHAR(2048), profile_picture VARCHAR(256), post_profile_picture VARCHAR(256)
   )
   LANGUAGE plpgsql AS
 $func$
@@ -42,21 +28,20 @@ DECLARE
         paramQuery text := ' WHERE ';
 		appendParam text := ' ';
 		BEGIN
-		raise notice 'userFilter: %', userFilter;
         IF userFilter != '' THEN
-            paramQuery = paramQuery || appendParam || 'user_name = ' || '''' || userFilter || '''';
+            paramQuery = paramQuery || appendParam || 'user_name = ''' || userFilter || '''';
 			appendParam = ' AND ';
         END IF;
         IF flairFilter != '' THEN
-            paramQuery = paramQuery || appendParam || 'flair = ' || '''' || flairFilter || '''';
+            paramQuery = paramQuery || appendParam || 'flair = ''' || flairFilter || '''';
 			appendParam = ' AND ';
         END IF;
         IF communityFilter != '' THEN
-            paramQuery = paramQuery || appendParam || 'community_name = ' || '''' || communityFilter || '''';
+            paramQuery = paramQuery || appendParam || 'community_name = ''' || communityFilter || '''';
 			appendParam = ' AND ';
         END IF;
         IF queryFilter != '' THEN
-            paramQuery = paramQuery || appendParam || 'title ILIKE ' || '''' || '%' || queryFilter || '%' || '''';
+            paramQuery = paramQuery || appendParam || 'to_tsvector(title) @@ to_tsquery(''' || queryFilter || ''')';
 			appendParam = ' AND ';
         END IF;
 		CASE orderParam
@@ -68,18 +53,18 @@ DECLARE
 				paramQuery = paramQuery || ' ORDER BY fav_point DESC';
 			ELSE
 		END CASE;
-		RAISE NOTICE 'Value: %', 'SELECT * FROM posts' || paramQuery;
         RETURN QUERY EXECUTE
         'WITH all_communities AS
-                (SELECT ac.community_name, p.user_name, AGE(CURRENT_TIMESTAMP, p.datetime_created), p.datetime_created, p.title, p.flair, p.url, p.post_id, p.view_count,
-                COALESCE((SELECT SUM(favour_point) FROM post_favours WHERE post_id = p.post_id AND community_name = p.community_name), 0) AS fav_point, fp.favour_point AS is_favour,
-                (SELECT count(*) FROM comments WHERE post_id = p.post_id AND community_name = p.community_name) AS comment_count, u.profile_picture
-                FROM community ac
+			(SELECT ac.community_name, p.user_name, AGE(CURRENT_TIMESTAMP, p.datetime_created), p.datetime_created, p.title, p.flair, p.url, p.post_id, p.view_count,
+				(SELECT favour_point FROM total_post_favours WHERE post_id = p.post_id AND community_name = p.community_name) AS fav_point, fp.favour_point AS is_favour,
+				(SELECT count(*) FROM comments WHERE post_id = p.post_id AND community_name = p.community_name) AS comment_count, u.profile_picture,
+				(SELECT profile_picture FROM community WHERE community_name = ac.community_name) as post_profile_picture
+			FROM community ac
                 INNER JOIN posts p ON p.community_name = ac.community_name AND p.datetime_deleted IS NULL
                 LEFT JOIN post_favours fp ON fp.post_id = p.post_id AND fp.community_name = p.community_name AND fp.giver = $1
                 LEFT JOIN users u ON u.user_name = p.user_name
             GROUP BY ac.community_name, p.user_name, p.datetime_created, p.title, p.flair, p.url, p.post_id, p.view_count, p.community_name, fp.favour_point, u.profile_picture)
-            SELECT DISTINCT post_id, community_name, user_name, age, datetime_created, title, flair, fav_point, is_favour, comment_count, view_count, url, profile_picture
+            SELECT DISTINCT post_id, community_name, user_name, age, datetime_created, title, flair, fav_point, is_favour, comment_count, view_count, url, profile_picture, post_profile_picture
             FROM all_communities' || paramQuery USING currentUser;
 END;
 $func$;
@@ -133,7 +118,7 @@ CREATE TABLE post_contents (
 	community_name VARCHAR(21) NOT NULL,
 	post_id INTEGER NOT NULL,
 	content VARCHAR(1000) NOT NULL,
-	is_edited TrueOrFalse NOT NULL DEFAULT 'N',
+	is_edited BOOLEAN NOT NULL DEFAULT FALSE,
 	datetime_edited TIMESTAMP DEFAULT NULL,
 	PRIMARY KEY (post_id, community_name),
 	CONSTRAINT PFK
@@ -151,8 +136,8 @@ CREATE TABLE comments(
 	replying_to INTEGER DEFAULT NULL,
 	commenter VARCHAR(30) NOT NULL REFERENCES users(user_name) ON DELETE CASCADE ON UPDATE CASCADE,
 	datetime_created TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-	is_deleted TrueOrFalse NOT NULL DEFAULT 'N',
-	is_edited TrueOrFalse NOT NULL DEFAULT 'N',
+	is_deleted BOOLEAN NOT NULL DEFAULT FALSE,
+	is_edited BOOLEAN NOT NULL DEFAULT FALSE,
 	content VARCHAR(1000) NOT NULL,
 	PRIMARY KEY (community_name, post_id, comment_id),
 	CONSTRAINT PFK
@@ -206,7 +191,7 @@ DROP TABLE IF EXISTS moderators CASCADE;
 CREATE TABLE moderators(
 	community_name VARCHAR(21) NOT NULL REFERENCES community(community_name) ON DELETE CASCADE ON UPDATE CASCADE,
 	user_name VARCHAR(30) NOT NULL REFERENCES users(user_name) ON DELETE CASCADE ON UPDATE CASCADE,
-	is_admin TrueOrFalse NOT NULL DEFAULT 'N',
+	is_admin BOOLEAN NOT NULL DEFAULT FALSE,
 	PRIMARY KEY (community_name, user_name)
 );
 
@@ -215,13 +200,54 @@ DROP TABLE IF EXISTS banlist CASCADE;
 CREATE TABLE banlist(
 	user_name VARCHAR(30) NOT NULL REFERENCES users(user_name) ON DELETE CASCADE ON UPDATE CASCADE,
 	community_name VARCHAR(21) NOT NULL,
-	is_approved TrueOrFalse NOT NULL DEFAULT 'N',
+	is_approved BOOLEAN NOT NULL DEFAULT FALSE,
 	PRIMARY KEY (community_name, user_name),
 	CONSTRAINT PFK
 	FOREIGN KEY (community_name)
 	REFERENCES community(community_name)
 	ON DELETE CASCADE ON UPDATE CASCADE
 );
+
+DROP VIEW IF EXISTS total_community_favours;
+CREATE OR REPLACE VIEW total_community_favours AS
+	SELECT community_name, COALESCE(
+	(SELECT SUM(favour_point) FROM (
+		SELECT favour_point FROM post_favours WHERE community_name = cm.community_name
+			UNION ALL
+		SELECT favour_point FROM comment_favours WHERE community_name = cm.community_name)
+	as fp), 0) AS favour_point
+	FROM community cm;
+
+DROP VIEW IF EXISTS total_post_favours;
+CREATE OR REPLACE VIEW total_post_favours AS
+	SELECT post_id, community_name, COALESCE(
+		(SELECT SUM(favour_point)
+			FROM post_favours
+			WHERE post_id = p.post_id AND community_name = p.community_name)
+		, 0) as favour_point
+	FROM posts p;
+
+DROP VIEW IF EXISTS total_comment_favours;
+CREATE OR REPLACE VIEW total_comment_favours AS
+	SELECT comment_id, post_id, community_name, COALESCE(
+		(SELECT SUM(favour_point)
+			FROM comment_favours
+			WHERE comment_id = c.comment_id AND post_id = c.post_id AND community_name = c.community_name)
+		, 0) as favour_point
+	FROM comments c;
+
+DROP VIEW IF EXISTS total_user_favours;
+CREATE OR REPLACE VIEW total_user_favours AS
+	SELECT user_name,
+	COALESCE((SELECT SUM(fp.favour_point)
+        FROM
+            (SELECT favour_point
+                FROM post_favours
+                WHERE receiver = u.user_name
+                UNION ALL SELECT favour_point
+                FROM comment_favours
+                WHERE receiver = u.user_name) AS fp), 0) as favour_point
+	FROM users u;
 
 -- Insert default user testaccount
 INSERT into users (user_name, password, email, user_description)
@@ -241,27 +267,27 @@ INSERT INTO community (community_name, description) VALUES ('community_w_no_post
 INSERT INTO community (community_name, description) VALUES ('banned_community', 'testaccount should be banned from this community and not be able to view it');
 -- Insert banlist
 INSERT INTO banlist (community_name, user_name, is_approved)
-	VALUES ('banned_community','testaccount', 'Y');
+	VALUES ('banned_community','testaccount', TRUE);
 INSERT INTO banlist (community_name, user_name, is_approved)
-	VALUES ('test_community', 'test3', 'N');
+	VALUES ('test_community', 'test3', FALSE);
 -- Insert followed community
 INSERT INTO followed_communities (community_name, user_name) VALUES ('test_community', 'testaccount');
 INSERT INTO followed_communities (community_name, user_name) VALUES ('another_community', 'testaccount');
 -- Insert moderators
 INSERT INTO moderators (community_name, user_name, is_admin)
-	VALUES ('test_community', 'testaccount', 'Y');
+	VALUES ('test_community', 'testaccount', TRUE);
 INSERT INTO moderators (community_name, user_name, is_admin)
-	VALUES ('test_community', 'test1', 'N');
+	VALUES ('test_community', 'test1', FALSE);
 INSERT INTO moderators (community_name, user_name, is_admin)
-	VALUES ('test_community', 'test3', 'N');
+	VALUES ('test_community', 'test3', FALSE);
 INSERT INTO moderators (community_name, user_name, is_admin)
-	VALUES ('banned_community', 'test1', 'Y');
+	VALUES ('banned_community', 'test1', TRUE);
 INSERT INTO moderators (community_name, user_name, is_admin)
-	VALUES ('another_community', 'test1', 'Y');
+	VALUES ('another_community', 'test1', TRUE);
 INSERT INTO moderators (community_name, user_name, is_admin)
-	VALUES ('another_community', 'test2', 'Y');
+	VALUES ('another_community', 'test2', TRUE);
 INSERT INTO moderators (community_name, user_name, is_admin)
-	VALUES ('another_community', 'test3', 'Y');
+	VALUES ('another_community', 'test3', TRUE);
 -- Insert Posts data
 --
 INSERT INTO posts (post_id, community_name, title, user_name, flair)
@@ -304,9 +330,9 @@ INSERT INTO post_contents (community_name, post_id, content)
 INSERT INTO comments (comment_id, community_name, post_id, commenter, content)
 	VALUES (1, 'test_community', 6, 'testaccount', 'This should be the first comment.');
 INSERT INTO comments (comment_id, community_name, post_id, replying_to, commenter, is_edited, content)
-	VALUES (2, 'test_community', 6, 1, 'anotheraccount', 'Y', 'The second comment should be replying the first comment and show as edited.');
+	VALUES (2, 'test_community', 6, 1, 'anotheraccount', TRUE, 'The second comment should be replying the first comment and show as edited.');
 INSERT INTO comments (comment_id, community_name, post_id, replying_to, commenter, is_deleted, content)
-	VALUES (3, 'test_community', 6, 2, 'anotheraccount', 'Y', 'The third comment should be replying the second comment and show should show as deleted.');
+	VALUES (3, 'test_community', 6, 2, 'anotheraccount', TRUE, 'The third comment should be replying the second comment and show should show as deleted.');
 INSERT INTO comments (comment_id, community_name, post_id, commenter, content)
 	VALUES (4, 'test_community', 6, 'test1', 'This should be a comment by itself with 3 likes.');
 INSERT INTO comment_favours (community_name, post_id, comment_id, favour_point, giver, receiver)
@@ -348,7 +374,7 @@ INSERT INTO community (community_name)
 INSERT INTO followed_communities (community_name, user_name) VALUES ('Dogs', 'testaccount');
 INSERT INTO followed_communities (community_name, user_name) VALUES ('DogOwners', 'testaccount');
 INSERT INTO moderators (community_name, user_name, is_admin)
-	VALUES ('Dogs', 'Benji', 'Y');
+	VALUES ('Dogs', 'Benji', TRUE);
 INSERT INTO posts (post_id, community_name, title, user_name, datetime_created, flair)
 	VALUES (1, 'Dogs', 'Missing Dog', 'Benji', '20220823', 'Text' );	
 INSERT INTO post_contents (community_name, post_id, content)
@@ -400,15 +426,15 @@ INSERT INTO users(user_name,password, email,user_description)
 INSERT INTO community(community_name, datetime_created )
     VALUES ('GoldenRetri','20220101');
 INSERT INTO moderators (community_name, user_name, is_admin)
-	VALUES ('DogOwners', 'Cody', 'Y');
+	VALUES ('DogOwners', 'Cody', TRUE);
 INSERT INTO moderators (community_name, user_name, is_admin)
-	VALUES ('GoldenRetri', 'Wiley', 'Y');
+	VALUES ('GoldenRetri', 'Wiley', TRUE);
 INSERT INTO moderators (community_name, user_name, is_admin)
-	VALUES ('GoldenRetri', 'Eli', 'Y');
+	VALUES ('GoldenRetri', 'Eli', TRUE);
 INSERT INTO banlist (community_name, user_name, is_approved)
-	VALUES ('DogOwners', 'Tami', 'Y');
+	VALUES ('DogOwners', 'Tami', TRUE);
 INSERT INTO banlist (community_name, user_name, is_approved)
-	VALUES ('Dogs', 'Coco', 'N');
+	VALUES ('Dogs', 'Coco', FALSE);
 INSERT INTO followed_communities (community_name, user_name) VALUES ('Dogs', 'Cody');
 INSERT INTO followed_communities (community_name, user_name) VALUES ('DogOwners', 'Cody');
 INSERT INTO followed_communities (community_name, user_name) VALUES ('GoldenRetri', 'Cody');

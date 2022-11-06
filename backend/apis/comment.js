@@ -1,4 +1,4 @@
-const { createComment, getCommentsById, updateComment, insertOrUpdateFavour } = require('../db/comment');
+const { createComment, getCommentsById, updateComment, insertOrUpdateFavour, setCommentToDeleted } = require('../db/comment');
 
 exports.createComment = async (req, resp) => {
     let username = req.token.username;
@@ -18,6 +18,14 @@ exports.createComment = async (req, resp) => {
         },
     );
 };
+
+exports.deleteComment = async (req, resp) => {
+    const { commentId, communityName, postId } = req.params;
+    await setCommentToDeleted(commentId, postId, communityName);
+    resp.status(200);
+    resp.type('application/json');
+    resp.json({ message: 'ok' });
+}
 
 exports.updateComment = async (req, resp) => {
     let username = req.token.username;
