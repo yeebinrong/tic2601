@@ -494,7 +494,14 @@ const getModeratorCommunities = (userName) => {
 }
 
 const getUserPosts = (userName) => {
-    return POOL.query('SELECT * FROM posts WHERE user_name = $1',
+    return POOL.query(`SELECT p.*, AGE(CURRENT_TIMESTAMP, p.datetime_created), fp.favour_point AS is_favour,
+    (SELECT favour_point FROM total_post_favours WHERE post_id = p.post_id AND community_name = p.community_name) AS fav_point,
+    (SELECT count(*) FROM comments WHERE post_id = p.post_id AND community_name = p.community_name) AS comment_count,
+    u.profile_picture, (SELECT profile_picture FROM community WHERE community_name = p.community_name) as post_profile_picture
+    FROM posts p
+    LEFT JOIN post_favours fp ON fp.post_id = p.post_id AND fp.community_name = p.community_name AND fp.giver = $1
+    LEFT JOIN users u ON u.user_name = $1
+    WHERE p.user_name = $1 AND p.datetime_deleted IS NULL`,
         [
             escapeQuotes(userName),
         ]
@@ -502,7 +509,16 @@ const getUserPosts = (userName) => {
 }
 
 const getUserComments = (userName) => {
-    return POOL.query('SELECT * FROM comments WHERE commenter = $1',
+    return POOL.query(`SELECT c.*, COALESCE(cf.favour_point, 0) AS is_favour, u.profile_picture,
+    (SELECT favour_point FROM total_comment_favours WHERE post_id = c.post_id AND community_name = c.community_name AND comment_id = c.comment_id) AS fav_point
+    FROM comments c
+    LEFT JOIN comment_favours cf
+        ON cf.community_name = c.community_name
+        AND cf.post_id = c.post_id
+        AND cf.comment_id = c.comment_id
+        AND cf.giver = $1
+    LEFT JOIN users u ON u.user_name = $1
+    WHERE c.commenter = $1`,
         [
             escapeQuotes(userName),
         ]
@@ -513,15 +529,25 @@ const getUserComments = (userName) => {
 
 const getUserFavouredPostsOrComments = (userName) => {
     return POOL.query(`
-        SELECT pc.community_name, pc.post_id, pc.comment_id, pc.user_name, pc.flair, pc.datetime_created, pc.title, pc.content, pc.is_favour, pc.favour_points, pc.comment_count
-        FROM (SELECT community_name, post_id, NULL as comment_id, user_name, flair, datetime_created, title, NULL as content, TRUE as is_favour,
-            (SELECT favour_point FROM total_post_favours WHERE post_id = p.post_id AND community_name = p.community_name) AS favour_points,
-            (SELECT count(*) FROM comments WHERE post_id = p.post_id AND community_name = p.community_name) AS comment_count
-        FROM posts p WHERE datetime_deleted IS NULL AND user_name = $1 UNION
-            SELECT community_name, post_id, comment_id, commenter as user_name, NULL as flair, datetime_created, NULL as title, content, TRUE as is_favour,
-            (SELECT favour_point FROM total_comment_favours WHERE post_id = c.post_id AND community_name = c.community_name AND comment_id = c.comment_id) AS favour_points,
-            NULL as comment_count
-        FROM comments c WHERE is_deleted IS FALSE AND commenter = $1) AS pc ORDER BY datetime_created DESC;`,
+        SELECT pc.community_name, pc.url, pc.post_id, pc.comment_id, pc.user_name, pc.flair, pc.datetime_created, pc.title, pc.content, pc.is_favour, pc.fav_point, pc.comment_count,
+        AGE(CURRENT_TIMESTAMP, pc.datetime_created), pc.post_profile_picture, u.profile_picture
+        FROM (SELECT p.community_name, p.url, p.post_id, NULL as comment_id, p.user_name, p.flair, p.datetime_created, p.title, NULL as content, fp.favour_point as is_favour,
+            (SELECT favour_point FROM total_post_favours tpf WHERE tpf.post_id = p.post_id AND tpf.community_name = p.community_name) AS fav_point,
+            (SELECT count(*) FROM comments WHERE post_id = p.post_id AND community_name = p.community_name) AS comment_count,
+            (SELECT profile_picture FROM community WHERE community_name = p.community_name) as post_profile_picture
+        FROM posts p
+            LEFT JOIN post_favours fp ON fp.post_id = p.post_id AND fp.community_name = p.community_name AND fp.giver = $1
+            WHERE p.datetime_deleted IS NULL AND fp.favour_point IS NOT NULL
+        UNION ALL
+            SELECT c.community_name, NULL as url, c.post_id, c.comment_id, c.commenter as user_name, NULL as flair, c.datetime_created, NULL as title, c.content, cfp.favour_point as is_favour,
+            (SELECT favour_point FROM total_comment_favours tcp WHERE tcp.post_id = c.post_id AND tcp.community_name = c.community_name AND comment_id = c.comment_id) AS fav_point,
+            NULL as comment_count, NULL as post_profile_picture
+        FROM comments c
+            LEFT JOIN comment_favours cfp ON cfp.comment_id = c.comment_id AND cfp.post_id = c.post_id AND cfp.community_name = c.community_name AND cfp.giver = $1
+            WHERE is_deleted IS FALSE AND commenter = $1 AND cfp.favour_point IS NOT NULL
+        ) AS pc
+        LEFT JOIN users u ON pc.user_name = u.user_name
+        ORDER BY datetime_created DESC;`,
         [
             escapeQuotes(userName),
         ]

@@ -82,11 +82,14 @@ const DownVote = ({ comment, onFavourChange }) => {
                 <IconButton
                     sx={{ p: '10px' }}
                     aria-label="upfavour"
+                    onClick={() => {
+                        callDownVoteAPI()
+                    }}
                 >
                     {(comment.is_favour === 0 || comment.is_favour === 1) &&
-                        <ForwardIcon className='downFavourStyle' onClick={() => { callDownVoteAPI() }} />}
+                        <ForwardIcon className='downFavourStyle' />}
                     {comment.is_favour === -1 &&
-                        <ForwardIcon className='downFavourColorStyle' onClick={() => { callDownVoteAPI() }} />}
+                        <ForwardIcon className='downFavourColorStyle' />}
                 </IconButton>
             }
 
@@ -390,7 +393,6 @@ const Post = (props) => {
             reloadPostFunc()
         })
     }
-
     return (
         <Grid container spacing={6} style={{ margin: '16px 280px' }}>
             {post &&
@@ -430,7 +432,7 @@ const Post = (props) => {
                                 </div>
                                 <Avatar
                                     sx={{ width: 32, height: 32 }}
-                                    src={post.post_profile_picture ? post.post_profile_picture : `/static/user-avatar-default.png`}>
+                                    src={post.profile_picture ? post.profile_picture : `/static/user-avatar-default.png`}>
                                 </Avatar>
                                 <div style={{ marginLeft: '8px' }}>
                                     {/* <Tooltip title={moment(post.datetime_created).format('DD-MM-YYYY hh:mmA')}> */}
@@ -438,10 +440,13 @@ const Post = (props) => {
                                             <Button
                                                 style={{ textTransform: 'none' }}
                                             >
-                                                Posted by {post.user_name} - {timeSince(post.datetime_created)}
+                                                Posted by {post.user_name}
                                             </Button>
                                         </a>
                                     {/* </Tooltip> */}
+                                    <Tooltip title={moment(post.datetime_created).format('DD-MM-YYYY hh:mmA')}>
+                                        <i>- {timeSince(post.datetime_created)} ago</i>
+                                    </Tooltip>
                                 </div>
                             </Box>
                             <h2>{post.title}</h2>
@@ -480,11 +485,12 @@ const Post = (props) => {
                                         <IconButton
                                             sx={{ p: '10px' }}
                                             aria-label="upfavour"
+                                            onClick={() => onFavourChange(post.is_favour <= 0 ? 1 : 0)}
                                         >
                                             {(post.is_favour === 0 || post.is_favour === -1) &&
-                                                <ForwardIcon className='upFavourStyle' onClick={() => onFavourChange(1)} />}
+                                                <ForwardIcon className='upFavourStyle' />}
                                             {post.is_favour === 1 &&
-                                                <ForwardIcon className='upFavourColorStyle' onClick={() => onFavourChange(0)} />}
+                                                <ForwardIcon className='upFavourColorStyle' />}
                                         </IconButton>
                                         {post.fav_point
                                             ? post.fav_point
@@ -492,11 +498,12 @@ const Post = (props) => {
                                         <IconButton
                                             sx={{ p: '10px' }}
                                             aria-label="downfavour"
+                                            onClick={() => onFavourChange(post.is_favour >= 0 ? -1 : 0)}
                                         >
                                             {(post.is_favour === 0 || post.is_favour === 1) &&
-                                                <ForwardIcon className='downFavourStyle' onClick={() => onFavourChange(-1)} />}
+                                                <ForwardIcon className='downFavourStyle' />}
                                             {post.is_favour === -1 &&
-                                                <ForwardIcon className='downFavourColorStyle' onClick={() => onFavourChange(0)} />}
+                                                <ForwardIcon className='downFavourColorStyle' />}
                                         </IconButton>
                                     </Box>
                                 </Stack>

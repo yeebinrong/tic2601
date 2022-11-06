@@ -1,6 +1,6 @@
 import './CommunityComponent.scss';
 import moment from 'moment';
-import { modifyFavour, retrieveCommunityPosts, updateFollow, deleteFromBanlist,deleteFromMods, retrieveModPageStats, updateColour, approveBan,updateComDesc, addMods, updateMods, uploadProfilePicture} from '../../apis/app-api';
+import { retrieveCommunityPosts, updateFollow, deleteFromBanlist,deleteFromMods, retrieveModPageStats, updateColour, approveBan,updateComDesc, addMods, updateMods, uploadProfilePicture} from '../../apis/app-api';
 import * as React from 'react';
 import {SketchPicker} from 'react-color';
 import Box from '@mui/material/Box';
@@ -14,7 +14,7 @@ import Button from '@mui/material/Button';
 import PostModButton from './PostModButton';
 import { Checkbox, Chip , FormControlLabel, TextField} from '@mui/material';
 import {snackBarProps, withParams } from '../../constants/constants';
-import { renderPostLists } from '../HomePageComponent/HomePageComponent';
+import { handleOnFavourChange, renderPostLists } from '../HomePageComponent/HomePageComponent';
 import { LineChart,Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend } from 'recharts';
 import { withSnackbar } from 'notistack';
 import ShieldIcon from '@mui/icons-material/Shield';
@@ -448,48 +448,11 @@ class CommunityComponent extends React.Component {
            })
     }
 
-    onFavourChange = (postId, favour, value, receiver, index, communityName) => {
-        modifyFavour({
-            postId: postId,
-            favour: favour ? favour : 0,
-            value: value,
-            receiver: receiver,
-            communityName,
-        }).then(res => {
-            if (!res.error) {
-                const tempPosts = this.state.posts;
-                if (favour) {
-                    if (favour === -1) {
-                        if (value === 1) {
-                            tempPosts[index].fav_point = tempPosts[index].fav_point || tempPosts[index].fav_point === 0 ? parseInt(tempPosts[index].fav_point) + 2 : 1;
-                            tempPosts[index].is_favour = 1;
-                        } else if (value === 0) {
-                            tempPosts[index].fav_point = tempPosts[index].fav_point || tempPosts[index].fav_point === 0 ? parseInt(tempPosts[index].fav_point) + 1 : 0;
-                            tempPosts[index].is_favour = null;
-                        }
-                    } else if (favour === 1) {
-                        if (value === -1) {
-                            tempPosts[index].fav_point = tempPosts[index].fav_point || tempPosts[index].fav_point === 0 ? parseInt(tempPosts[index].fav_point) - 2 : -1;
-                            tempPosts[index].is_favour = -1;
-                        } else if (value === 0) {
-                            tempPosts[index].fav_point = tempPosts[index].fav_point || tempPosts[index].fav_point === 0 ? parseInt(tempPosts[index].fav_point) - 1 : 0;
-                            tempPosts[index].is_favour = null;
-                        }
-                    }
-                } else {
-                    if (value === 1) {
-                        tempPosts[index].fav_point = tempPosts[index].fav_point || tempPosts[index].fav_point === 0 ? parseInt(tempPosts[index].fav_point) + 1 : 1;
-                        tempPosts[index].is_favour = 1;
-                    } else if (value === -1) {
-                        tempPosts[index].fav_point = tempPosts[index].fav_point || tempPosts[index].fav_point === 0 ? parseInt(tempPosts[index].fav_point) - 1 : -1;
-                        tempPosts[index].is_favour = -1;
-                    }
-                }
-                this.setState({
-                    posts: tempPosts,
-                });
-            }
-        })
+    onFavourChange = async (posts, postId, favour, value, receiver, index, communityName) => {
+        let tempPosts = await handleOnFavourChange(posts, postId, favour, value, receiver, index, communityName);
+        this.setState({
+            posts: tempPosts,
+        });
     };
 
     onDeletePostCallBack = (name, id) => {

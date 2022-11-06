@@ -2,10 +2,11 @@ const { POOL } = require('../server_config.js');
 
 const commentWithFavourPoint = `
 SELECT
-    c.*, COALESCE(comment_favours.favour_point, 0) AS is_favour,
+    c.*, COALESCE(comment_favours.favour_point, 0) AS is_favour, u.profile_picture,
     (SELECT favour_point FROM total_comment_favours WHERE post_id = c.post_id AND community_name = c.community_name AND comment_id = c.comment_id) AS fav_point
 FROM
 comments c
+LEFT JOIN users u ON c.commenter = u.user_name
 LEFT JOIN comment_favours
     ON comment_favours.community_name = c.community_name
     AND comment_favours.post_id = c.post_id

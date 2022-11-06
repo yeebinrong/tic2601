@@ -21,23 +21,14 @@ import CommentIcon from '@mui/icons-material/Comment';
 import ForwardIcon from '@mui/icons-material/Forward';
 import CreateCommunityComponent from '../CreateCommunityComponent/CreateCommunityComponent';
 import moment from 'moment'
+import { renderComment } from '../ProfilePageComponent/ProfilePageComponent';
 
-export const renderPostLists = (posts, params, handleChange, onFavourChange, onDeletePostCallBack, currentUser, mainColour) => {
+export const renderPostsOrComment = (posts, onFavourChange, onDeletePostCallBack, currentUser, props, callUpVoteAPI, callDownVoteAPI) => {
     return (
-    <>
-        <Item>
-            <TabButton
-                value={params.currentTab ? params.currentTab : 'best'}
-                handleChange={handleChange}
-                indicatorColor={mainColour}
-            />
-        </Item>
-        {(!posts || (posts && posts.length === 0)) && (
-            <Item key={'no_post_found'} style={{ height: '64px', padding: '32px', textAlign: 'center' }}>
-                <p>No posts found!</p>
-            </Item>
-        )}
-        {posts && posts.map((post, index) => {
+        posts && posts.map((post, index) => {
+            if (post.comment_id) {
+                return renderComment(post, index, props, callUpVoteAPI, callDownVoteAPI, 'userFavoured');
+            }
             return (
                 <Item key={`${post.community_name}${post.post_id}`}>
                     <Stack
@@ -106,22 +97,22 @@ export const renderPostLists = (posts, params, handleChange, onFavourChange, onD
                             >
                                 <Tooltip title={moment(post.datetime_created).format('DD-MM-YYYY hh:mmA')}>
                                     <div>
-                                        {(post.age.years &&
-                                            post.age.years +
+                                        {(post.age?.years &&
+                                            post.age?.years +
                                                 ' years ago') ||
-                                            (post.age.months &&
+                                            (post.age?.months &&
                                                 post.age.months +
                                                     ' months ago') ||
-                                            (post.age.days &&
+                                            (post.age?.days &&
                                                 post.age.days +
                                                     ' days ago') ||
-                                            (post.age.hours &&
+                                            (post.age?.hours &&
                                                 post.age.hours +
                                                     ' hours ago') ||
-                                            (post.age.minutes &&
+                                            (post.age?.minutes &&
                                                 post.age.minutes +
                                                     ' minutes ago') ||
-                                            (post.age.seconds &&
+                                            (post.age?.seconds &&
                                                 post.age.seconds +
                                                     ' seconds ago')}
                                     </div>
@@ -178,9 +169,9 @@ export const renderPostLists = (posts, params, handleChange, onFavourChange, onD
                                     aria-label="upfavour"
                                     onClick={() => {
                                         if (post.is_favour === null || post.is_favour === -1) {
-                                            onFavourChange(post.post_id, post.is_favour, 1, post.user_name, index, post.community_name);
+                                            onFavourChange(posts, post.post_id, post.is_favour, 1, post.user_name, index, post.community_name);
                                         } else if (post.is_favour === 1) {
-                                            onFavourChange(post.post_id, post.is_favour, 0, post.user_name, index, post.community_name);
+                                            onFavourChange(posts, post.post_id, post.is_favour, 0, post.user_name, index, post.community_name);
                                         }
                                     }}
                                 >
@@ -197,9 +188,9 @@ export const renderPostLists = (posts, params, handleChange, onFavourChange, onD
                                     aria-label="downfavour"
                                     onClick={() => {
                                         if (post.is_favour === null || post.is_favour === 1) {
-                                            onFavourChange(post.post_id, post.is_favour, -1, post.user_name, index, post.community_name);
+                                            onFavourChange(posts, post.post_id, post.is_favour, -1, post.user_name, index, post.community_name);
                                         } else if (post.is_favour === -1) {
-                                            onFavourChange(post.post_id, post.is_favour, 0, post.user_name, index, post.community_name);
+                                            onFavourChange(posts, post.post_id, post.is_favour, 0, post.user_name, index, post.community_name);
                                         }
                                     }}
                                 >
@@ -232,10 +223,72 @@ export const renderPostLists = (posts, params, handleChange, onFavourChange, onD
                     </Stack>
                 </Item>
             );
-        })}
+        })
+    );
+}
+
+export const renderPostLists = (posts, params, handleChange, onFavourChange, onDeletePostCallBack, currentUser, mainColour) => {
+    return (
+    <>
+        <Item>
+            <TabButton
+                value={params.currentTab ? params.currentTab : 'best'}
+                handleChange={handleChange}
+                indicatorColor={mainColour}
+            />
+        </Item>
+        {(!posts || (posts && posts.length === 0)) && (
+            <Item key={'no_post_found'} style={{ height: '64px', padding: '32px', textAlign: 'center' }}>
+                <p>No posts found!</p>
+            </Item>
+        )}
+        {renderPostsOrComment(posts, onFavourChange, onDeletePostCallBack, currentUser)}
     </>
     );
 };
+
+export const handleOnFavourChange = (posts, postId, favour, value, receiver, index, communityName) => {
+    return modifyFavour({
+        postId: postId,
+        favour: favour ? favour : 0,
+        value: value ? value : 0,
+        receiver: receiver,
+        communityName,
+    }).then(res => {
+        if (!res.error) {
+            const tempPosts = posts;
+            if (favour) {
+                if (favour === -1) {
+                    if (value === 1) {
+                        tempPosts[index].fav_point = tempPosts[index].fav_point || tempPosts[index].fav_point === 0 ? parseInt(tempPosts[index].fav_point) + 2 : 1;
+                        tempPosts[index].is_favour = 1;
+                    } else if (value === 0) {
+                        tempPosts[index].fav_point = tempPosts[index].fav_point || tempPosts[index].fav_point === 0 ? parseInt(tempPosts[index].fav_point) + 1 : 0;
+                        tempPosts[index].is_favour = null;
+                    }
+                } else if (favour === 1) {
+                    if (value === -1) {
+                        tempPosts[index].fav_point = tempPosts[index].fav_point || tempPosts[index].fav_point === 0 ? parseInt(tempPosts[index].fav_point) - 2 : -1;
+                        tempPosts[index].is_favour = -1;
+                    } else if (value === 0) {
+                        tempPosts[index].fav_point = tempPosts[index].fav_point || tempPosts[index].fav_point === 0 ? parseInt(tempPosts[index].fav_point) - 1 : 0;
+                        tempPosts[index].is_favour = null;
+                    }
+                }
+            } else {
+                if (value === 1) {
+                    tempPosts[index].fav_point = tempPosts[index].fav_point || tempPosts[index].fav_point === 0 ? parseInt(tempPosts[index].fav_point) + 1 : 1;
+                    tempPosts[index].is_favour = 1;
+                } else if (value === -1) {
+                    tempPosts[index].fav_point = tempPosts[index].fav_point || tempPosts[index].fav_point === 0 ? parseInt(tempPosts[index].fav_point) - 1 : -1;
+                    tempPosts[index].is_favour = -1;
+                }
+            }
+            return Promise.resolve(tempPosts);
+        }
+        return Promise.resolve(posts);
+    })
+}
 
 export const Item = styled(Paper)(({ theme }) => ({
     backgroundColor: '#fff',
@@ -327,48 +380,11 @@ class HomePageComponent extends React.Component {
         });
     };
 
-    onFavourChange = (postId, favour, value, receiver, index, communityName) => {
-        modifyFavour({
-            postId: postId,
-            favour: favour ? favour : 0,
-            value: value,
-            receiver: receiver,
-            communityName,
-        }).then(res => {
-            if (!res.error) {
-                const tempPosts = this.state.posts;
-                if (favour) {
-                    if (favour === -1) {
-                        if (value === 1) {
-                            tempPosts[index].fav_point = tempPosts[index].fav_point || tempPosts[index].fav_point === 0 ? parseInt(tempPosts[index].fav_point) + 2 : 1;
-                            tempPosts[index].is_favour = 1;
-                        } else if (value === 0) {
-                            tempPosts[index].fav_point = tempPosts[index].fav_point || tempPosts[index].fav_point === 0 ? parseInt(tempPosts[index].fav_point) + 1 : 0;
-                            tempPosts[index].is_favour = null;
-                        }
-                    } else if (favour === 1) {
-                        if (value === -1) {
-                            tempPosts[index].fav_point = tempPosts[index].fav_point || tempPosts[index].fav_point === 0 ? parseInt(tempPosts[index].fav_point) - 2 : -1;
-                            tempPosts[index].is_favour = -1;
-                        } else if (value === 0) {
-                            tempPosts[index].fav_point = tempPosts[index].fav_point || tempPosts[index].fav_point === 0 ? parseInt(tempPosts[index].fav_point) - 1 : 0;
-                            tempPosts[index].is_favour = null;
-                        }
-                    }
-                } else {
-                    if (value === 1) {
-                        tempPosts[index].fav_point = tempPosts[index].fav_point || tempPosts[index].fav_point === 0 ? parseInt(tempPosts[index].fav_point) + 1 : 1;
-                        tempPosts[index].is_favour = 1;
-                    } else if (value === -1) {
-                        tempPosts[index].fav_point = tempPosts[index].fav_point || tempPosts[index].fav_point === 0 ? parseInt(tempPosts[index].fav_point) - 1 : -1;
-                        tempPosts[index].is_favour = -1;
-                    }
-                }
-                this.setState({
-                    posts: tempPosts,
-                });
-            }
-        })
+    onFavourChange = async (posts, postId, favour, value, receiver, index, communityName) => {
+        let tempPosts = await handleOnFavourChange(posts, postId, favour, value, receiver, index, communityName);
+        this.setState({
+            posts: tempPosts,
+        });
     };
 
     onDeletePostCallBack = (name, id) => {

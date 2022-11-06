@@ -1,9 +1,9 @@
 import { Box, Stack, Chip, Button } from '@mui/material';
 import Grid from '@mui/material/Unstable_Grid2';
 import React from 'react';
-import { modifyFavour, searchForPostWithParams } from '../../apis/app-api';
+import { searchForPostWithParams } from '../../apis/app-api';
 import { getQueryParameters, withParams } from '../../constants/constants';
-import { Item, renderBackToTopChip, renderPostLists } from '../HomePageComponent/HomePageComponent';
+import { handleOnFavourChange, Item, renderBackToTopChip, renderPostLists } from '../HomePageComponent/HomePageComponent';
 
 class SearchComponent extends React.Component {
     constructor(props) {
@@ -158,48 +158,11 @@ class SearchComponent extends React.Component {
         }));
     }
 
-    onFavourChange = (postId, favour, value, receiver, index, communityName) => {
-        modifyFavour({
-            postId: postId,
-            favour: favour ? favour : 0,
-            value: value,
-            receiver: receiver,
-            communityName,
-        }).then(res => {
-            if (!res.error) {
-                const tempPosts = this.state.posts;
-                if (favour) {
-                    if (favour === -1) {
-                        if (value === 1) {
-                            tempPosts[index].fav_point = tempPosts[index].fav_point || tempPosts[index].fav_point === 0 ? parseInt(tempPosts[index].fav_point) + 2 : 1;
-                            tempPosts[index].is_favour = 1;
-                        } else if (value === 0) {
-                            tempPosts[index].fav_point = tempPosts[index].fav_point || tempPosts[index].fav_point === 0 ? parseInt(tempPosts[index].fav_point) + 1 : 0;
-                            tempPosts[index].is_favour = null;
-                        }
-                    } else if (favour === 1) {
-                        if (value === -1) {
-                            tempPosts[index].fav_point = tempPosts[index].fav_point || tempPosts[index].fav_point === 0 ? parseInt(tempPosts[index].fav_point) - 2 : -1;
-                            tempPosts[index].is_favour = -1;
-                        } else if (value === 0) {
-                            tempPosts[index].fav_point = tempPosts[index].fav_point || tempPosts[index].fav_point === 0 ? parseInt(tempPosts[index].fav_point) - 1 : 0;
-                            tempPosts[index].is_favour = null;
-                        }
-                    }
-                } else {
-                    if (value === 1) {
-                        tempPosts[index].fav_point = tempPosts[index].fav_point || tempPosts[index].fav_point === 0 ? parseInt(tempPosts[index].fav_point) + 1 : 1;
-                        tempPosts[index].is_favour = 1;
-                    } else if (value === -1) {
-                        tempPosts[index].fav_point = tempPosts[index].fav_point || tempPosts[index].fav_point === 0 ? parseInt(tempPosts[index].fav_point) - 1 : -1;
-                        tempPosts[index].is_favour = -1;
-                    }
-                }
-                this.setState({
-                    posts: tempPosts,
-                });
-            }
-        })
+    onFavourChange = async (posts, postId, favour, value, receiver, index, communityName) => {
+        let tempPosts = await handleOnFavourChange(posts, postId, favour, value, receiver, index, communityName);
+        this.setState({
+            posts: tempPosts,
+        });
     };
 
     onDeletePostCallBack = (name, id) => {
