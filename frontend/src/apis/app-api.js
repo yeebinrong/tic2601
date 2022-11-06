@@ -512,6 +512,23 @@ export function updateComment(communityName, postId, commentId, content) {
         }));
 }
 
+export function deleteComment({ commentId, postId, communityName }) {
+    return axios
+        .delete(
+            `${HOST}/api/community/${communityName}/posts/${postId}/comments/${commentId}`,
+            {
+                headers: {
+                    Accept: CONTENT_TYPE_JSON,
+                },
+            })
+        .then((resp) => ({ data: resp.data, error: false }))
+        .catch((err) => ({
+            data: err && err.response ? err.response.data : '',
+            error: true,
+            status: err && err.response ? err.response.status : '',
+        }));
+}
+
 export function updateCommentFavour(communityName, postId, commentId, favourPoint) {
     return axios
         .post(

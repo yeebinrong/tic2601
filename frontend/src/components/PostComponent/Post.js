@@ -15,7 +15,7 @@ import {
 import ForwardIcon from '@mui/icons-material/Forward';
 import { timeSince } from '../../utils/time';
 import './Post.scss';
-import { createComment, modifyFavour, retrieveCommunityByName, retrievePostByIdAndCommunityName, updateComment, updateCommentFavour, updateFollow } from '../../apis/app-api';
+import { createComment, deleteComment, modifyFavour, retrieveCommunityByName, retrievePostByIdAndCommunityName, updateComment, updateCommentFavour, updateFollow } from '../../apis/app-api';
 import { useParams } from 'react-router-dom';
 import moment from 'moment';
 import Grid from '@mui/material/Unstable_Grid2';
@@ -107,13 +107,17 @@ const User = (props) => {
                     props.profile_picture :
                     `/static/user-avatar-default.png`}>
             </Avatar>
+            {props.deleted &&
+            props.user
+            }
+            {!props.deleted &&
             <a style={{ margin: 'auto', color: 'inherit', textDecoration: 'none' }} href={`/user/${props.user}/profile/overview`}>
                 <Button
                     style={{ textTransform: 'none' }}
                 >
                     {props.user}
                 </Button>
-            </a>
+            </a>}
         </Box>
     );
 };
@@ -219,59 +223,105 @@ const Comment = (props) => {
     let [showReplyBox, setShowReplyBox] = useState(false);
     let [showEditBox, setShowEditBox] = useState(false);
     return (
-
-        <div>
+        <>
             <div>
-                <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                <div>
+                    <Box sx={{ display: 'flex', alignItems: 'center' }}>
 
-                    <User user={props.comment.commenter} profile_picture={props.comment?.profile_picture} />
-                    <Tooltip title={moment(props.comment.datetime_created).format('DD-MM-YYYY hh:mmA')}>
-                        <div className='comment-time'><i>{timeSince(props.comment.datetime_created)} ago</i></div>
-                    </Tooltip>
+                        <User
+                            deleted={props.comment.is_deleted}
+                            user={!props.comment.is_deleted ? props.comment.commenter : 'deleted_user'}
+                            profile_picture={!props.comment.is_deleted ? props.comment?.profile_picture : '/static/user-avatar-default.png'}
+                        />
+                        <Tooltip
+                            title={moment(props.comment.datetime_created).format('DD-MM-YYYY hh:mmA')}
+                        >
+                            <div
+                                className='comment-time'>
+                                <i>{timeSince(props.comment.datetime_created)} ago</i>
+                            </div>
+                        </Tooltip>
 
-                </Box>
-            </div>
+                    </Box>
+                </div>
 
-            <div style={{ margin: '12px 0 0 12px' }}>{props.comment.content}</div>
-            <Stack direction="row" spacing={1}>
-                <UpVote type={'comment'} comment={props.comment} onFavourChange={onFavourChange}></UpVote>
-                <Box sx={{ display: 'flex', alignItems: 'center' }}>
-                    <Typography>
-                        {props.comment.fav_point}
-                    </Typography>
-                </Box>
-                <DownVote type={'comment'} comment={props.comment} onFavourChange={onFavourChange}></DownVote>
-            </Stack>
-            <Button size='small' onClick={() => {
-                setShowReplyBox(!showReplyBox);
-                setShowEditBox(false);
-            }}>Reply</Button>
-            {props.comment.is_commenter && < Button size='small' onClick={() => {
-                setShowEditBox(!showEditBox);
-                setShowReplyBox(false);
-            }}>Edit</Button>}
+                <div style={{ margin: !props.comment.is_deleted ? '12px 0 0 12px' : '24px 12px' }}>
+                    {!props.comment.is_deleted ? props.comment.content : 'This comment was deleted.'}
+                </div>
+                {!props.comment.is_deleted &&
+                <Stack direction="row" spacing={1}>
+                    <UpVote type={'comment'} comment={props.comment} onFavourChange={onFavourChange}></UpVote>
+                    <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                        <Typography>
+                            {props.comment.fav_point}
+                        </Typography>
+                    </Box>
+                    <DownVote type={'comment'} comment={props.comment} onFavourChange={onFavourChange}></DownVote>
+                </Stack>}
+                {!props.comment.is_deleted &&
+                <Button
+                    size='small'
+                    onClick={() => {
+                        setShowReplyBox(!showReplyBox);
+                        setShowEditBox(false);
+                    }}
+                >
+                    Reply
+                </Button>}
+                {props.comment.is_commenter &&
+                !props.comment.is_deleted &&
+                <Button
+                    size='small'
+                    onClick={() => {
+                        setShowEditBox(!showEditBox);
+                        setShowReplyBox(false);
+                    }}
+                >
+                    Edit
+                </Button>}
+                {props.comment.is_commenter &&
+                !props.comment.is_deleted &&
+                <Button
+                    size='small'
+                    onClick={() => {
+                        console.log(props.comment)
+                        deleteComment({
+                            commentId: props.comment.comment_id,
+                            postId: props.comment.post_id,
+                            communityName: props.comment.community_name,
+                        }).then(res => {
+                            props.reloadPostFunc();
+                        })
+                    }}
+                >
+                    Delete
+                </Button>}
 
-            {showReplyBox &&
-            <CommentBox
-                userInfo={props.userInfo}
-                communityName={props.comment.community_name}
-                postId={props.comment.post_id}
-                replyTo={props.comment.comment_id}
-                enqueueSnackbar={props.enqueueSnackbar}
-            />}
-            {showEditBox &&
+                {showReplyBox &&
+                !props.comment.is_deleted &&
                 <CommentBox
                     userInfo={props.userInfo}
                     communityName={props.comment.community_name}
                     postId={props.comment.post_id}
-                    commentId={props.comment.comment_id}
-                    commentText={props.comment.content}
+                    replyTo={props.comment.comment_id}
                     enqueueSnackbar={props.enqueueSnackbar}
                 />}
-            <ul>
-                {subComments}
-            </ul>
-        </div>
+                {showEditBox &&
+                !props.comment.is_deleted &&
+                    <CommentBox
+                        userInfo={props.userInfo}
+                        communityName={props.comment.community_name}
+                        postId={props.comment.post_id}
+                        commentId={props.comment.comment_id}
+                        commentText={props.comment.content}
+                        enqueueSnackbar={props.enqueueSnackbar}
+                    />}
+                <Divider style={{ margin: '8px 0' }} />
+                <ul>
+                    {subComments}
+                </ul>
+            </div>
+        </>
     );
 };
 const Community = ({ community, reloadPostFunc, enqueueSnackbar }) => {

@@ -14,6 +14,11 @@ LEFT JOIN comment_favours
     AND comment_favours.giver = $1
 `
 
+exports.setCommentToDeleted = (commentId, postId, communityName) => {
+    return POOL.query(`UPDATE comments SET is_deleted = TRUE WHERE
+    comment_id = $1 AND post_id = $2 AND community_name = $3`,
+    [commentId, postId, communityName]);
+};
 
 exports.getCommentsByPostId = (currentUser, id, communityName) => {
     return POOL.query(commentWithFavourPoint + `
