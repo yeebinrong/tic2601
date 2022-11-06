@@ -290,6 +290,17 @@ const Comment = (props) => {
                             postId: props.comment.post_id,
                             communityName: props.comment.community_name,
                         }).then(res => {
+                            if (!res.error) {
+                                props.enqueueSnackbar(
+                                    `Comment deleted successfully.`,
+                                    snackBarProps('success'),
+                                );
+                            } else {
+                                props.enqueueSnackbar(
+                                    `An error has occurred.`,
+                                    snackBarProps('success'),
+                                );
+                            }
                             props.reloadPostFunc();
                         })
                     }}
