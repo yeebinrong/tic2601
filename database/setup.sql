@@ -149,7 +149,7 @@ DROP TABLE IF EXISTS followed_communities CASCADE;
 CREATE TABLE followed_communities(
 	community_name VARCHAR(21) NOT NULL REFERENCES community(community_name) ON DELETE CASCADE ON UPDATE CASCADE,
 	user_name VARCHAR(30) NOT NULL REFERENCES users(user_name) ON DELETE CASCADE ON UPDATE CASCADE,
-	followed_date TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+	followed_datetime TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
 	PRIMARY KEY (community_name, user_name)
 );
 

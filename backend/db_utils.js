@@ -303,13 +303,13 @@ const updateModsDB = (community,username,isadmin) => {
 
 const retrieveFollowerStatsDB = (community) => {
     return POOL.query(
-        `SELECT COUNT(user_name) AS follow_total, 0 AS days_ago FROM followed_communities WHERE community_name = $1 AND followed_date <= (CURRENT_DATE)
+        `SELECT COUNT(user_name) AS follow_total, 0 AS days_ago FROM followed_communities WHERE community_name = $1 AND followed_datetime <= (CURRENT_DATE)
         UNION
-        SELECT COUNT(user_name) AS follow_total, 7 AS days_ago FROM followed_communities WHERE community_name = $1 AND followed_date <= (CURRENT_DATE-7)
+        SELECT COUNT(user_name) AS follow_total, 7 AS days_ago FROM followed_communities WHERE community_name = $1 AND followed_datetime <= (CURRENT_DATE-7)
         UNION
-        SELECT COUNT(user_name) AS follow_total, 14 AS days_ago FROM followed_communities WHERE community_name = $1 AND followed_date <= (CURRENT_DATE-14)
+        SELECT COUNT(user_name) AS follow_total, 14 AS days_ago FROM followed_communities WHERE community_name = $1 AND followed_datetime <= (CURRENT_DATE-14)
         UNION
-        SELECT COUNT(user_name) AS follow_total, 21 AS days_ago FROM followed_communities WHERE community_name = $1 AND followed_date <= (CURRENT_DATE-28)
+        SELECT COUNT(user_name) AS follow_total, 21 AS days_ago FROM followed_communities WHERE community_name = $1 AND followed_datetime <= (CURRENT_DATE-28)
         ORDER BY days_ago desc;`,
          [
              escapeQuotes(community),
