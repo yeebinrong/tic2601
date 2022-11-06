@@ -109,20 +109,8 @@ CREATE TABLE posts (
 	datetime_created TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
 	datetime_deleted TIMESTAMP DEFAULT NULL,
 	view_count INTEGER NOT NULL DEFAULT 0,
-	PRIMARY KEY (post_id, community_name)
-);
-
--- [Create post contents table]
-DROP TABLE IF EXISTS post_contents CASCADE;
-CREATE TABLE post_contents (
-	community_name VARCHAR(21) NOT NULL,
-	post_id INTEGER NOT NULL,
 	content VARCHAR(1000) NOT NULL,
-	PRIMARY KEY (post_id, community_name),
-	CONSTRAINT PFK
-	FOREIGN KEY (community_name, post_id)
-	REFERENCES  posts(community_name, post_id)
-	ON DELETE CASCADE ON UPDATE CASCADE
+	PRIMARY KEY (post_id, community_name)
 );
 
 -- [Create comments table]
@@ -140,7 +128,7 @@ CREATE TABLE comments(
 	PRIMARY KEY (community_name, post_id, comment_id),
 	CONSTRAINT PFK
 	FOREIGN KEY (community_name, post_id)
-	REFERENCES post_contents(community_name, post_id)
+	REFERENCES posts(community_name, post_id)
 	ON DELETE CASCADE ON UPDATE CASCADE
 );
 
@@ -288,33 +276,23 @@ INSERT INTO moderators (community_name, user_name, is_admin)
 	VALUES ('another_community', 'test3', TRUE);
 -- Insert Posts data
 --
-INSERT INTO posts (post_id, community_name, title, user_name, flair)
-	VALUES (1, 'test_community', 'Hello World One!', 'testaccount', 'Text');
-INSERT INTO post_contents (community_name, post_id, content)
-	VALUES ('test_community', 1, 'This is post content for hello world one.');
+INSERT INTO posts (post_id, community_name, title, user_name, flair, content)
+	VALUES (1, 'test_community', 'Hello World One!', 'testaccount', 'Text', 'This is post content for hello world one.');
 --
-INSERT INTO posts (post_id, community_name, title, user_name, flair)
-	VALUES (2, 'test_community', 'Hello World Two!', 'test2', 'Text');
-INSERT INTO post_contents (community_name, post_id, content)
-	VALUES ('test_community', 2, 'This is post content for hello world two.');
+INSERT INTO posts (post_id, community_name, title, user_name, flair, content)
+	VALUES (2, 'test_community', 'Hello World Two!', 'test2', 'Text', 'This is post content for hello world two.');
 --
-INSERT INTO posts (post_id, community_name, title, user_name, flair)
-	VALUES (3, 'test_community', 'This post is by anotheraccount user!', 'anotheraccount', 'Text');
-INSERT INTO post_contents (community_name, post_id, content)
-	VALUES ('test_community', 3, 'testaccount user should not be able to view this post!');
+INSERT INTO posts (post_id, community_name, title, user_name, flair, content)
+	VALUES (3, 'test_community', 'This post is by anotheraccount user!', 'anotheraccount', 'Text', 'testaccount user should not be able to view this post!');
 --
-INSERT INTO posts (post_id, community_name, title, user_name, flair)
-	VALUES (4, 'test_community', 'This post is by testaccount user!', 'test3', 'Text');
-INSERT INTO post_contents (community_name, post_id, content)
-	VALUES ('test_community', 4, 'This post is by testaccount user!');
+INSERT INTO posts (post_id, community_name, title, user_name, flair, content)
+	VALUES (4, 'test_community', 'This post is by testaccount user!', 'test3', 'Text', 'This post is by testaccount user!');
 --
-INSERT INTO posts (post_id, community_name, title, user_name, flair)
-	VALUES (5, 'test_community', 'This post should be is for test_community!', 'testaccount', 'Text');
-INSERT INTO post_contents (community_name, post_id, content)
-	VALUES ('test_community', 5, 'This post content should be is for test_community.');
+INSERT INTO posts (post_id, community_name, title, user_name, flair, content)
+	VALUES (5, 'test_community', 'This post should be is for test_community!', 'testaccount', 'Text', 'This post content should be is for test_community.');
 --
-INSERT INTO posts (post_id, community_name, title, user_name, flair)
-	VALUES (6, 'test_community', 'This post should have 4 comments and 2 likes!', 'testaccount', 'Text');
+INSERT INTO posts (post_id, community_name, title, user_name, flair, content)
+	VALUES (6, 'test_community', 'This post should have 4 comments and 2 likes!', 'testaccount', 'Text', 'This post content should have 4 comments and 2 likes');
 INSERT INTO post_favours (community_name, post_id, favour_point, giver, receiver)
 	VALUES ('test_community', 6, 1, 'testaccount', 'testaccount');
 INSERT INTO post_favours (community_name, post_id, favour_point, giver, receiver)
@@ -323,8 +301,6 @@ INSERT INTO post_favours (community_name, post_id, favour_point, giver, receiver
 	VALUES ('test_community', 6, 1, 'test1', 'testaccount');
 INSERT INTO post_favours (community_name, post_id, favour_point, giver, receiver)
 	VALUES ('test_community', 6, -1, 'test2', 'testaccount');
-INSERT INTO post_contents (community_name, post_id, content)
-	VALUES ('test_community', 6, 'This post content should have 4 comments and 2 likes');
 INSERT INTO comments (comment_id, community_name, post_id, commenter, content)
 	VALUES (1, 'test_community', 6, 'testaccount', 'This should be the first comment.');
 INSERT INTO comments (comment_id, community_name, post_id, replying_to, commenter, is_edited, content)
@@ -344,15 +320,11 @@ INSERT INTO comment_favours (community_name, post_id, comment_id, favour_point, 
 INSERT INTO comment_favours (community_name, post_id, comment_id, favour_point, giver, receiver)
 	VALUES ('test_community', 6, 4, 1, 'test1', 'test1');
 --
-INSERT INTO posts (post_id, community_name, title, user_name, flair)
-	VALUES (1, 'another_community', 'Hello World One for another_community!', 'test1', 'Text');
-INSERT INTO post_contents (community_name, post_id, content)
-	VALUES ('another_community', 1, 'This is post content for hello world for another_community post.');
+INSERT INTO posts (post_id, community_name, title, user_name, flair, content)
+	VALUES (1, 'another_community', 'Hello World One for another_community!', 'test1', 'Text', 'This is post content for hello world for another_community post.');
 --
-INSERT INTO posts (post_id, community_name, title, user_name, flair)
-	VALUES (1, 'banned_community', 'testaccount should not be able to see this post as he is banned from here!', 'anotheraccount', 'Text');
-INSERT INTO post_contents (community_name, post_id, content)
-	VALUES ('banned_community', 1, 'testaccount should not be able to see this post... as he is banned.');
+INSERT INTO posts (post_id, community_name, title, user_name, flair, content)
+	VALUES (1, 'banned_community', 'testaccount should not be able to see this post as he is banned from here!', 'anotheraccount', 'Text', 'testaccount should not be able to see this post... as he is banned.');
 --
 -- Password is username in lowercase eg. user_name=Arial, password=arial
 INSERT INTO users(user_name,password, email,user_description)
@@ -373,10 +345,8 @@ INSERT INTO followed_communities (community_name, user_name) VALUES ('Dogs', 'te
 INSERT INTO followed_communities (community_name, user_name) VALUES ('DogOwners', 'testaccount');
 INSERT INTO moderators (community_name, user_name, is_admin)
 	VALUES ('Dogs', 'Benji', TRUE);
-INSERT INTO posts (post_id, community_name, title, user_name, datetime_created, flair)
-	VALUES (1, 'Dogs', 'Missing Dog', 'Benji', '20220823', 'Text' );	
-INSERT INTO post_contents (community_name, post_id, content)
-	VALUES ('Dogs', 1, 'My dog benji is lost yesterday, it is a Jack Russel with full black hair, please contact me if anyone sees it');		
+INSERT INTO posts (post_id, community_name, title, user_name, datetime_created, flair, content)
+	VALUES (1, 'Dogs', 'Missing Dog', 'Benji', '20220823', 'Text', 'My dog benji is lost yesterday, it is a Jack Russel with full black hair, please contact me if anyone sees it');			
 INSERT INTO comments (comment_id, community_name, post_id, commenter,datetime_created,content)
 	VALUES (1, 'Dogs', 1, 'Arial', '20220823','I have found your dog, we are at dog park now, please come and pick up');	
 INSERT INTO comment_favours (community_name, post_id, comment_id, favour_point, giver, receiver)
@@ -385,10 +355,8 @@ INSERT INTO comment_favours (community_name, post_id, comment_id, favour_point, 
 	VALUES ('Dogs', 1, 1, 1, 'Cooper', 'Arial');
 INSERT INTO comment_favours (community_name, post_id, comment_id, favour_point, giver, receiver)
 	VALUES ('Dogs', 1, 1, 1, 'Cody', 'Arial');
-INSERT INTO posts (post_id, community_name, title, user_name, datetime_created, flair)
-	VALUES (2, 'Dogs', 'How did I find my dog', 'Benji', '20220830', 'Text');
-INSERT INTO post_contents (community_name, post_id, content)
-     VALUES ('Dogs', 2, 'The owner of Arial have found my dog in the park');
+INSERT INTO posts (post_id, community_name, title, user_name, datetime_created, flair, content)
+	VALUES (2, 'Dogs', 'How did I find my dog', 'Benji', '20220830', 'Text', 'The owner of Arial have found my dog in the park');
 INSERT INTO post_favours (community_name, post_id, favour_point, giver, receiver)
 	VALUES ('Dogs', 2, 1, 'Cooper', 'Benji');
 INSERT INTO post_favours (community_name, post_id, favour_point, giver, receiver)
@@ -438,10 +406,8 @@ INSERT INTO followed_communities (community_name, user_name) VALUES ('DogOwners'
 INSERT INTO followed_communities (community_name, user_name) VALUES ('GoldenRetri', 'Cody');
 INSERT INTO followed_communities (community_name, user_name) VALUES ('GoldenRetri', 'Wiley');
 -- Insert posts and comment 
-INSERT INTO posts (post_id, community_name, title, user_name, datetime_created, flair)
-	VALUES (1, 'DogOwners', 'Do you allow your dog sleep on your bed', 'Cody', '20220825', 'Text' );
-INSERT INTO post_contents (community_name, post_id, content)
-    VALUES ('DogOwners', 1,'If you have a dog, will you aloow it to sleep with you on your bed?');
+INSERT INTO posts (post_id, community_name, title, user_name, datetime_created, flair, content)
+	VALUES (1, 'DogOwners', 'Do you allow your dog sleep on your bed', 'Cody', '20220825', 'Text', 'If you have a dog, will you aloow it to sleep with you on your bed?');
 INSERT INTO comments (comment_id, community_name, post_id,commenter,datetime_created,content)
 	VALUES (1, 'DogOwners', 1, 'Arial', '20220825','yes, definitely! they need to stay with you to feel safe');
 INSERT INTO comment_favours (community_name, post_id, comment_id, favour_point, giver, receiver)
