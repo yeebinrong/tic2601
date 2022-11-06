@@ -778,11 +778,6 @@ class CommunityComponent extends React.Component {
                         </div>
                     </Item>
                     <div style={{ marginTop: '32px', color: 'white', backgroundColor: this.state.info.colour ? this.state.info.colour : 'rgb(0, 178, 210)', height: '35px', borderRadius: '5px', padding: '16px 6px 6px 6px', textIndent: '16px' }}>
-                        <b>Community Colour</b>
-                    </div>
-                    <Item style={{ padding: '32px' }}>
-                    </Item>
-                    <div style={{ marginTop: '32px', color: 'white', backgroundColor: this.state.info.colour ? this.state.info.colour : 'rgb(0, 178, 210)', height: '35px', borderRadius: '5px', padding: '16px 6px 6px 6px', textIndent: '16px' }}>
                         <b>Community Banlist</b>
                     </div>
                     <Item style={{ padding: '12px 32px 32px 32px' }}>
