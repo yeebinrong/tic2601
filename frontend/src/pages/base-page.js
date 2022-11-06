@@ -4,6 +4,7 @@ import {
     Avatar,
     Backdrop,
     Button,
+    Chip,
     CircularProgress,
     IconButton,
     InputAdornment,
@@ -74,24 +75,25 @@ class BasePage extends React.Component {
         const chipKeys = Object.keys(validatedChips);
         let searchParamStr = '';
         for (let i = 0; i < chipKeys.length; i += 1) {
+            const currValue = encodeURIComponent(validatedChips[chipKeys[i]].inputValue);
             if (chipKeys[i] === 'community') {
                 if (searchParamStr !== '')
                     searchParamStr += '&';
-                searchParamStr += `community=${validatedChips[chipKeys[i]].inputValue}`;
+                searchParamStr += `community=${currValue}`;
             } else if (chipKeys[i] === 'flair') {
                 if (searchParamStr !== '')
                     searchParamStr += '&';
-                searchParamStr += `flair=${validatedChips[chipKeys[i]].inputValue}`;
+                searchParamStr += `flair=${currValue}`;
             } else if (chipKeys[i] === 'user') {
                 if (searchParamStr !== '')
                     searchParamStr += '&';
-                searchParamStr += `user=${validatedChips[chipKeys[i]].inputValue}`;
+                searchParamStr += `user=${currValue}`;
             }
         }
         if (this.state.searchBarText !== '') {
             if (searchParamStr !== '')
                 searchParamStr += '&';
-            searchParamStr += `q=${this.state.searchBarText}`;
+            searchParamStr += `q=${encodeURIComponent(this.state.searchBarText)}`;
         }
         return searchParamStr;
     }
@@ -171,6 +173,24 @@ class BasePage extends React.Component {
                                     }}
                                     getOptionLabel={(option) => {
                                         return option.title;
+                                    }}
+                                    renderTags={(val, getTagProps) => {
+                                        return val.map((option, index) => {
+                                            let color = 'rgb(0, 178, 210)';
+                                            if (option.title.startsWith('Add user')) {
+                                                color = 'teal';
+                                            } else if (option.title.startsWith('Add flairs')) {
+                                                color = 'purple'
+                                            }
+                                            return (
+                                                <Chip
+                                                    {...getTagProps({ index })}
+                                                    style={{ backgroundColor: color }}
+                                                    color='primary'
+                                                    label={option.title}
+                                                />
+                                            );
+                                        });
                                     }}
                                     renderInput={params => {
                                         return (

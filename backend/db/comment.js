@@ -2,60 +2,55 @@ const { POOL } = require('../server_config.js');
 
 const commentWithFavourPoint = `
 SELECT
-comments.*,
-coalesce(favour_points.favour_point, 0) as fav_point,
-coalesce(comment_favours.favour_point, 0) AS is_favour
+    c.*, COALESCE(comment_favours.favour_point, 0) AS is_favour, u.profile_picture,
+    (SELECT favour_point FROM total_comment_favours WHERE post_id = c.post_id AND community_name = c.community_name AND comment_id = c.comment_id) AS fav_point
 FROM
-comments
-LEFT JOIN (
-    SELECT
-        community_name,
-        post_id,
-        comment_id,
-        sum(favour_point) AS favour_point
-    FROM
-        comment_favours
-    GROUP BY
-        1,
-        2,
-        3) AS favour_points
-    ON favour_points.community_name = comments.community_name
-    AND favour_points.post_id = comments.post_id
-    AND favour_points.comment_id = comments.comment_id
+comments c
+LEFT JOIN users u ON c.commenter = u.user_name
 LEFT JOIN comment_favours
-    ON comment_favours.community_name = comments.community_name
-    AND comment_favours.post_id = comments.post_id
-    AND comment_favours.comment_id = comments.comment_id
+    ON comment_favours.community_name = c.community_name
+    AND comment_favours.post_id = c.post_id
+    AND comment_favours.comment_id = c.comment_id
     AND comment_favours.giver = $1
 `
 
+exports.setCommentToDeleted = (commentId, postId, communityName) => {
+    return POOL.query(`UPDATE comments SET is_deleted = TRUE WHERE
+    comment_id = $1 AND post_id = $2 AND community_name = $3`,
+    [commentId, postId, communityName]);
+};
 
 exports.getCommentsByPostId = (currentUser, id, communityName) => {
     return POOL.query(commentWithFavourPoint + `
-    WHERE comments.post_id = $2
-      AND comments.community_name = $3
-      AND comments.replying_to IS NULL
+    WHERE c.post_id = $2
+      AND c.community_name = $3
+      AND c.replying_to IS NULL
     `, [currentUser, id, communityName]);
 };
 
 exports.getCommentsById = (currentUser, id, communityName, postId) => {
     return POOL.query(commentWithFavourPoint + `
-    WHERE comments.comment_id = $2
-      AND comments.community_name = $3
-      AND comments.post_id = $4
+    WHERE c.comment_id = $2
+      AND c.community_name = $3
+      AND c.post_id = $4
     `, [currentUser, id, communityName, postId]);
 };
 
 exports.getReplyComments = (currentUser, id, communityName, postId) => {
     return POOL.query(commentWithFavourPoint + `
     WHERE replying_to = $2
-      AND comments.community_name = $3
-      AND comments.post_id = $4
+      AND c.community_name = $3
+      AND c.post_id = $4
     `, [currentUser, id, communityName, postId]);
 };
 
 exports.createComment = (communityName, postId, commenter, content, replyTo) => {
-    return POOL.query('INSERT INTO comments(comment_id, community_name, post_id, commenter, content, replying_to) VALUES(COALESCE((SELECT max(comment_id) +1 FROM comments WHERE community_name = $1 AND post_id = $2), 1),$1,$2,$3,$4,$5) RETURNING *', [communityName, postId, commenter, content, replyTo]);
+    return POOL.query(
+        `INSERT INTO comments(comment_id, community_name, post_id, commenter, content, replying_to)
+            VALUES(
+                COALESCE((SELECT max(comment_id) +1 FROM comments WHERE community_name = $1 AND post_id = $2), 1), $1, $2, $3, $4, $5)
+        RETURNING *`,
+            [communityName, postId, commenter, content, replyTo]);
 };
 
 exports.updateComment = (commentId, content, communityName, postId) => {

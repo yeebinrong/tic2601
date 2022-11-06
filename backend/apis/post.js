@@ -43,7 +43,6 @@ exports.getPost = async (req, resp) => {
             ...post,
             comments,
             comment_count: commentCount,
-
         },
     );
 };

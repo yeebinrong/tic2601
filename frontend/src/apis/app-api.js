@@ -165,6 +165,70 @@ export function approveBan(params) {
         }));
 }
 
+export function updateComDesc(params) {
+    return axios
+        .post(`${HOST}/api/updateComDesc`, {
+            params,
+            headers: {
+                Accept: CONTENT_TYPE_JSON,
+            },
+        })
+        .then((resp) => ({ data: resp.data, error: false }))
+        .catch((err) => ({
+            data: err && err.response ? err.response.data : '',
+            error: true,
+            status: err && err.response ? err.response.status : '',
+        }));
+}
+
+export function addMods(params) {
+    return axios
+        .post(`${HOST}/api/addMods`, {
+            params,
+            headers: {
+                Accept: CONTENT_TYPE_JSON,
+            },
+        })
+        .then((resp) => ({ data: resp.data, error: false }))
+        .catch((err) => ({
+            data: err && err.response ? err.response.data : '',
+            error: true,
+            status: err && err.response ? err.response.status : '',
+        }));
+}
+
+export function updateMods(params) {
+    return axios
+        .post(`${HOST}/api/updateMods`, {
+            params,
+            headers: {
+                Accept: CONTENT_TYPE_JSON,
+            },
+        })
+        .then((resp) => ({ data: resp.data, error: false }))
+        .catch((err) => ({
+            data: err && err.response ? err.response.data : '',
+            error: true,
+            status: err && err.response ? err.response.status : '',
+        }));
+}
+
+export function deleteFromMods(params) {
+    return axios
+        .post(`${HOST}/api/deleteFromMods`, {
+            params,
+            headers: {
+                Accept: CONTENT_TYPE_JSON,
+            },
+        })
+        .then((resp) => ({ data: resp.data, error: false }))
+        .catch((err) => ({
+            data: err && err.response ? err.response.data : '',
+            error: true,
+            status: err && err.response ? err.response.status : '',
+        }));
+}
+
 export function deleteFromBanlist(params) {
     return axios
         .post(`${HOST}/api/deleteFromBanlist`, {
@@ -180,6 +244,7 @@ export function deleteFromBanlist(params) {
             status: err && err.response ? err.response.status : '',
         }));
 }
+
 export function updateColour(params) {
     return axios
     .post(`${HOST}/api/updateColour`, {
@@ -231,12 +296,10 @@ export function retrieveModPageStats(community_name) {
         }));
 }
 
-export function retrieveCommunityPosts(community_name) {
+export function retrieveCommunityPosts(params) {
     return axios
         .get(`${HOST}/api/community`, {
-            params: {
-                community_name,
-            },
+            params,
             headers: {
                 Accept: CONTENT_TYPE_JSON,
             },
@@ -294,7 +357,6 @@ export function uploadProfilePicture(formData) {
             status: err && err.response ? err.response.status : '',
         }));
 }
-
 
 export function retrieveAllFollowedCommunities() {
     return axios
@@ -437,6 +499,23 @@ export function updateComment(communityName, postId, commentId, content) {
             {
                 content,
             },
+            {
+                headers: {
+                    Accept: CONTENT_TYPE_JSON,
+                },
+            })
+        .then((resp) => ({ data: resp.data, error: false }))
+        .catch((err) => ({
+            data: err && err.response ? err.response.data : '',
+            error: true,
+            status: err && err.response ? err.response.status : '',
+        }));
+}
+
+export function deleteComment({ commentId, postId, communityName }) {
+    return axios
+        .delete(
+            `${HOST}/api/community/${communityName}/posts/${postId}/comments/${commentId}`,
             {
                 headers: {
                     Accept: CONTENT_TYPE_JSON,

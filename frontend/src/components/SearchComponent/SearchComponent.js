@@ -1,9 +1,9 @@
 import { Box, Stack, Chip, Button } from '@mui/material';
 import Grid from '@mui/material/Unstable_Grid2';
 import React from 'react';
-import { modifyFavour, searchForPostWithParams } from '../../apis/app-api';
+import { searchForPostWithParams } from '../../apis/app-api';
 import { getQueryParameters, withParams } from '../../constants/constants';
-import { Item, renderBackToTopChip, renderPostLists } from '../HomePageComponent/HomePageComponent';
+import { handleOnFavourChange, Item, renderBackToTopChip, renderPostLists } from '../HomePageComponent/HomePageComponent';
 
 class SearchComponent extends React.Component {
     constructor(props) {
@@ -39,6 +39,12 @@ class SearchComponent extends React.Component {
     }
 
     shouldComponentUpdate (nextProps) {
+        if (this.props.location.search === '') {
+            this.props.navigate({
+                pathname: `/home/best`,
+                replace: true,
+            });
+        }
         if ((nextProps.isVerifyDone && !this.props.isVerifyDone) ||
         (nextProps.location.search !== this.props.location.search) ||
         nextProps.params.currentTab !== this.props.params.currentTab
@@ -125,67 +131,38 @@ class SearchComponent extends React.Component {
                 } else if (keys[i] === 'flair') {
                     chipArray.push(`f/${queryParams[keys[i]]}`);
                 } else if (keys[i] === 'q') {
-                    chipArray.push(queryParams[keys[i]]);
+                    chipArray.push(`Searching for [${queryParams[keys[i]]}]`);
                 }
             }
         }
         return chipArray.map(((val, index) => {
+            let color = 'rgb(0, 178, 210)';
+            if (val.startsWith('u/')) {
+                color = 'teal';
+            } else if (val.startsWith('f/')) {
+                color = 'purple'
+            } else if (val.startsWith('Searching')) {
+                color = '#1976d2';
+            }
             return (
                 <Chip
-                    style={{ marginLeft: '8px' }}
+                    style={{ marginLeft: '8px', backgroundColor: color }}
                     key={index}
                     value={val}
                     label={val}
                     color="primary"
-                    variant="outlined"
+                    variant="contained"
                     onDelete={() => this.removeChipAndSearch(val)}
                 />
             );
         }));
     }
 
-    onFavourChange = (postId, favour, value, receiver, index, communityName) => {
-        modifyFavour({
-            postId: postId,
-            favour: favour ? favour : 0,
-            value: value,
-            receiver: receiver,
-            communityName,
-        }).then(res => {
-            if (!res.error) {
-                const tempPosts = this.state.posts;
-                if (favour) {
-                    if (favour === -1) {
-                        if (value === 1) {
-                            tempPosts[index].fav_point = tempPosts[index].fav_point || tempPosts[index].fav_point === 0 ? parseInt(tempPosts[index].fav_point) + 2 : 1;
-                            tempPosts[index].is_favour = 1;
-                        } else if (value === 0) {
-                            tempPosts[index].fav_point = tempPosts[index].fav_point || tempPosts[index].fav_point === 0 ? parseInt(tempPosts[index].fav_point) + 1 : 0;
-                            tempPosts[index].is_favour = null;
-                        }
-                    } else if (favour === 1) {
-                        if (value === -1) {
-                            tempPosts[index].fav_point = tempPosts[index].fav_point || tempPosts[index].fav_point === 0 ? parseInt(tempPosts[index].fav_point) - 2 : -1;
-                            tempPosts[index].is_favour = -1;
-                        } else if (value === 0) {
-                            tempPosts[index].fav_point = tempPosts[index].fav_point || tempPosts[index].fav_point === 0 ? parseInt(tempPosts[index].fav_point) - 1 : 0;
-                            tempPosts[index].is_favour = null;
-                        }
-                    }
-                } else {
-                    if (value === 1) {
-                        tempPosts[index].fav_point = tempPosts[index].fav_point || tempPosts[index].fav_point === 0 ? parseInt(tempPosts[index].fav_point) + 1 : 1;
-                        tempPosts[index].is_favour = 1;
-                    } else if (value === -1) {
-                        tempPosts[index].fav_point = tempPosts[index].fav_point || tempPosts[index].fav_point === 0 ? parseInt(tempPosts[index].fav_point) - 1 : -1;
-                        tempPosts[index].is_favour = -1;
-                    }
-                }
-                this.setState({
-                    posts: tempPosts,
-                });
-            }
-        })
+    onFavourChange = async (posts, postId, favour, value, receiver, index, communityName) => {
+        let tempPosts = await handleOnFavourChange(posts, postId, favour, value, receiver, index, communityName);
+        this.setState({
+            posts: tempPosts,
+        });
     };
 
     onDeletePostCallBack = (name, id) => {
@@ -201,7 +178,7 @@ class SearchComponent extends React.Component {
             <>
                 <div style={{ fontSize: '30px', margin: '32px 184px 0px 304px' }}>
                     <div>
-                        {this.props.location.search === '' ? 'All posts' : 'Search Results'}
+                        Search Results
                     </div>
                     {this.parseSearchToChips()}
                 </div>

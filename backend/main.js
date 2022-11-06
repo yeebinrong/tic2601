@@ -17,7 +17,7 @@ const { localStrategy, mkAuth, verifyToken } = require('./passport_strategy.js')
 const { getCommunity } = require('./apis/community');
 const { getPost } = require('./apis/post');
 const { SIGN_SECRET, CHECK_DIGITAL_OCEAN_KEYS, CHECK_POSTGRES_CONN, READ_FILE, UNLINK_ALL_FILES } = require('./server_config.js')
-const { createComment, updateComment, insertOrUpdateFavour } = require('./apis/comment');
+const { createComment, deleteComment, updateComment, insertOrUpdateFavour } = require('./apis/comment');
 const {
     checkUserNameAlreadyExists,
     insertToUser,
@@ -30,9 +30,10 @@ const {
     uploadToDigitalOcean,
     retrieveUserInfo,
     updateUserProfile,
+    deleteFromModsDB,
     deleteFromBanlistDB,
     approveBanDB,
-    updateCommunityColourDB,
+    addModsDB,
     updateFollowDB,
     retrieveFollowerStatsDB,
     retrievePostStatsDB,
@@ -43,6 +44,7 @@ const {
     retrieveCommunityInfoDB,
     isFollowingCommunityDB,
     retrieveCommunityPostsDB,
+    isModAdminDB,
     getAllFollowedCommunities,
     insertTextPost,
     insertUrlPost,
@@ -51,7 +53,9 @@ const {
     getModeratorCommunities,
     getUserPosts,
     getUserComments,
-    getUserFavouredPostsOrComments
+    getUserFavouredPostsOrComments,
+    updateModsDB,
+    updateCommunity,
 } = require('./db_utils.js')
 
 /* -------------------------------------------------------------------------- */
@@ -260,10 +264,8 @@ app.post('/api/create_image_post', upload.single('file'), async (req, resp) => {
     let insertedPostId = -1;
     const { selectedCommunity, title, selectedFlair } = req.body;
     try {
-        console.log(req.body);
         const buffer = await READ_FILE(req.file.path);
         const key = await uploadToDigitalOcean(buffer, req, crypto.randomBytes(16).toString("hex"));
-        console.log(key);
         const results = await insertUrlPost(req.token.username, selectedCommunity, title, key, selectedFlair)
         await UNLINK_ALL_FILES(UPLOAD_PATH);
         insertedPostId = results.rows[0].post_id
@@ -388,7 +390,7 @@ app.get('/api/search', async (req, resp) => {
         resp.json({rows: results.rows });
         return;
     } catch (e) {
-        console.log(e);
+        console.info(e);
         resp.status(400);
         resp.type('application/json');
         resp.json({ message: 'An error has occurred.' });
@@ -396,13 +398,79 @@ app.get('/api/search', async (req, resp) => {
     }
 });
 
+app.post('/api/deleteFromMods', async (req, resp) => {
+    try {
+        await deleteFromModsDB(req.body.params.communityName, req.body.params.username);
+        resp.status(200);
+        resp.type('application/json');
+        resp.json({ message: 'delete ok' });
+        return;
+    } catch (e) {
+        console.info(e);
+		resp.status(404);
+		resp.type('application/json');
+        resp.json({ message: 'An error has occured.'});
+        return;
+    }
+});
+
+
 app.post('/api/deleteFromBanlist', async (req, resp) => {
     try {
-        console.log(req.body.params.username + "this")
         await deleteFromBanlistDB(req.body.params.communityName, req.body.params.username);
         resp.status(200);
         resp.type('application/json');
         resp.json({ message: 'delete ok' });
+        return;
+    } catch (e) {
+        console.info(e);
+		resp.status(404);
+		resp.type('application/json');
+        resp.json({ message: 'An error has occured.'});
+        return;
+    }
+});
+
+app.post('/api/addMods', async (req, resp) => {
+    try {
+        await addModsDB(req.body.params.communityName, req.body.params.userName, req.body.params.isAdmin);
+        const result = await retrieveCommunityModsDB(req.body.params.communityName)
+        resp.status(200);
+        resp.type('application/json');
+        resp.json({ modRows: result.rows });
+        return;
+    } catch (e) {
+        console.info(e);
+		resp.status(404);
+		resp.type('application/json');
+        resp.json({ message: 'An error has occured.'});
+        return;
+    }
+});
+
+app.post('/api/updateMods', async (req, resp) => {
+    try {
+        await updateModsDB(req.body.params.communityName, req.body.params.userName, req.body.params.isAdmin);
+        const result = await retrieveCommunityModsDB(req.body.params.communityName)
+        resp.status(200);
+        resp.type('application/json');
+        resp.json({ modRows: result.rows });
+        return;
+    } catch (e) {
+        console.info(e);
+		resp.status(404);
+		resp.type('application/json');
+        resp.json({ message: 'An error has occured.'});
+        return;
+    }
+});
+
+app.post('/api/updateComDesc', async (req, resp) => {
+    try {
+        await updateCommunity('description' , req.body.params.newDesc, req.body.params.communityName);
+        resp.status(200);
+        resp.type('application/json');
+        resp.json({ message: 'desc updated ok' });
         return;
     } catch (e) {
         console.info(e);
@@ -431,7 +499,7 @@ app.post('/api/approveBan', async (req, resp) => {
 
 app.post('/api/updateColour', async (req, resp) => {
     try {
-        await updateCommunityColourDB(req.body.params.communityName, req.body.params.newColour);
+        await updateCommunity('colour', req.body.params.newColour, req.body.params.communityName);
         resp.status(200);
         resp.type('application/json');
         resp.json({ message: 'update ok' });
@@ -463,15 +531,15 @@ app.post('/api/updateFollow', async (req, resp) => {
 
 app.get('/api/moderator', async (req, resp) => {
     const community = req.query.community_name;
-    const username = req.token.username
     const results1 = await retrieveFollowerStatsDB(community);
     const results2 = await retrievePostStatsDB(community);
     const results3 = await retrieveFavStatsDB(community);
-    const results4 = await retrieveCommunityStatsDB(community)
+    const results4 = await retrieveCommunityStatsDB(community);
     if ((results1.rows && results1.rows.length == 0) &&
         (results2.rows && results2.rows.length == 0) &&
         (results3.rows && results3.rows.length == 0) &&
-        (results4.rows && results4.rows.length == 0) 
+        (results4.rows && results4.rows.length == 0) &&
+        (results5.rows && results5.rows.length == 0)
     ) {
         resp.status(204);
         resp.type('application/json');
@@ -480,26 +548,35 @@ app.get('/api/moderator', async (req, resp) => {
     }
     resp.status(200);
     resp.type('application/json');
-    resp.json({folRows: results1.rows, posRows: results2.rows, favRows: results3.rows, statsRows: results4.rows }); 
+    resp.json({folRows: results1.rows, posRows: results2.rows, favRows: results3.rows, statsRows: results4.rows}); 
     return;
 });
 
 
 app.get('/api/community', async (req, resp) => {
-    const community = req.query.community_name;
+    const community = req.query.communityName;
+    const currentTab = req.query.currentTab;
+    let sortBy = 'fav_point DESC';
+    if (currentTab == 'hot') {
+        sortBy = 'view_count DESC';
+    } else if (currentTab == 'new') {
+        sortBy = 'age ASC';
+    }
     const username = req.token.username
-    const results1 = await retrieveCommunityPostsDB(community, req.token.username);
+    const results1 = await retrieveCommunityPostsDB(community, sortBy, req.token.username);
     const results2 = await retrieveCommunityInfoDB(community);
     const results3 = await retrieveCommunityModsDB(community);
     const results4 = await retrieveCommunityStatsDB(community);
     const results5 = await retrieveCommunityBansDB(community);
     const results6 = await isFollowingCommunityDB(community,username);
+    const results7 = await isModAdminDB(community,username);
     if ((results1.rows && results1.rows.length == 0) &&
         (results2.rows && results2.rows.length == 0) &&
         (results3.rows && results3.rows.length == 0) &&
         (results4.rows && results4.rows.length == 0) &&
         (results5.rows && results5.rows.length == 0)
         && (results6.rows && results6.rows.length == 0)
+        && (results7.rows && results7.rows.length == 0)
     ) {
         resp.status(204);
         resp.type('application/json');
@@ -509,7 +586,7 @@ app.get('/api/community', async (req, resp) => {
     resp.status(200);
     resp.type('application/json');
     resp.json({postsRows: results1.rows, infoRows: { ...results2.rows[0] }, modRows: results3.rows, statsRows: results4.rows,
-    banRows: results5.rows,isFollowing: results6.rows[0].count }); 
+    banRows: results5.rows,isFollowing: results6.rows[0].count, isModAdmin: results7.rows[0].authority}); 
     return;
 });
 
@@ -562,10 +639,22 @@ app.post('/api/update_description', async (req, resp) => {
 
 // POST /api/upload
 app.post('/api/upload', upload.single('file'), async (req, resp) => {
+    const { type, communityName } = req.body;
+    if (type !== 'user' && type !== 'community') {
+		resp.status(400);
+		resp.type('application/json');
+		resp.json({ message: `Invalid value for type [${type}]`});
+        return;
+    }
     try {
         const buffer = await READ_FILE(req.file.path);
-        const key = await uploadToDigitalOcean(buffer, req, req.token.username);
-        await updateUserProfile('profile_picture', `${key}?${Date.now()}`, req.token.username);
+        const initialKey = type === 'user' ? req.token.username : communityName;
+        const key = await uploadToDigitalOcean(buffer, req, initialKey);
+        if (type === 'user') {
+            await updateUserProfile('profile_picture', `${key}?${Date.now()}`, req.token.username);
+        } else {
+            await updateCommunity('profile_picture', `${key}?${Date.now()}`, communityName);
+        }
         await UNLINK_ALL_FILES(UPLOAD_PATH);
         resp.status(200);
         resp.type('application/json');
@@ -582,7 +671,6 @@ app.post('/api/upload', upload.single('file'), async (req, resp) => {
 
 // POST /api/report
 app.post('/api/report', async (req, resp) => {
-    console.log(req);
     try {
         const { userName, communityName } = req.body;
         await insertUserIntoBanList(userName, communityName);
@@ -591,7 +679,7 @@ app.post('/api/report', async (req, resp) => {
         resp.json({ message: 'report ok' });
         return;
     } catch (e) {
-        console.log(e);
+        console.info(e);
 		resp.status(400);
 		resp.type('application/json');
 		resp.json({ message: `${e}`});
@@ -621,6 +709,7 @@ app.get('/api/community/:communityName', getCommunity)
 app.get('/api/community/:communityName/posts/:postId', getPost)
 app.post('/api/community/:communityName/posts/:postId/comments', createComment)
 app.put('/api/community/:communityName/posts/:postId/comments/:commentId', updateComment)
+app.delete('/api/community/:communityName/posts/:postId/comments/:commentId', deleteComment)
 app.post('/api/community/:communityName/posts/:postId/comments/:commentId/favour', insertOrUpdateFavour)
 
 Promise.all([CHECK_POSTGRES_CONN(), CHECK_DIGITAL_OCEAN_KEYS()])

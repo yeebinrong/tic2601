@@ -1,13 +1,106 @@
-import { Box, Button, Divider, Stack, Tab, Tabs, TextField } from '@mui/material';
+import { Avatar, Box, Button, Divider, IconButton, Stack, Tab, Tabs, TextField, Tooltip, Typography } from '@mui/material';
 import Grid from '@mui/material/Unstable_Grid2';
 import moment from 'moment';
 import { withSnackbar } from 'notistack';
 import React from 'react';
-import { getUserProfile, updateFollow, updateUserDescription, uploadProfilePicture } from '../../apis/app-api';
+import { getUserProfile, updateCommentFavour, updateFollow, updateUserDescription, uploadProfilePicture } from '../../apis/app-api';
 import { snackBarProps, withParams } from '../../constants/constants';
-import { Item } from '../HomePageComponent/HomePageComponent';
+import { handleOnFavourChange, Item, renderPostsOrComment } from '../HomePageComponent/HomePageComponent';
 import ShieldIcon from '@mui/icons-material/Shield';
 import LocalPoliceIcon from '@mui/icons-material/LocalPolice';
+import ForwardIcon from '@mui/icons-material/Forward';
+import { timeSince } from '../../utils/time';
+
+export const renderComment = (c, index, props, callUpVoteAPI, callDownVoteAPI, key) => {
+    return (
+        <Button
+            fullWidth
+            onClick={() => {
+                props.navigate({
+                    pathname: `/community/${c.community_name}/view/${c.post_id}`,
+                    replace: true,
+                });
+            }}
+            style={{ textTransform: 'none', textAlign: 'left', padding: '0' }}
+        >
+            <Item style={{ width: '100%', padding: '8px 16px' }}>
+                <Stack
+                    spacing={1}
+                    direction="column"
+                    style={{ margin: '6px' }}
+                >
+                    <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                        <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                            <Avatar
+                                style={{ margin: '0 8px 0 0' }}
+                                sx={{ width: 32, height: 32 }}
+                                src={c.profile_picture ?
+                                    c.profile_picture :
+                                    `/static/user-avatar-default.png`}>
+                            </Avatar>
+                            <a style={{ margin: 'auto', color: 'inherit', textDecoration: 'none' }} href={`/user/${c.commenter ? c.commenter : c.user_name}/profile/overview`}>
+                                <Button
+                                    style={{ textTransform: 'none' }}
+                                >
+                                    {c.commenter ? c.commenter : c.user_name}
+                                </Button>
+                            </a>
+                        </Box>
+                        <Tooltip title={moment(c.datetime_created).format('DD-MM-YYYY hh:mmA')}>
+                            <div className='comment-time'><i>{timeSince(c.datetime_created)} ago</i></div>
+                        </Tooltip>
+                    </Box>
+                    <div style={{ margin: '12px 0 0 12px' }}>{c.content}</div>
+                    <Stack direction="row" spacing={1}>
+                        <IconButton
+                            sx={{ p: '10px' }}
+                            aria-label="upfavour"
+                            onMouseDown={e => {
+                                e.stopPropagation();
+                            }}
+                            onClick={e => {
+                                e.stopPropagation();
+                                e.nativeEvent.stopImmediatePropagation();
+                                callUpVoteAPI(c, index, key);
+                            }}
+                        >
+                            {(c.is_favour === 0 || c.is_favour === -1) &&
+                                <ForwardIcon className='upFavourStyle' />}
+                            {c.is_favour === 1 &&
+                                <ForwardIcon className='upFavourColorStyle' />}
+                        </IconButton>
+                        <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                            <Typography>
+                                {c.fav_point}
+                            </Typography>
+                        </Box>
+                        <IconButton
+                            sx={{ p: '10px' }}
+                            aria-label="upfavour"
+                            onMouseDown={e => {
+                                    e.stopPropagation();
+                                }}
+                            onClick={e => {
+                                e.stopPropagation();
+                                e.nativeEvent.stopImmediatePropagation();
+                                callDownVoteAPI(c, index, key);
+                            }}
+                        >
+                            {(c.is_favour === 0 || c.is_favour === 1) &&
+                            <ForwardIcon
+                                className='downFavourStyle'
+                            />}
+                            {c.is_favour === -1 &&
+                            <ForwardIcon
+                                className='downFavourColorStyle'
+                            />}
+                        </IconButton>
+                    </Stack>
+                </Stack>
+            </Item>
+        </Button>
+    );
+}
 
 class ProfilePageComponent extends React.Component {
     constructor(props) {
@@ -19,6 +112,11 @@ class ProfilePageComponent extends React.Component {
             selectedFile: null,
             user_description: null,
             profileLoaded: false,
+            followedCommunities: [],
+            userComments: [],
+            userFavoured: [],
+            userPosts: [],
+            userModeratorCommunities: [],
         }
 
         if (props.isVerifyDone) {
@@ -32,8 +130,8 @@ class ProfilePageComponent extends React.Component {
                     followedCommunities: res.data.followedCommunities,
                     userComments: res.data.userComments,
                     userFavoured: res.data.userFavoured,
-                    userModeratorCommunities: res.data.userModeratorCommunities,
                     userPosts: res.data.userPosts,
+                    userModeratorCommunities: res.data.userModeratorCommunities,
                 });
             })
         }
@@ -54,12 +152,12 @@ class ProfilePageComponent extends React.Component {
                     followedCommunities: res.data.followedCommunities,
                     userComments: res.data.userComments,
                     userFavoured: res.data.userFavoured,
-                    userModeratorCommunities: res.data.userModeratorCommunities,
                     userPosts: res.data.userPosts,
+                    userModeratorCommunities: res.data.userModeratorCommunities,
                     selectedFile: null,
                     profileLoaded: true,
                 });
-            })
+            });
         }
         return true;
     }
@@ -83,6 +181,7 @@ class ProfilePageComponent extends React.Component {
         this.props.setIsLoading(true);
         const formData = new FormData();
         formData.set('username', this.props.userInfo.username)
+        formData.set('type', 'user')
         formData.set('file', this.state.selectedFile)
         uploadProfilePicture(formData)
         .then(res => {
@@ -130,13 +229,72 @@ class ProfilePageComponent extends React.Component {
                         );
                     }
                 })
-        }
+    }
+
+    onFavourChange = async (posts, postId, favour, value, receiver, index, communityName) => {
+        let tempPosts = await handleOnFavourChange(posts, postId, favour, value, receiver, index, communityName);
+        this.setState({
+            userPosts: tempPosts,
+        });
+    };
+
+    onDeletePostCallBack = (name, id) => {
+        let tempPosts = this.state.userPosts;
+        tempPosts = tempPosts.filter(p => !(p.community_name === name && p.post_id === id));
+        this.setState({
+            userPosts: tempPosts,
+        });
+    }
+
+    callUpVoteAPI = (c, index, key) => {
+        updateCommentFavour(
+            c.community_name,
+            c.post_id,
+            c.comment_id,
+            c.is_favour === 1 ? 0 : 1
+        ).then(resp => {
+            let tempArray = this.state[key];
+            let toAdd = 1;
+            if (c.is_favour === 1) {
+                toAdd = -1;
+            } else if (c.is_favour === -1) {
+                toAdd = 2;
+            }
+            tempArray[index].is_favour = c.is_favour === 1 ? 0 : 1;
+            tempArray[index].fav_point = parseInt(tempArray[index].fav_point) + toAdd;
+            this.setState({
+                [key]: tempArray,
+            });
+        })
+    };
+
+    callDownVoteAPI = (c, index, key) => {
+        updateCommentFavour(
+            c.community_name,
+            c.post_id,
+            c.comment_id,
+            c.is_favour === -1 ? 0 : -1
+        ).then(resp => {
+            let toMinus = 1;
+            if (c.is_favour === -1) {
+                toMinus = -1;
+            } else if (c.is_favour === 1) {
+                toMinus = 2;
+            }
+            let tempArray = this.state[key];
+            tempArray[index].is_favour = c.is_favour === -1 ? 0 : -1;
+            tempArray[index].fav_point = parseInt(tempArray[index].fav_point) - toMinus;
+            this.setState({
+                [key]: tempArray,
+            });
+        })
+    };
 
     render() {
         return (
             <Grid container spacing={6} style={{ margin: '32px 280px 0px 280px' }}>
                 <Grid xs={this.state.user_name ? 8 : 12}>
-                    <Item key={'community_panel'} style={{ padding: '16px' }}>
+                    <Item key={'community_panel'} style={{ padding: '16px 16px 0 16px' }}>
                         <Stack spacing={2} direction="column">
                             {this.props.isVerifyDone &&
                             this.props.userInfo &&
@@ -175,6 +333,18 @@ class ProfilePageComponent extends React.Component {
                                         }
                                     }}
                                     onChange={(e, newValue) => {
+                                        getUserProfile(this.props.params.userName)
+                                        .then(res => {
+                                            this.setState({
+                                                ...res.data.userInfo,
+                                                followedCommunities: res.data.followedCommunities,
+                                                userComments: res.data.userComments,
+                                                userFavoured: res.data.userFavoured,
+                                                userPosts: res.data.userPosts,
+                                                userModeratorCommunities: res.data.userModeratorCommunities,
+                                                selectedFile: null,
+                                            });
+                                        })
                                         this.props.navigate({
                                             pathname: `/user/${this.props.params.userName}/profile/${newValue}`,
                                             replace: true,
@@ -228,7 +398,7 @@ class ProfilePageComponent extends React.Component {
                                             {this.state.followedCommunities?.map(fc => {
                                                 return (
                                                     <>
-                                                        <Box key={fc.community_name} style={{ marginLeft: '16px', marginTop: '8px', display: 'flex' }}>
+                                                        <Box key={fc.community_name} style={{ marginTop: '8px', display: 'flex' }}>
                                                             <span style={{ margin: 'auto auto auto 0' }}>
                                                                 r/{fc.community_name}
                                                             </span>
@@ -274,15 +444,15 @@ class ProfilePageComponent extends React.Component {
                                             )}
                                             {this.state.userModeratorCommunities?.map(mc => {
                                                 return (
-                                                    <Box key={mc.community_name} style={{ marginLeft: '16px', marginTop: '8px', display: 'flex' }}>
-                                                        <span style={{ margin: 'auto 0 auto 0' }}>
-                                                            r/{mc.community_name}
-                                                        </span>
-                                                        <span style={{ margin: '8px 0 auto 16px' }}>
-                                                            {mc.is_admin ? <LocalPoliceIcon /> : <ShieldIcon />}
+                                                    <Box key={mc.community_name} style={{ marginTop: '8px', display: 'flex' }}>
+                                                        <span style={{ margin: '8px 0 auto 0' }}>
+                                                            {mc.is_admin === true ? <LocalPoliceIcon /> : <ShieldIcon />}
                                                         </span>
                                                         <span style={{ margin: 'auto 0 auto 4px' }}>
-                                                            <b>{mc.is_admin ? 'Super Moderator' : 'Moderator'}</b>
+                                                            <b>{mc.is_admin === true ? 'Admin Moderator' : 'Moderator'}</b>
+                                                        </span>
+                                                        <span style={{ margin: 'auto 0 auto 8px' }}>
+                                                            r/{mc.community_name}
                                                         </span>
                                                         <Button
                                                             style={{ margin: 'auto 0 auto auto', textTransform: 'none' }}
@@ -303,24 +473,49 @@ class ProfilePageComponent extends React.Component {
                                         </Box>
                                     </div>
                                 </div>}
-                                {this.props.params.currentTab === 'posts' &&
-                                <div style={{ margin: '16px', display: 'flex', flexDirection: 'column' }}>
-                                </div>}
-                                {this.props.params.currentTab === 'comments' &&
-                                <div style={{ margin: '16px', display: 'flex', flexDirection: 'column' }}>
-                                </div>}
-                                {this.props.params.currentTab === 'favoured' &&
-                                <div style={{ margin: '16px', display: 'flex', flexDirection: 'column' }}>
-                                </div>}
                             </Box>}
                         </Stack>
                     </Item>
+                    {this.props.params.currentTab === 'posts' &&
+                    <div style={{ margin: '16px 0', display: 'flex', flexDirection: 'column' }}>
+                        <Box sx={{ width: '100%' }}>
+                            <Stack spacing={2}>
+                                {renderPostsOrComment(this.state.userPosts, this.onFavourChange, this.onDeletePostCallBack, this.props.userInfo.username)}
+                            </Stack>
+                        </Box>
+                    </div>}
+                    {this.props.params.currentTab === 'comments' &&
+                    <div style={{ margin: '16px 0', display: 'flex', flexDirection: 'column' }}>
+                        <Box sx={{ width: '100%' }}>
+                            <Stack spacing={2}>
+                                {this.state.userComments && this.state.userComments.map((c, index) => {
+                                    return (renderComment(c, index, this.props, this.callUpVoteAPI, this.callDownVoteAPI, 'userComments'));
+                                })}
+                            </Stack>
+                        </Box>
+                    </div>}
+                    {this.props.params.currentTab === 'favoured' &&
+                    <div style={{ margin: '16px 0', display: 'flex', flexDirection: 'column' }}>
+                        <Box sx={{ width: '100%' }}>
+                            <Stack spacing={2}>
+                                {renderPostsOrComment(
+                                    this.state.userFavoured,
+                                    this.onFavourChange,
+                                    this.onDeletePostCallBack,
+                                    this.props.userInfo.username,
+                                    this.props,
+                                    this.callUpVoteAPI,
+                                    this.callDownVoteAPI,
+                                )}
+                            </Stack>
+                        </Box>
+                    </div>}
                 </Grid>
-                {!(this.props.isVerifyDone &&
+                {this.props.isVerifyDone &&
                 this.props.userInfo &&
                 !this.props.isLoading &&
-                !this.state.user_name &&
-                this.state.profileLoaded) &&
+                this.state.profileLoaded &&
+                this.state.user_name &&
                     <Grid xs style={{ position: 'relative' }}>
                     <div style={{ color: 'white', backgroundColor: 'rgb(0, 178, 210)', height: '35px', borderRadius: '5px', padding: '16px 6px 6px 6px', textIndent: '16px' }}>
                         <b>Profile Page</b>
@@ -339,7 +534,7 @@ class ProfilePageComponent extends React.Component {
                             this.state.user_name === this.props.userInfo.username &&
                             <>
                                 <Button
-                                    style={{ width: '300px', margin: 'auto', marginTop: '16px', textTransform: 'none', backgroundColor: 'rgb(0, 178, 210)' }}
+                                    style={{ margin: 'auto', marginTop: '16px', textTransform: 'none', backgroundColor: 'rgb(0, 178, 210)' }}
                                     onClick={() => { this.fileRef.current.click() }}
                                     variant='contained'
                                 >
@@ -352,11 +547,11 @@ class ProfilePageComponent extends React.Component {
                                     />
                                     Select Profile Picture
                                 </Button>
-                                <div style={{ width: '200px', margin: '16px auto', padding: '8px', textAlign: 'center', border: 'solid 1px rgb(0, 178, 210)', borderRadius: '5px' }}>
+                                <div style={{ margin: '16px auto', padding: '8px', textAlign: 'center', border: 'solid 1px rgb(0, 178, 210)', borderRadius: '5px' }}>
                                     {this.state.selectedFile ? this.state.selectedFile.name : 'No file is selected!'}
                                 </div>
                                 <Button
-                                    style={{ width: '300px', margin: 'auto', textTransform: 'none', backgroundColor: !this.state.selectedFile ? 'rgba(0, 0, 0, 0.24)' : 'rgb(0, 178, 210)' }}
+                                    style={{ margin: 'auto', textTransform: 'none', backgroundColor: !this.state.selectedFile ? 'rgba(0, 0, 0, 0.24)' : 'rgb(0, 178, 210)' }}
                                     disabled={!this.state.selectedFile}
                                     onClick={this.onProfilePictureChange}
                                     variant='contained'
@@ -393,7 +588,7 @@ class ProfilePageComponent extends React.Component {
                                 multiline
                                 rows='5'
                                 size="small"
-                                onChange={(e) =>  {
+                                onChange={(e) => {
                                     this.setState({ user_description: e.target.value })
                                 }}
                                 value={this.state.user_description}
