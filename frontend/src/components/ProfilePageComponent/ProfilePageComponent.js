@@ -480,7 +480,7 @@ class ProfilePageComponent extends React.Component {
                     <div style={{ margin: '16px 0', display: 'flex', flexDirection: 'column' }}>
                         <Box sx={{ width: '100%' }}>
                             <Stack spacing={2}>
-                                {renderPostsOrComment(this.state.userPosts, this.onFavourChange, this.onDeletePostCallBack, this.props.userInfo.username)}
+                                {renderPostsOrComment(this.state.userPosts, this.onFavourChange, this.onDeletePostCallBack, this.props.userInfo.username, false)}
                             </Stack>
                         </Box>
                     </div>}
@@ -503,6 +503,7 @@ class ProfilePageComponent extends React.Component {
                                     this.onFavourChange,
                                     this.onDeletePostCallBack,
                                     this.props.userInfo.username,
+                                    false,
                                     this.props,
                                     this.callUpVoteAPI,
                                     this.callDownVoteAPI,

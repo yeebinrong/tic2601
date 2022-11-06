@@ -23,7 +23,7 @@ import CreateCommunityComponent from '../CreateCommunityComponent/CreateCommunit
 import moment from 'moment'
 import { renderComment } from '../ProfilePageComponent/ProfilePageComponent';
 
-export const renderPostsOrComment = (posts, onFavourChange, onDeletePostCallBack, currentUser, props, callUpVoteAPI, callDownVoteAPI) => {
+export const renderPostsOrComment = (posts, onFavourChange, onDeletePostCallBack, currentUser, isMod, props, callUpVoteAPI, callDownVoteAPI) => {
     return (
         posts && posts.map((post, index) => {
             if (post.comment_id) {
@@ -217,7 +217,7 @@ export const renderPostsOrComment = (posts, onFavourChange, onDeletePostCallBack
                                 postOwner={post.user_name}
                                 href={`/community/${post.community_name}/view/${post.post_id}`}
                                 deleteCallback={onDeletePostCallBack}
-                                canDelete={post.user_name === currentUser}
+                                canDelete={post.user_name === currentUser || isMod}
                             />
                         </Stack>
                     </Stack>
@@ -227,7 +227,7 @@ export const renderPostsOrComment = (posts, onFavourChange, onDeletePostCallBack
     );
 }
 
-export const renderPostLists = (posts, params, handleChange, onFavourChange, onDeletePostCallBack, currentUser, mainColour) => {
+export const renderPostLists = (posts, params, handleChange, onFavourChange, onDeletePostCallBack, currentUser, mainColour, isMod) => {
     return (
     <>
         <Item>
@@ -242,7 +242,7 @@ export const renderPostLists = (posts, params, handleChange, onFavourChange, onD
                 <p>No posts found!</p>
             </Item>
         )}
-        {renderPostsOrComment(posts, onFavourChange, onDeletePostCallBack, currentUser)}
+        {renderPostsOrComment(posts, onFavourChange, onDeletePostCallBack, currentUser, isMod)}
     </>
     );
 };

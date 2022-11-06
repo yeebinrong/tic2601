@@ -113,12 +113,11 @@ const updatePostFavour = (postId, favour, value, currentUser, receiver, communit
     }
 }
 
-const deletePost = (community,post_id,currentUser) => {
-    return POOL.query(`UPDATE posts SET datetime_deleted = CURRENT_TIMESTAMP WHERE community_name = $1 AND post_id = $2 AND user_name = $3;`,
+const deletePost = (community,post_id) => {
+    return POOL.query(`UPDATE posts SET datetime_deleted = CURRENT_TIMESTAMP WHERE community_name = $1 AND post_id = $2;`,
         [
             escapeQuotes(community),
             escapeQuotes(post_id),
-            escapeQuotes(currentUser),
         ]
     );
 };
