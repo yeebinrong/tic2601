@@ -465,13 +465,19 @@ class CommunityComponent extends React.Component {
 
     //Posts UI
     renderNorm = () => {
+        let canDelete = false;
+        this.state.mod.forEach(mods => {
+            if (mods.user_name === this.props.userInfo?.username) {
+                canDelete = true;
+            }
+        });
         return (
             <>
                 <Grid container spacing={6} style={{ margin: '16px 280px' }}>
                     <Grid xs={8}>
                         <Box sx={{ width: '100%' }}>
                             <Stack spacing={2}>
-                            {renderPostLists(this.state.posts, this.props.params, this.handleChange, this.onFavourChange, this.onDeletePostCallBack, this.props.userInfo?.username, this.state.info?.colour)}
+                            {renderPostLists(this.state.posts, this.props.params, this.handleChange, this.onFavourChange, this.onDeletePostCallBack, this.props.userInfo?.username, this.state.info?.colour, canDelete)}
                             </Stack>
                         </Box>
                     </Grid>
