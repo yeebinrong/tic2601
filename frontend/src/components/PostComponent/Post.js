@@ -569,7 +569,6 @@ const Post = (props) => {
                                     </Box>
                                 </Stack>
                                 <Button style={{ color: 'black' }} disabled>{post['comment_count']} comments</Button>
-                                <Button></Button>
                             </div>
                             <Divider style={{ margin: '8px 0' }} />
                             <div>
