@@ -317,13 +317,17 @@ class CommunityComponent extends React.Component {
             if (!res.error) {
                 const tempMods = res.data.modRows;
                     this.setState({
-                        mod: tempMods
+                        mod: tempMods,
+                        newMod: '',
                     })
                 this.props.enqueueSnackbar(
                     `User [${username}] is now a moderator.`,
                     snackBarProps('success'),
                 );
             } else {
+                this.setState({
+                    newMod: '',
+                });
                 this.props.enqueueSnackbar(
                     `An error has occurred`,
                     snackBarProps('error'),
@@ -669,6 +673,7 @@ class CommunityComponent extends React.Component {
                                             <TextField
                                                 fullWidth
                                                 sx={{m:'2px'}}
+                                                value={this.state.newMod}
                                                 label="User Name"
                                                 onChange={(e) => {
                                                     this.setState({
@@ -691,6 +696,7 @@ class CommunityComponent extends React.Component {
                                             style={{ margin: 'auto 0 auto 16px', textTransform: 'none' }}
                                             variant='contained'
                                             size='small'
+                                            disabled={this.state.newMod === ''}
                                             color={"primary"}
                                             onClick={() => {
                                                 this.handleNewMods(this.state.newMod, this.state.newModAdmin);
