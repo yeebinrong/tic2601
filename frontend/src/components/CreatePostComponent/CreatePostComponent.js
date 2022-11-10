@@ -302,7 +302,9 @@ class CreatePostComponent extends React.Component {
                                                         this.handleCreatePostResponse(res);
                                                     });
                                                 } else if (this.state.currentTab === 'link') {
-                                                    if (this.state.content.includes('embed')) {
+                                                    if ((this.state.content.includes('embed') || this.state.content.startsWith('http')) &&
+                                                        this.state.content.split(' ').length === 1
+                                                    ) {
                                                         createLinkPostApi(
                                                             this.state.selectedCommunity,
                                                             this.state.title,
@@ -313,7 +315,7 @@ class CreatePostComponent extends React.Component {
                                                         });
                                                     } else {
                                                         this.props.enqueueSnackbar(
-                                                            "Please enter a valid embed link!",
+                                                            "Please enter a valid link!",
                                                             snackBarProps('error'),
                                                         );
                                                     }

@@ -309,7 +309,7 @@ class ProfilePageComponent extends React.Component {
                                         draggable={false}
                                         src="/static/404_1.png"
                                         className={'app-error'}
-                                        alt="error 404"
+                                        alt=""
                                     />
                                     <Button
                                         className={'app-error-button'}
@@ -403,7 +403,7 @@ class ProfilePageComponent extends React.Component {
                                                                 r/{fc.community_name}
                                                             </span>
                                                             <span style={{ margin: 'auto 0 auto auto' }}>
-                                                                Followed on {moment(fc.followedDate).format('DD-MM-YYYY hh:mmA')}
+                                                                {fc.followed_datetime ? `Followed on ${moment(fc.followed_datetime).format('DD-MM-YYYY hh:mmA')}` : '-'}
                                                             </span>
                                                             <Button
                                                                 style={{ marginLeft: '16px', textTransform: 'none' }}
@@ -529,7 +529,7 @@ class ProfilePageComponent extends React.Component {
                                     this.state.profile_picture:
                                     `/static/user-avatar-default.png`}
                                 className={'profile-page-picture'}
-                                alt="readit logo"
+                                alt=""
                             />
                             {this.props.userInfo.username !== '' &&
                             this.state.user_name === this.props.userInfo.username &&

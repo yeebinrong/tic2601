@@ -25,18 +25,16 @@ class LoginComponent extends React.Component {
         super(props);
 
         this.state = {
-            isRegisterPage: this.props.isRegisterPage,
             ...initialLoginPageState,
-            username: 'testaccount',
-            password: '123',
+            isRegisterPage: this.props.isRegisterPage,
         };
     }
 
     static getDerivedStateFromProps(nextProps, prevState) {
         if (prevState.isRegisterPage !== nextProps.isRegisterPage) {
             return {
-                isRegisterPage: nextProps.isRegisterPage,
                 ...initialLoginPageState,
+                isRegisterPage: nextProps.isRegisterPage,
             };
         }
         // Return null to indicate no change to state.
@@ -292,7 +290,7 @@ class LoginComponent extends React.Component {
                     draggable={false}
                     src="/static/readit_logo.png"
                     className={'main-logo'}
-                    alt="readit logo"
+                    alt=""
                 />
                 <div
                     className={`${

@@ -19,7 +19,7 @@ class ErrorPage extends React.Component {
                                             draggable={false}
                                             src="/static/404_1.png"
                                             className={'app-error'}
-                                            alt="error 404"
+                                            alt=""
                                         />
                                         <Button
                                             className={'app-error-button'}

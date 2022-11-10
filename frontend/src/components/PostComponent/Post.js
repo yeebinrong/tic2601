@@ -21,6 +21,8 @@ import moment from 'moment';
 import Grid from '@mui/material/Unstable_Grid2';
 import { withSnackbar } from 'notistack';
 import { snackBarProps } from '../../constants/constants';
+import { Link } from 'react-router-dom';
+import { LinkPreview } from '@dhaiwat10/react-link-preview';
 
 const Item = styled(Paper)(({ theme }) => ({
     backgroundColor: theme.palette.mode === 'dark' ? '#1A2027' : '#fff',
@@ -30,6 +32,11 @@ const Item = styled(Paper)(({ theme }) => ({
     color: theme.palette.text.secondary,
 }));
 
+const customFetcher = async (url) => {
+    const response = await fetch(`https://seahorse-app-ryml2.ondigitalocean.app/v2?url=${url}`);
+    const json = await response.json();
+    return json.metadata;
+};
 
 const UpVote = ({ comment, onFavourChange }) => {
     let callUpVoteAPI = () => {
@@ -514,6 +521,21 @@ const Post = (props) => {
                             <Divider style={{ margin: '8px 0' }} />
                             {post.url && !post.url.includes('digitaloceanspaces') &&
                                 <div>
+                                {!post.url.includes('embed') &&
+                                    <Link
+                                        to={{ pathname: post.url }}
+                                        target="_blank"
+                                    >
+                                        <LinkPreview
+                                            width="560"
+                                            height="315"
+                                            className={'post-image'}
+                                            url={post.url}
+                                            fetcher={customFetcher}
+                                            fallback={<div>Fallback</div>}
+                                        />
+                                    </Link>}
+                                    {post.url.includes('embed') &&
                                     <iframe
                                         width="560"
                                         height="315"
@@ -522,12 +544,12 @@ const Post = (props) => {
                                         frameBorder="0"
                                         allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
                                         allowFullScreen
-                                    />
+                                    />}
                                 </div>}
                             {post.url && post.url.includes('digitaloceanspaces') &&
                                 <div>
                                     <img
-                                        alt={''}
+                                        alt=""
                                         width="560"
                                         height="315"
                                         src={post.url}
