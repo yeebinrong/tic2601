@@ -309,7 +309,7 @@ class ProfilePageComponent extends React.Component {
                                         draggable={false}
                                         src="/static/404_1.png"
                                         className={'app-error'}
-                                        alt="error 404"
+                                        alt=""
                                     />
                                     <Button
                                         className={'app-error-button'}
@@ -529,7 +529,7 @@ class ProfilePageComponent extends React.Component {
                                     this.state.profile_picture:
                                     `/static/user-avatar-default.png`}
                                 className={'profile-page-picture'}
-                                alt="readit logo"
+                                alt=""
                             />
                             {this.props.userInfo.username !== '' &&
                             this.state.user_name === this.props.userInfo.username &&

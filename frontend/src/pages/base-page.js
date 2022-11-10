@@ -113,7 +113,7 @@ class BasePage extends React.Component {
                                 draggable={false}
                                 src="/static/readit_logo.png"
                                 className={'app-bar-logo'}
-                                alt="readit logo"
+                                alt=""
                                 onClick={() => {
                                     this.props.navigate({
                                         pathname: '/home',

@@ -527,6 +527,8 @@ const Post = (props) => {
                                         target="_blank"
                                     >
                                         <LinkPreview
+                                            width="560"
+                                            height="315"
                                             className={'post-image'}
                                             url={post.url}
                                             fetcher={customFetcher}
@@ -547,7 +549,7 @@ const Post = (props) => {
                             {post.url && post.url.includes('digitaloceanspaces') &&
                                 <div>
                                     <img
-                                        alt={''}
+                                        alt=""
                                         width="560"
                                         height="315"
                                         src={post.url}

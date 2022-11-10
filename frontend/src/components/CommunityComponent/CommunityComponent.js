@@ -723,7 +723,7 @@ class CommunityComponent extends React.Component {
                                         this.state.profile_picture:
                                         `/static/user-avatar-default.png`}
                                     className={'profile-page-picture'}
-                                    alt="community profile"
+                                    alt=""
                                 />
                                 <Button
                                     style={{ margin: 'auto', marginTop: '16px', textTransform: 'none', backgroundColor: this.state.info.colour }}
@@ -898,7 +898,7 @@ class CommunityComponent extends React.Component {
                 <div style={{ backgroundColor: 'white' }}>
                     <div style={{ display: 'flex', marginLeft: '20%', paddingTop: '10px' }}>
                         <div>
-                            <Avatar alt="Community Logo" sx={{ width: 128, height: 128, margin: '8px' }} src={this.state.info.profile_picture ?
+                            <Avatar alt="" sx={{ width: 128, height: 128, margin: '8px' }} src={this.state.info.profile_picture ?
                                 this.state.info.profile_picture: `/static/user-avatar-default.png`} />
                         </div>
                         <div style={{ marginRight: '25px' }}>

@@ -485,14 +485,14 @@ const getModeratorCommunities = (userName) => {
 }
 
 const getUserPosts = (userName) => {
-    return POOL.query(`SELECT p.*, AGE(CURRENT_TIMESTAMP, p.datetime_created), fp.favour_point AS is_favour,
+    return POOL.query(`SELECT p.*, AGE(CURRENT_TIMESTAMP, p.datetime_created), fp.favour_point AS is_favour, AGE(CURRENT_TIMESTAMP, p.datetime_created),
     (SELECT favour_point FROM total_post_favours WHERE post_id = p.post_id AND community_name = p.community_name) AS fav_point,
     (SELECT count(*) FROM comments WHERE post_id = p.post_id AND community_name = p.community_name) AS comment_count,
     u.profile_picture, (SELECT profile_picture FROM community WHERE community_name = p.community_name) as post_profile_picture
     FROM posts p
     LEFT JOIN post_favours fp ON fp.post_id = p.post_id AND fp.community_name = p.community_name AND fp.giver = $1
     LEFT JOIN users u ON u.user_name = $1
-    WHERE p.user_name = $1 AND p.datetime_deleted IS NULL`,
+    WHERE p.user_name = $1 AND p.datetime_deleted IS NULL ORDER BY age`,
         [
             escapeQuotes(userName),
         ]
@@ -500,7 +500,7 @@ const getUserPosts = (userName) => {
 }
 
 const getUserComments = (userName) => {
-    return POOL.query(`SELECT c.*, COALESCE(cf.favour_point, 0) AS is_favour, u.profile_picture,
+    return POOL.query(`SELECT c.*, COALESCE(cf.favour_point, 0) AS is_favour, u.profile_picture, AGE(CURRENT_TIMESTAMP, c.datetime_created),
     (SELECT favour_point FROM total_comment_favours WHERE post_id = c.post_id AND community_name = c.community_name AND comment_id = c.comment_id) AS fav_point
     FROM comments c
     LEFT JOIN comment_favours cf
@@ -509,7 +509,7 @@ const getUserComments = (userName) => {
         AND cf.comment_id = c.comment_id
         AND cf.giver = $1
     LEFT JOIN users u ON u.user_name = $1
-    WHERE c.commenter = $1`,
+    WHERE c.commenter = $1 ORDER BY age`,
         [
             escapeQuotes(userName),
         ]
@@ -538,7 +538,7 @@ const getUserFavouredPostsOrComments = (userName) => {
             WHERE is_deleted IS FALSE AND commenter = $1 AND cfp.favour_point IS NOT NULL
         ) AS pc
         LEFT JOIN users u ON pc.user_name = u.user_name
-        ORDER BY datetime_created DESC;`,
+        ORDER BY age ASC;`,
         [
             escapeQuotes(userName),
         ]

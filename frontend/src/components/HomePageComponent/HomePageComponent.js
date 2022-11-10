@@ -29,7 +29,7 @@ const customFetcher = async (url) => {
     const response = await fetch(`https://seahorse-app-ryml2.ondigitalocean.app/v2?url=${url}`);
     const json = await response.json();
     return json.metadata;
-  };
+};
 
 export const renderPostsOrComment = (posts, onFavourChange, onDeletePostCallBack, currentUser, isMod, props, callUpVoteAPI, callDownVoteAPI) => {
     return (
@@ -155,6 +155,8 @@ export const renderPostsOrComment = (posts, onFavourChange, onDeletePostCallBack
                                 <LinkPreview
                                     className={'post-image'}
                                     url={post.url}
+                                    width="560"
+                                    height="315"
                                     fetcher={customFetcher}
                                     fallback={<div>Fallback</div>}
                                 />
@@ -174,7 +176,7 @@ export const renderPostsOrComment = (posts, onFavourChange, onDeletePostCallBack
                         {post.url && post.url.includes('digitaloceanspaces') &&
                         <Stack>
                             <img
-                                alt={''}
+                                alt=""
                                 width="560"
                                 height="315"
                                 src={post.url}
