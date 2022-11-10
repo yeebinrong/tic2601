@@ -403,7 +403,7 @@ class ProfilePageComponent extends React.Component {
                                                                 r/{fc.community_name}
                                                             </span>
                                                             <span style={{ margin: 'auto 0 auto auto' }}>
-                                                                Followed on {moment(fc.followedDate).format('DD-MM-YYYY hh:mmA')}
+                                                                {fc.followed_datetime ? `Followed on ${moment(fc.followed_datetime).format('DD-MM-YYYY hh:mmA')}` : '-'}
                                                             </span>
                                                             <Button
                                                                 style={{ marginLeft: '16px', textTransform: 'none' }}
