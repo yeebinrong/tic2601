@@ -22,6 +22,14 @@ import ForwardIcon from '@mui/icons-material/Forward';
 import CreateCommunityComponent from '../CreateCommunityComponent/CreateCommunityComponent';
 import moment from 'moment'
 import { renderComment } from '../ProfilePageComponent/ProfilePageComponent';
+import { LinkPreview } from '@dhaiwat10/react-link-preview';
+import { Link } from 'react-router-dom';
+
+const customFetcher = async (url) => {
+    const response = await fetch(`https://seahorse-app-ryml2.ondigitalocean.app/v2?url=${url}`);
+    const json = await response.json();
+    return json.metadata;
+  };
 
 export const renderPostsOrComment = (posts, onFavourChange, onDeletePostCallBack, currentUser, isMod, props, callUpVoteAPI, callDownVoteAPI) => {
     return (
@@ -139,6 +147,19 @@ export const renderPostsOrComment = (posts, onFavourChange, onDeletePostCallBack
                         </Stack>
                         {post.url && !post.url.includes('digitaloceanspaces') &&
                         <Stack>
+                            {!post.url.includes('embed') &&
+                            <Link
+                                to={{ pathname: post.url }}
+                                target="_blank"
+                            >
+                                <LinkPreview
+                                    className={'post-image'}
+                                    url={post.url}
+                                    fetcher={customFetcher}
+                                    fallback={<div>Fallback</div>}
+                                />
+                            </Link>}
+                            {post.url.includes('embed') &&
                             <iframe
                                 width="560"
                                 height="315"
@@ -148,7 +169,7 @@ export const renderPostsOrComment = (posts, onFavourChange, onDeletePostCallBack
                                 frameBorder="0"
                                 allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
                                 allowFullScreen
-                            />
+                            />}
                         </Stack>}
                         {post.url && post.url.includes('digitaloceanspaces') &&
                         <Stack>
