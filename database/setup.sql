@@ -41,7 +41,7 @@ DECLARE
 			appendParam = ' AND ';
         END IF;
         IF queryFilter != '' THEN
-            paramQuery = paramQuery || appendParam || 'to_tsvector(title) @@ to_tsquery(''' || queryFilter || ''')';
+            paramQuery = paramQuery || appendParam || 'to_tsvector(''english'', title) @@ to_tsquery(''' || queryFilter || ''')';
 			appendParam = ' AND ';
         END IF;
 		CASE orderParam

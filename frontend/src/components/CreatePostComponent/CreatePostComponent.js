@@ -303,7 +303,7 @@ class CreatePostComponent extends React.Component {
                                                     });
                                                 } else if (this.state.currentTab === 'link') {
                                                     if ((this.state.content.includes('embed') || this.state.content.startsWith('http')) &&
-                                                        this.state.content.split(' ').length === 1
+                                                        this.state.content.split(' ').length === 1 && this.state.content.split('?').length === 1
                                                     ) {
                                                         createLinkPostApi(
                                                             this.state.selectedCommunity,

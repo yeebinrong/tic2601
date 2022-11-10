@@ -155,8 +155,8 @@ export const renderPostsOrComment = (posts, onFavourChange, onDeletePostCallBack
                                 <LinkPreview
                                     className={'post-image'}
                                     url={post.url}
-                                    width="560"
-                                    height="315"
+                                    width="560px"
+                                    height="315px"
                                     fetcher={customFetcher}
                                     fallback={<div>Fallback</div>}
                                 />
