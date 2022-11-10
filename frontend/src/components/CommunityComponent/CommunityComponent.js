@@ -578,7 +578,7 @@ class CommunityComponent extends React.Component {
                                                     <td>{postData[3].Value}</td>
                                                     <td>{favData[3].Value}</td>
                                                     <td>{this.state.mod ? `${this.state.mod.length}` : '0'}</td>
-                                                    <td>{this.state.ban ? `${this.state.ban.filter(b => b.is_approved).length}` : '0'}</td>
+                                                    <td>{this.state.bans ? `${this.state.bans.filter(b => b.is_approved).length}` : '0'}</td>
                                                 </tr>
                                             </tbody>
                                         </table>
